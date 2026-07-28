@@ -71,4 +71,4 @@ Eleven weeks ago this project was a manifesto and an empty repo. Today it's load
 
 Good luck in Lisbon. Bring endpoints, plural. You've read why.
 
-*Nuthatch is [github.com/nuthatch-indexer/nuthatch](https://github.com/nuthatch-indexer/nuthatch): one Rust binary, AGPL-3.0. Point it at a contract; be your own indexer.*
+*Nuthatch is [github.com/nuthatch-indexer/nuthatch](https://github.com/nuthatch-indexer/nuthatch): one Rust binary, MIT OR Apache-2.0. Point it at a contract; be your own indexer.*

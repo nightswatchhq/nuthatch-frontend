@@ -58,7 +58,7 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 ## Conventions
 
 Every RFC honours the non-negotiables (single static binary, the ≤2 GB budget, no phone-home,
-determinism in the core, AGPL-3.0) and carries the standard structure: Abstract, Motivation,
+determinism in the core, MIT OR Apache-2.0) and carries the standard structure: Abstract, Motivation,
 Goals/Non-goals, Design, Implementation, Testing, Risks, Alternatives, Open questions. Companions
 in `docs/`: **backlog.md** (everything deferred across the series), **prod-readiness.md** (the bar
 a release clears before it's pointed at a real workload unattended), and the **progress log** (the
