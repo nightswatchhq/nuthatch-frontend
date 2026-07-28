@@ -21,6 +21,40 @@ near-empty. Widen it: `--window 50000` turns tens of thousands of near-empty req
 Keep the window under your provider's `getLogs` block-range cap; the concurrent backfill fails a
 too-big range loudly rather than silently shrinking it.
 
+## Free public RPCs: stalls and empty results
+
+nuthatch ships a small pool of free public endpoints per chain so `init` -> `dev` works with no setup.
+That is deliberate, and it is the right default for a first run. It is the wrong default for production,
+and the failure mode is worth knowing because **it does not always look like an error**:
+
+- **Shared rate limits.** You are queueing behind everyone else on the same free tier from the same IP
+  range, so throughput varies by the hour.
+- **Silent empties.** A throttled endpoint often answers with an *empty result* instead of an error. To
+  the indexer that is indistinguishable from "no logs in this range", so the window advances and you
+  simply get less data than expected.
+- **Deep backfills crawl or stop.** Full history over a busy contract is millions of `eth_getLogs`
+  calls; expect throttling long before it finishes.
+- **No archive guarantees.** Many free endpoints prune old state, so a backfill from a 2020 deploy block
+  can fail partway.
+
+**Symptoms:** `nuthatch_last_block` barely moves while `nuthatch_rpc_requests_total` climbs; `/ready`
+reports `stalled` (no successful poll within the stall window); the log shows `all RPC endpoints
+unreachable` every ~60 s.
+
+**Remedy - use your own endpoint:**
+
+```sh
+nuthatch dev --rpc https://your-endpoint.example/arbitrum
+```
+
+`--rpc` is repeatable, and nuthatch round-robins across the pool with per-endpoint health tracking, so
+two or three endpoints buy you failover as well as throughput. Persist them as `rpc_urls` in
+`nuthatch.toml` rather than passing them every run.
+
+Every endpoint in a pool must be on the **same chain**. nuthatch verifies this at startup and refuses to
+run against a mixed pool - indexing against the wrong chain corrupts state silently, so this is a hard
+error rather than a warning.
+
 ## "block N alone exceeds the provider's getLogs result cap"
 
 One block's logs are too large for the provider to return, and a single block can't be split
