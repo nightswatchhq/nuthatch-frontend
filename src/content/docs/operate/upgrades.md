@@ -61,6 +61,13 @@ Everything above upgrades a *nest* - its schema, views, or decode. A separate ax
 *nuthatch runtime* serving your nests, from one release to the next. This is deliberately a plain
 binary swap, not a migration:
 
+> **Upgrade to v0.6.2 if you are exposing `/sql`.** Releases up to and including 0.6.1 accepted
+> `;`-stacked statements on the `/sql` surface. Since `COPY … TO` and `ATTACH` write to disk
+> regardless of the in-memory connection, a stacked statement was an arbitrary file-write primitive
+> for anyone who could reach the endpoint. v0.6.2 rejects statement stacking outright. nuthatch binds
+> `127.0.0.1` by default, so the exposure is limited to whatever you have put in front of it - but
+> this is a binary swap with no data migration, so there is no reason to sit on it.
+
 - **On-disk state is forward-readable.** A newer binary reads an older release's hot store (redb) and
   sealed Parquet segments as they are. No re-backfill, no conversion step.
 - **The `dev` flags and unit files are stable.** A release does not silently rename the flags your

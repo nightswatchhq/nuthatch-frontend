@@ -70,6 +70,36 @@ curl http://127.0.0.1:8288/balance/0xYourAddress
 > page is about going deeper: authored logic, factories, roosts, upgrades, and operating it in
 > production.
 
+## A word on the free public RPCs
+
+nuthatch ships free public endpoints per chain so that `init` → `dev` works with zero setup. That is
+the two-minute demo above, and it is deliberate. They are fine for trying it out, following the tip of
+a quiet contract, or a modest recent-history backfill.
+
+They are **not** fine for real work, and it's better to hear that here than at 3am:
+
+- **They are rate-limited and shared.** You queue behind everyone else on the same free tier from the
+  same IP range; throughput varies by the hour.
+- **They fail intermittently, and not always loudly.** A rate-limited endpoint may return an empty
+  result rather than an error. nuthatch fails over across the pool and retries, but a window every
+  endpoint refuses will stall - `/ready` reports `stalled` when that happens.
+- **Deep backfills will crawl or stop.** Full history over a busy contract is millions of
+  `eth_getLogs` calls. Expect a free endpoint to throttle you long before that finishes.
+- **No archive guarantees.** Many free endpoints prune old state, so a backfill from a 2020 deploy
+  block can fail partway.
+
+Use your own endpoint for anything you care about - your own node, or a paid provider:
+
+```sh
+nuthatch init 0xADDR --chain arbitrum-one --rpc https://your-endpoint.example/arbitrum
+nuthatch dev --rpc https://your-endpoint.example/arbitrum   # or set rpc_urls in nuthatch.toml
+```
+
+`--rpc` is repeatable and nuthatch round-robins across the pool with per-endpoint health tracking, so
+listing two or three gets you failover as well as throughput. Every endpoint in a pool must be on the
+**same chain** - nuthatch verifies this at startup and refuses a mixed pool, since indexing against
+the wrong chain corrupts state silently.
+
 ## Next
 
 - [What is a nest?](/docs/concepts/nests/) - the mental model

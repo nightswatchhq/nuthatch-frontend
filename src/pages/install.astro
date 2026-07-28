@@ -6,7 +6,7 @@ const GH = 'https://github.com/nuthatch-indexer/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v0.6.1: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. v0.6.1 brings portable nest bundles, a nest registry, zero-downtime upgrades, multichain roosts, and derive-first contract reads. Checksums verified; a Homebrew tap, an OCI image, and release signatures are on the way."
+  description="Install Nuthatch v0.6.2: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. The 0.6 line brings portable nest bundles, a nest registry, zero-downtime upgrades, multichain roosts, derive-first contract reads, and fault quarantine; 0.6.2 is a security patch for the /sql surface. Checksums verified; a Homebrew tap, an OCI image, and release signatures are on the way."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,10 +19,14 @@ const GH = 'https://github.com/nuthatch-indexer/nuthatch';
       </p>
 
       <p class="prerelease-note">
-        <strong>v0.6.1 is out.</strong> It brings portable nest bundles, a nest registry
+        <strong>v0.6.2 is out.</strong> The 0.6 line brings portable nest bundles, a nest registry
         (<code>name@version</code>, filesystem or S3), zero-downtime nest upgrades, multichain roosts,
-        and derive-first contract reads (<code>recipe add</code>) - on top of the delightful core and
-        agent-grade MCP. Prebuilt binaries ship for macOS (Apple Silicon) and Linux x86_64.
+        derive-first contract reads (<code>recipe add</code>), and fault quarantine so a roost survives
+        its sick nests - on top of the delightful core and agent-grade MCP. <strong>0.6.2 is a security
+        patch:</strong> releases up to 0.6.1 accepted <code>;</code>-stacked statements on
+        <code>/sql</code>, which was an arbitrary file-write primitive for anyone who could reach the
+        endpoint. If you are running an older build, swap the binary - there is no data migration.
+        Prebuilt binaries ship for macOS (Apple Silicon) and Linux x86_64.
         Nuthatch is early 0.x software under a config-stability contract - see the
         <a href="/roadmap">roadmap</a>. A Homebrew tap, an OCI image, and detached release signatures
         are still on the way; other platforms build from source with <code>cargo</code> for now.

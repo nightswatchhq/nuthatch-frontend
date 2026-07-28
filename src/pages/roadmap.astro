@@ -1,10 +1,11 @@
 <!-- Regenerate against the repo README + docs/rfcs when either changes materially.
      Ground-truth rule: README / progress log wins over this page.
-     Last regenerated against the progress log through the v0.6.1 release: RFC-0012 (bundles +
+     Last regenerated against the progress log through the v0.6.2 release: RFC-0012 (bundles +
      roost), RFC-0015/0016/0017 (delightful core, agent-grade MCP, builder skill), RFC-0019 (nest
      registry), RFC-0020 (N-1 upgrade), RFC-0021 slice 1 (multichain roost), RFC-0023 tiers 1-2
-     (derive-first recipes + metadata cache), and RFC-0025 (adaptive MCP tools) all shipped;
-     v0.6.1 is the current release.
+     (derive-first recipes + metadata cache), RFC-0025 (adaptive MCP tools), and RFC-0026 (fault
+     quarantine) all shipped; RFC-0027 (live roost) and RFC-0028 (adaptive log-range control) are
+     part-landed. v0.6.2 is the current release (0.6.1 audit hardening, 0.6.2 a /sql security patch).
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -34,6 +35,9 @@ const RFCS = {
   '0020': '0020-nest-lifecycle-and-the-n-1-upgrade.md',
   '0021': '0021-the-multichain-roost.md',
   '0023': '0023-contract-state-eth-call-derive-first.md',
+  '0026': '0026-fault-quarantine-and-partial-health.md',
+  '0027': '0027-the-live-roost.md',
+  '0028': '0028-adaptive-log-range-control.md',
 };
 const rfc = (n) => `${REPO}/blob/main/docs/rfcs/${RFCS[n]}`;
 const rfcsDir = `${REPO}/tree/main/docs/rfcs`;
@@ -120,7 +124,7 @@ const progressLog = `${REPO}#progress-log`;
         <li>A Prometheus <code>GET /metrics</code> endpoint: tip height, tip lag, sealed-through, decode / seal / reorg / HTTP / SQL counters, and process RSS.</li>
         <li>A <code>GET /ready</code> readiness endpoint (200 fresh, 503 when the tip poll has stalled) and an escalating log when RPC stops answering.</li>
         <li>Health-aware RPC failover - a failing endpoint is benched on a cooldown so calls route to healthy ones first - and startup segment recovery that hash-verifies each sealed segment and quarantines any that is corrupt or tampered.</li>
-        <li><code>/sql</code> query guards - a wall-clock timeout, a row cap, and a concurrency limit.</li>
+        <li><code>/sql</code> query guards - a wall-clock timeout, a row cap, a result-byte ceiling, a concurrency limit, a filesystem-access denylist, and single-statement enforcement (a <code>;</code>-stacked statement is refused before anything runs).</li>
         <li>Graceful shutdown on SIGTERM (drains, checkpoints, resumes without gaps) and a loud warning when bound off localhost.</li>
         <li>A 0.x config-stability contract, and a <code>cargo-deny</code> CI gate over advisories, licences, and sources.</li>
       </ul>
@@ -172,7 +176,7 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Multichain roost (<a href={rfc('0021')} rel="noopener">RFC-0021</a>, in progress)</p>
       <ul class="rl">
-        <li>A roost can host nests across <strong>more than one chain</strong> in a single runtime - <code>[[chains]]</code> in <code>roost.toml</code>, and one <strong>isolated cursor per chain</strong> (its own tip, finality, and reorg boundary): a Base nest and an Arbitrum nest served from one process. The footprint budget is <strong>per active-chain cursor</strong> (≤2 GB), and any cursor's failure fails the whole roost - one observable boundary, held per chain. A capability, not a mandate: one-chain-per-roost stays the simple default and is byte-identical to running the nest solo. The single-cursor law holds per chain - two chains are never multiplexed behind one cursor.</li>
+        <li>A roost can host nests across <strong>more than one chain</strong> in a single runtime - <code>[[chains]]</code> in <code>roost.toml</code>, and one <strong>isolated cursor per chain</strong> (its own tip, finality, and reorg boundary): a Base nest and an Arbitrum nest served from one process. The footprint budget is <strong>per active-chain cursor</strong> (≤2 GB), and each cursor is its own observable boundary, held per chain. A capability, not a mandate: one-chain-per-roost stays the simple default and is byte-identical to running the nest solo. The single-cursor law holds per chain - two chains are never multiplexed behind one cursor.</li>
       </ul>
 
       <p class="grp">Derive-first - the eth_call you don't need (<a href={rfc('0023')} rel="noopener">RFC-0023</a>, in progress)</p>
@@ -180,9 +184,15 @@ const progressLog = `${REPO}#progress-log`;
         <li>The Foundation reports that &gt;70% of subgraphs call <code>eth_call</code> - but most of those reads are <em>derivable</em> from the events a nest already indexes; subgraphs fetch them only because they have no incremental-view engine. Nuthatch does. <code>nuthatch recipe add total_supply</code> drops in a derived view that computes an ERC-20's <code>totalSupply()</code> as &#931; minted &#8722; &#931; burned from Transfer events - deterministic, free, and with no archive node. It derives what a subgraph pays an archive node to fetch. The ERC-20-generic trio - <code>total_supply</code>, <code>balances</code>, and <code>holder_count</code> - all derive from Transfer events, and <code>reserves</code> derives Uniswap-V2 <code>getReserves()</code> as the latest <code>Sync</code> per pair - the AMM read a subgraph fetches on every swap. For the handful of reads that aren't derivable but never change - <code>decimals</code>/<code>symbol</code>/<code>name</code> - <code>nuthatch metadata fetch</code> calls once and caches forever. For the genuinely non-derivable residue, a verifiable eth_call fallback follows; its local-execution engine (a demand-driven state cache, not an archive node) is designed but deferred, so the derive-first path stays fully self-hosted with no external data dependency.</li>
       </ul>
 
+      <p class="grp">Fault quarantine - a roost survives its sick nests (<a href={rfc('0026')} rel="noopener">RFC-0026</a>)</p>
+      <ul class="rl">
+        <li>A faulting nest is <strong>quarantined</strong> rather than fatal: its healthy siblings keep indexing and serving, and it is re-admitted on a backoff if the fault was retryable. A terminal fault stays quarantined until an operator fixes it. The blast radius is now bounded in both directions - a nest's error no longer kills its cursor, and a cursor's death no longer kills the roost.</li>
+        <li>The health surface to see it with: <code>GET /nests</code> merges each nest's live health per request, <code>GET /ready</code> answers roost-wide while <code>GET /&lt;name&gt;/ready</code> answers per nest, and <code>nuthatch_nest_health</code> / <code>nuthatch_nest_quarantine_total</code> / <code>nuthatch_cursor_live</code> cover the metrics. <code>--fail-fast</code> restores exit-on-first-fault for CI and for operators who prefer a loud death to partial service.</li>
+      </ul>
+
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li>v0.6.1 is the current release (tagged, with prebuilt binaries on the GitHub release) - portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools, on top of the delightful core and agent-grade MCP. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
+        <li>v0.6.2 is the current release (tagged, with prebuilt binaries on the GitHub release). The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools, on top of the delightful core and agent-grade MCP. 0.6.1 is an audit-hardening patch; <strong>0.6.2 is a security patch</strong> - releases up to 0.6.1 accepted <code>;</code>-stacked statements on <code>/sql</code>, which was an arbitrary file-write primitive for anyone who could reach the endpoint. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
         <li>A CI footprint job fails the build above 256 MB of RAM.</li>
         <li>Measured peak: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - 2.8% of the 2 GB budget.</li>
       </ul>
@@ -198,6 +208,21 @@ const progressLog = `${REPO}#progress-log`;
           carries the Horizon staking/service surface; the migration is parked after the proven pilot,
           with the remaining panels (Indexer Directory, Curation, Epochs) folded into
           <code>horizon-nest</code> as they're needed rather than as a second nest.
+        </li>
+        <li>
+          The live roost (<a href={rfc('0027')} rel="noopener">RFC-0027</a>): a roost's nest set is
+          frozen at boot today, so onboarding one tenant's nest restarts every co-tenant's. The first
+          slices have landed - a roost is now served through a swappable composition, with a lifecycle
+          channel and retirement so an operator's unmount is not counted as a fault. Admission, the
+          two-phase catch-up join, and the full control surface follow.
+        </li>
+        <li>
+          Adaptive log-range control (<a href={rfc('0028')} rel="noopener">RFC-0028</a>): a fix pack,
+          not a new capability. Adaptive <code>getLogs</code> splitting has existed since early on, but
+          the failure markers missed the message Arbitrum's own public endpoint returns - a shipped
+          default - so splitting never fired on that path. RPC failures are now classified properly
+          (an auth rejection stops being retried forever), unclassifiable wide-range failures split
+          speculatively, and a 429 escalates pool-wide.
         </li>
         <li>
           reth ExEx wiring (<a href={rfc('0003')} rel="noopener">RFC-0003</a>): the <code>Source</code>

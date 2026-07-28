@@ -31,6 +31,45 @@ The per-contract `events` allowlist is how a nest indexing e.g. GraphToken keeps
 instead of millions of irrelevant rows. A name the ABI doesn't define is a config error, caught at
 registry build.
 
+### Any other EVM chain
+
+Ethereum mainnet, Arbitrum One and Base are **built in** - keyless public endpoints, a tuned
+`eth_getLogs` window, chain-appropriate finality, and bytecode probing so `init` can detect which of
+them a contract lives on.
+
+**Any other EVM chain works too** - World Chain, Base Sepolia, your own devnet - it just has to be
+configured by hand. `dev`, `sql`, `bench`, and `roost dev` are chain-agnostic; `init` and `add` are
+not, since ABI resolution is chain-gated. So the recipe is: write `nuthatch.toml` yourself, vendor
+the ABI, and run.
+
+```toml
+[nest]
+name = "my-nest"
+chain = "world-chain"        # any label you like - not looked up for an unlisted chain
+chain_id = 480               # MUST match what your endpoints report; verified at startup
+rpc_urls = ["https://your-endpoint.example"]
+schema_version = 1
+
+[[contracts]]
+alias = "router"
+address = "0x…"
+start_block = 1234567        # no bytecode probing here, so supply it yourself
+abi = "abis/router.json"     # vendor the ABI by hand
+events = ["Swapped"]
+```
+
+Then `nuthatch dev --dir .` as usual - decode, sealing, `/sql`, views, MCP, roosts, and bundles are
+all chain-agnostic downstream. Two caveats worth knowing:
+
+1. **You inherit default finality and window.** An unlisted chain gets depth-64 finality and a
+   20-block `eth_getLogs` window, because nuthatch has no per-chain policy for it. Depth-64 is an
+   Ethereum-L1-shaped assumption; if your chain finalises differently, the conservative direction is
+   *deeper*. The 20-block window will make a long backfill crawl - raise it with `--window` (a
+   sparse contract can often take 50000) up to your provider's range cap.
+2. **`chain_id` is enforced.** Every endpoint in `rpc_urls` is checked against it at startup and a
+   mismatch is refused - get it wrong and nuthatch tells you immediately rather than three days into
+   a backfill.
+
 ### Factories (RFC-0009)
 
 ```toml

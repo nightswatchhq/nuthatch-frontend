@@ -38,11 +38,18 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
 
 - **SELECT/WITH only.** The surface is read-only by construction; the ingest thread is the single
   writer, and queries attach the sealed segments read-only.
+- **One statement per request.** A `;`-stacked second statement is rejected before anything runs.
+  This matters more than it looks: `COPY … TO` and `ATTACH` write to disk regardless of the
+  in-memory connection, so a stacked statement was a file-write primitive. Fixed in **v0.6.2** -
+  see [upgrades](/docs/operate/upgrades/) if you are running anything older.
+- **No filesystem access.** A denylist rejects the file-reading functions outright. DuckDB's own
+  `allowed_directories` is not enforced on the build nuthatch bundles, so this denylist is the
+  control, not a second layer behind one.
 - **Deterministic and finality-aware.** Sealed segments are immutable; only the hot tip can change
   under a reorg, and the union converges with it.
-- **Guarded:** a 30-second timeout, a row cap, a 64 MiB result-byte cap, and 2 concurrent analytical queries. A rejection is
-  the node protecting itself - narrow the query rather than fighting the guard. Validate cheaply
-  first with `explain`.
+- **Guarded:** a 30-second timeout, a 50,000-row cap, a 64 MiB result-byte ceiling, and 2
+  concurrent analytical queries. A rejection is the node protecting itself - narrow the query
+  rather than fighting the guard. Validate cheaply first with `explain`.
 - **Provenance-stamped.** Results carry the block range and the content-addressed segment hashes
   they were computed from, so a number can be cited against immutable data and re-derived by
   anyone.

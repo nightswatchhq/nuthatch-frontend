@@ -48,6 +48,12 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   demands it.
 - **0025 Adaptive MCP tool advertisement** *(Implemented)* - advertise only the tools a nest can
   answer, so an agent is never handed an inert tool that returns `{"count":0}`.
+- **0026 Fault quarantine & partial health** *(Implemented)* - a roost survives its sick nests: a
+  nest's error no longer kills its cursor, and a cursor's death no longer kills the roost.
+- **0027 The live roost** *(Draft; slices 1-2a merged)* - mounting and unmounting nests without a
+  restart, so onboarding one tenant doesn't restart every co-tenant.
+- **0028 Adaptive log-range control** *(Draft; slices 1-3 merged)* - a fix pack for `eth_getLogs`
+  range control: classify RPC failures properly rather than retrying an auth rejection forever.
 
 ## Conventions
 

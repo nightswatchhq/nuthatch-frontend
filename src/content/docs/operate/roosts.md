@@ -52,6 +52,22 @@ This brings up every mounted nest and serves them behind one listener (`--listen
 The backfill flags you know from `dev` apply to every mounted nest: `--backfill N`,
 `--seal-direct`, `--concurrency`, `--window`, `--rpc` overrides, `--no-admin`.
 
+## When one nest goes wrong
+
+A roost survives its sick nests (RFC-0026). A nest that faults is **quarantined**, not fatal: its
+healthy siblings keep indexing and serving, and it is re-admitted on a backoff if the fault was
+retryable. A terminal fault (a corrupt registry, a config that can't load) stays quarantined until
+you fix it. The blast radius is bounded in both directions - a nest's error doesn't kill its cursor,
+and a cursor's death doesn't kill the roost.
+
+You see it in three places: `GET /nests` carries each nest's live health and re-admission time,
+`GET /ready` at the roost root answers roost-wide while `GET /<name>/ready` answers per nest, and
+`nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` cover the
+[metrics](/docs/operate/metrics/) side.
+
+Pass `--fail-fast` to opt out and exit on the first fault instead - the right call for CI and
+deterministic tests, and for operators who would rather a process die loudly than serve partially.
+
 ## Multichain
 
 To span more than one chain, drop the top-level `chain`/`chain_id`/`rpc_urls` and list chains under

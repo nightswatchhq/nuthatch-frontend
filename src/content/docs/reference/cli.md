@@ -58,7 +58,8 @@ Every command that operates on a nest takes `--dir` (default `.`).
   `latest`.
 - **`nuthatch nest diff <old> <new>`** / **`nest upgrade --to <dir>`** - classify an update and
   perform the zero-downtime flip. See [Upgrading a nest](/docs/operate/upgrades/).
-- **`nuthatch roost dev`** - run many nests behind one listener. See
+- **`nuthatch roost dev`** - run many nests behind one listener; `--fail-fast` exits on the first
+  fault instead of quarantining it (RFC-0026). See
   [Run a roost](/docs/operate/roosts/).
 
 ## The compliance pack (RFC-0008)

@@ -15,6 +15,8 @@ nest's full surface appears under its `/<name>/…` prefix, byte-identical to a 
 - `GET /ready` - readiness (caught up enough to serve).
 - `GET /metrics` - Prometheus text. See [Metrics & footprint](/docs/operate/metrics/).
 - `GET /nest` - the nest's identity: name, chain, content-addressed registry hash.
+- `GET /shape` - which capabilities this nest can actually answer for (balances, flags, exposure,
+  …). The MCP bridge reads it to advertise only live tools; it fails open if the probe fails.
 - `GET /tables` - every decoded table with its columns, Solidity types, and topic0.
 - `GET /schema` - the human/agent-readable data model, composed from the decode registry and
   [`semantic.toml`](/docs/build/semantic/).
@@ -50,7 +52,11 @@ nest's full surface appears under its `/<name>/…` prefix, byte-identical to a 
   (SSE). Off-localhost both require the admin token; `--no-admin` removes them. See
   [Serving & the admin UI](/docs/operate/serving/).
 - `GET /nests` *(roost only)* - the roster of mounted nests: name, chain, registry hash, table
-  count, footprint.
+  count, footprint, plus each nest's **live health** (`indexing` or `quarantined`, with the reason
+  and the next re-admission attempt). The health half is merged per request, not cached at boot, so
+  a quarantined nest reports what is true now.
+- `GET /ready` *(roost root)* - roost-wide readiness, for a supervisor to poll. Each nest also
+  answers its own `GET /<name>/ready`, so one sick nest is diagnosable without guessing.
 
 During a breaking [upgrade](/docs/operate/upgrades/), the old version's responses additionally
 carry `Deprecation: true` and a `Link: …; rel="successor-version"` header (RFC 8594) pointing at

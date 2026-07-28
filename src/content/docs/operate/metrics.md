@@ -38,6 +38,14 @@ number, so each nest also gets labelled per-nest counterparts: `nuthatch_nest_la
 `nuthatch_nest_sealed_through`, `nuthatch_nest_rows_decoded_total`,
 `nuthatch_nest_rows_sealed_total`, and `nuthatch_nest_reorgs_total`.
 
+Health series (RFC-0026), which is where you look when *part* of a roost is unwell:
+
+| Series | Meaning |
+|---|---|
+| `nuthatch_nest_health{nest,chain}` | `1` while the nest is indexing, `0` while it is quarantined. |
+| `nuthatch_nest_quarantine_total{nest}` | Times this nest has been quarantined since start - a flapping nest shows up here before anyone notices. |
+| `nuthatch_cursor_live{chain}` | `1` while the chain's cursor is running, `0` once it has died. |
+
 ## The footprint budget
 
 The budget is a non-negotiable, CI-enforced: **≤2 GB RAM per active-chain cursor** - one chain's
