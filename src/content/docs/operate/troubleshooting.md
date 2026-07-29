@@ -68,7 +68,43 @@ semantics are worse than none, so `dev` warns loudly.
 
 ## ABI won't resolve at `init`
 
-`init` tries Sourcify, then Etherscan-class APIs. If both miss (an unverified contract), drop the
-ABI into `abis/` yourself and reference it from `nuthatch.toml`, or pass `--rpc <url>` so a proxy's
-implementation can be looked up on-chain - EIP-1967 proxies resolve their implementation ABI
-automatically.
+`init` tries Sourcify, then Etherscan-class APIs. If both miss (an unverified contract), pass the ABI
+directly:
+
+```sh
+nuthatch init 0xAddr --abi path/to/abi.json
+```
+
+One `--abi` per address, in the same order as the addresses; leave an entry empty to resolve that one
+normally. Hardhat and Foundry artifacts work as-is - the ABI is unwrapped from the `"abi"` key.
+
+## The nest indexes nothing and reports no error
+
+Almost always a **proxy whose implementation ABI was never found**. Standard proxies (EIP-1967,
+EIP-1822, legacy zeppelinos, and beacon proxies) are followed automatically and resolve to the
+implementation's ABI. A protocol using a *bespoke* proxy pattern matches none of those slots, so the
+resolvers return the proxy's own ABI - typically two or three administrative events - and every event
+you actually wanted is missing. `init` succeeds, the schema looks plausible, and the tables stay empty.
+
+Since **0.7.2**, `init` catches this itself. It samples the contract's real logs and tells you when
+none of them match the ABI it resolved:
+
+```
+⚠ bonding (0x35Bc…): none of its last 47 log(s) match any event in the resolved ABI.
+  As configured this contract will index zero rows, silently.
+```
+
+The fix is the implementation's ABI - from the project's repo, or from a block explorer's "read as
+proxy" view:
+
+```sh
+nuthatch init 0xProxyAddr --abi path/to/implementation.json
+```
+
+For a nest you have already scaffolded, overwrite `abis/<alias>.json` and run `nuthatch schema` to
+regenerate.
+
+Two things the check will *not* tell you, on purpose. A contract that has emitted no logs recently
+proves nothing either way, so it stays quiet rather than crying wolf. And one matching log is enough
+to clear it - a contract may legitimately emit events its ABI omits, and only the total mismatch is
+the silent failure.
