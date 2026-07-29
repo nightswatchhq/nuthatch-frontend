@@ -53,6 +53,6 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
 ## Where to start reading
 
 `CLAUDE.md` states the non-negotiables every change is judged against (single static binary; the
-2 GB budget; no phone-home; determinism; AGPL-3.0). The [RFC series](/docs/contributing/rfcs/) is
+2 GB budget; no phone-home; determinism; MIT OR Apache-2.0). The [RFC series](/docs/contributing/rfcs/) is
 the design record - each module's header comments name the RFC that shaped it. The progress log in
 `docs/` narrates how it actually went.

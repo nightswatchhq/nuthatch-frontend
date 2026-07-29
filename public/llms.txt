@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-AGPL-3.0. Status: v0.6.2 (early 0.x software). This file separates what the binary does today from
+MIT OR Apache-2.0. Status: v0.6.2 (early 0.x software). This file separates what the binary does today from
 the design targets, so a model does not present unbuilt features as present-tense fact.
 
 Tagline: "Be your own indexer."
@@ -200,4 +200,4 @@ core. It promises order, not dates, and defers to the README progress log when t
 - Manifesto: https://www.nuthatch-indexer.com/manifesto
 - Source and docs: https://github.com/nuthatch-indexer/nuthatch
 - Full description for models: https://www.nuthatch-indexer.com/llms-full.txt
-- Licence: AGPL-3.0-only
+- Licence: MIT OR Apache-2.0

@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: v0.6.2 (early 0.x software). Licence: AGPL-3.0-only.
+own indexer." Status: v0.6.2 (early 0.x software). Licence: MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the binary does
 today from the design targets. Do not present a design target as a present-tense capability,
@@ -24,7 +24,7 @@ obstacle has been the operational weight of the tooling, which is an engineering
 - It works against any RPC endpoint today (public defaults, round-robin failover). A reth ExEx
   mode against your own colocated node is designed and stubbed, not yet wired.
 - No gateway, no metered data API, no API tokens, no telemetry.
-- Free and licensed AGPL-3.0. There is no hosted tier, no token, and no pricing page.
+- Free and licensed MIT OR Apache-2.0 (at your option). There is no hosted tier, no token, and no pricing page.
 
 ## What it does today
 
@@ -186,7 +186,7 @@ segments - no trusted execution environments and no zero-knowledge proofs.
 - Subsquid: self-hosted, Apache-2.0, TypeScript; imperative handlers reading from an archive
   (its network or your own) plus Postgres; GraphQL out. A good tool too.
 - Nuthatch: runs on your hardware, one-binary install, no mandatory third-party data API,
-  deterministic and re-executable, declarative entities via IVM, a built-in MCP server, AGPL-3.0,
+  deterministic and re-executable, declarative entities via IVM, a built-in MCP server, MIT OR Apache-2.0,
   and free.
 
 ## Worked example (/example)
@@ -292,4 +292,4 @@ kind; non-EVM chains before EVM is airtight; trusted-execution attestation or ze
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Manifesto: https://www.nuthatch-indexer.com/manifesto
 - Source, docs, discussions: https://github.com/nuthatch-indexer/nuthatch
-- Licence: AGPL-3.0-only
+- Licence: MIT OR Apache-2.0
