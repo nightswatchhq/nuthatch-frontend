@@ -52,6 +52,34 @@ This brings up every mounted nest and serves them behind one listener (`--listen
 The backfill flags you know from `dev` apply to every mounted nest: `--backfill N`,
 `--seal-direct`, `--concurrency`, `--window`, `--rpc` overrides, `--no-admin`.
 
+## Mount and unmount without a restart
+
+Since **0.7.0** a roost's nest set is changeable while it runs. Before that, adding or removing a nest
+meant editing `roost.toml` and restarting - which stops every *co-tenant* nest too, so a configuration
+change had a wider blast radius than an actual fault.
+
+```sh
+curl -XPOST   localhost:8288/_admin/nests -d '{"name":"my-nest"}'
+curl -XDELETE localhost:8288/_admin/nests/my-nest
+```
+
+Both are gated by the admin token when bound off-localhost, and `--no-admin` removes them entirely.
+
+What the runtime guarantees:
+
+- **A mount is admitted, not assumed.** It is refused with `507` if it would breach the cursor's RAM
+  budget (the response carries the projected and ceiling figures), and `409` for a name already mounted
+  or a chain this roost has no cursor for. Every refusal is decided before a store is opened or a block
+  is fetched, so a rejected mount leaves nothing behind.
+- **It catches up before it joins.** A cursor advances from the *slowest* of its live nests, so a nest
+  spliced in while far behind would drag every co-tenant back through history. A new nest backfills
+  alongside the cursor and joins once it is level.
+- **An unmount is a drain.** The cursor finishes its current window and releases the nest's store
+  before the routes are removed - not the other way round.
+- **The set is persisted** to `roost.toml`, so a restart comes back with what you last asked for. At
+  runtime nuthatch owns that list; use `--no-admin` if you manage the file with configuration
+  management.
+
 ## When one nest goes wrong
 
 A roost survives its sick nests (RFC-0026). A nest that faults is **quarantined**, not fatal: its
