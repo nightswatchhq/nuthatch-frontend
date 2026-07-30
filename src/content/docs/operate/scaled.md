@@ -35,9 +35,21 @@ The same crates, run three ways. A role flag, never a fork.
 | **Query-FE** | `nuthatch serve --dir <nest> --hot-store <postgres>` | nothing — serves from shared state |
 
 ```sh
+nuthatch init 0xYourContract --chain arbitrum-one --dir nest
+sudo chown -R 10001:10001 nest      # see below - this one is easy to miss
+
 docker compose -f docker-compose.scaled.yml --profile fleet up \
   --scale writer=2 --scale fe=3
 ```
+
+Two prerequisites, both of which cost us time before they were written down:
+
+- **The fleet mounts `./nest`.** Without it the FE nodes exit and the **writers keep running** — they
+  take work from the control plane rather than from disk. That asymmetry makes it look like an FE bug
+  rather than a missing directory.
+- **It must be owned by uid 10001.** The image runs unprivileged, so a root-owned bind mount is
+  unwritable to it and the FE nodes exit with `Permission denied`. This **passes on Docker Desktop and
+  fails on Linux**, because Desktop fakes mount permissions — so a Mac that works is not evidence.
 
 ## Three things to understand before you run it
 
@@ -147,13 +159,16 @@ cooperating nests. Charging strangers for isolated access is a different product
 
 ## Honest limits
 
-Two things are not yet proven, and are worth knowing before you commit:
+**Verified:** the full stack stood up on a clean Ubuntu 24.04 box from the published release artifacts —
+control plane, two writers, two FE nodes — and every automated step of the acceptance runbook passed
+(10/10, nothing skipped): workers registering, a nest declared over HTTP and picked up within a tick,
+**exactly one** owner for the cursor, fleet-wide version pinning, and write-only secrets with a canary
+absent from disk.
 
-- **The compose stack has not been brought up end to end.** Every service in it maps to something
-  tested, but the test suites talk to Postgres directly.
-- **Everything is verified on one host** — several processes and connections against one database,
-  which is genuinely equivalent for every invariant tested (a lease race does not care whether the
-  contenders share a kernel). It is *not* a substitute for real network partitions or clock skew.
+**Not verified:** nothing has run across **real machines**. Everything above is multiple processes and
+connections against one host, which is genuinely equivalent for every invariant tested — a lease race
+does not care whether the contenders share a kernel — but it is *not* a substitute for real network
+partitions or clock skew. If you run this across machines, we would like to hear how it went.
 
 The full design and its acceptance criteria are in
 [RFC-0022](https://github.com/nuthatch-indexer/nuthatch/blob/main/docs/rfcs/0022-distributed-scaled-mode.md);
