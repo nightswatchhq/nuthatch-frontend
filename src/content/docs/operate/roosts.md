@@ -132,3 +132,13 @@ rather than one blended number.
 One rule to keep: **one cursor per chain, one chain per cursor.** To index a second chain, add a
 second `[[chains]]` cursor (or run a second process) - never try to multiplex chains behind one
 cursor.
+
+## When one machine is not enough
+
+A roost is bounded **per cursor** at 2 GB, and the sum of a machine's cursors has to fit the machine.
+When it stops fitting - or when serving load and ingestion load want different dials - the same crates
+run as a fleet across machines: a writer pool taking cursor leases, and an independently-scaled serving
+tier. See [scaled mode](/docs/operate/scaled/).
+
+It is a trade rather than an upgrade: one roost on one box is simpler, and that simplicity is the point
+of the embedded path.
