@@ -16,7 +16,7 @@ curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 Or build it with cargo:
 
 ```sh
-cargo install --git https://github.com/nuthatch-indexer/nuthatch nuthatch
+cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch
 ```
 
 ## 2. Scaffold a nest from an address

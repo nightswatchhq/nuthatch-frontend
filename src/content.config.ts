@@ -31,7 +31,7 @@ const blog = defineCollection({
 // build time, so the page and the index can't drift. Build-time only: nothing ships to the client,
 // and a failed fetch fails the build loudly (the last good deploy stays live).
 const NESTS_INDEX =
-  'https://raw.githubusercontent.com/nuthatch-indexer/nests/main/index.json';
+  'https://raw.githubusercontent.com/nightswatchhq/nests/main/index.json';
 const nests = defineCollection({
   loader: async () => {
     const res = await fetch(NESTS_INDEX);

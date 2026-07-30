@@ -272,7 +272,7 @@ v0.8.1 is the current release. The installer and `cargo` fetch the latest.
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with SHA-256
   checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
   downloads and verifies them. Read any install script before running it.
-- `cargo install --git https://github.com/nuthatch-indexer/nuthatch nuthatch` (rustc 1.95 or newer).
+- `cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch` (rustc 1.95 or newer).
 - A Homebrew tap, an OCI image, and detached release signatures (minisign/cosign) are on the way;
   embedded mode needs no Docker.
 
@@ -291,5 +291,5 @@ kind; non-EVM chains before EVM is airtight; trusted-execution attestation or ze
 - Who runs Nuthatch (personas): https://www.nuthatch-indexer.com/stories
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Manifesto: https://www.nuthatch-indexer.com/manifesto
-- Source, docs, discussions: https://github.com/nuthatch-indexer/nuthatch
+- Source, docs, discussions: https://github.com/nightswatchhq/nuthatch
 - Licence: MIT OR Apache-2.0

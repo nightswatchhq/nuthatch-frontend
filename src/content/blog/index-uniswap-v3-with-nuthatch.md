@@ -9,7 +9,7 @@ Here's a claim, and we'll back every word of it: **you can fully index, serve, a
 without writing a single line of code.**
 
 Not a hosted service. Not a subgraph you deploy to someone else's network and pay per query to read.
-A local index you own: one Rust binary called [nuthatch](https://github.com/nuthatch-indexer/nuthatch),
+A local index you own: one Rust binary called [nuthatch](https://github.com/nightswatchhq/nuthatch),
 one config file, and plain SQL.
 
 ## The short version
@@ -17,7 +17,7 @@ one config file, and plain SQL.
 There's a prebuilt nest for it. Three commands:
 
 ```sh
-nuthatch init --from https://github.com/nuthatch-indexer/uniswap-v3   # clone the nest
+nuthatch init --from https://github.com/nightswatchhq/uniswap-v3   # clone the nest
 nuthatch dev --dir uniswap-v3 --backfill 10000000 --seal-direct       # index a recent slice
 nuthatch sql --dir uniswap-v3                                         # ask it anything
 ```
@@ -169,7 +169,7 @@ The indexer is free. Self-hosting is free (it runs on your laptop). The one thin
 
 ```sh
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
-nuthatch init --from https://github.com/nuthatch-indexer/uniswap-v3
+nuthatch init --from https://github.com/nightswatchhq/uniswap-v3
 nuthatch dev --dir uniswap-v3 --backfill 10000000 --seal-direct
 ```
 

@@ -85,10 +85,10 @@ That's the binary the box runs today. Verified by checksum, both nests healthy.
 
 ## What it feels like to depend on your own indexer
 
-The honest answer: uneventful, which is the point. A public dashboard's two panels now resolve against a machine we own, from data we derived ourselves from public inputs, with an automatic fallback to the old gateway if the box ever sneezes. Nobody has to trust a claim about the numbers - the code is [open and re-runnable](https://github.com/nuthatch-indexer/nuthatch), and the panels carry a small badge that only lights up when the data genuinely came from nuthatch.
+The honest answer: uneventful, which is the point. A public dashboard's two panels now resolve against a machine we own, from data we derived ourselves from public inputs, with an automatic fallback to the old gateway if the box ever sneezes. Nobody has to trust a claim about the numbers - the code is [open and re-runnable](https://github.com/nightswatchhq/nuthatch), and the panels carry a small badge that only lights up when the data genuinely came from nuthatch.
 
 We're not pretending it's the whole road. Some of Lodestar's data needs calldata and IPFS ingestion nuthatch doesn't have yet. The developer-activity numbers sit a single subgraph off the network subgraph's - documented, not hidden. And "a whole dashboard" is a long parade of panels, each with its own quirks to reproduce faithfully.
 
 But two of them are ours now, running on 86 MB and one small box. That's what the slogan was always supposed to mean.
 
-*Nuthatch is [github.com/nuthatch-indexer/nuthatch](https://github.com/nuthatch-indexer/nuthatch) - one Rust binary, MIT OR Apache-2.0. Point it at a contract; be your own indexer.*
+*Nuthatch is [github.com/nightswatchhq/nuthatch](https://github.com/nightswatchhq/nuthatch) - one Rust binary, MIT OR Apache-2.0. Point it at a contract; be your own indexer.*

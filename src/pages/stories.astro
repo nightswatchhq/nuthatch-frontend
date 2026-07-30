@@ -24,7 +24,7 @@ const sqlCurl = `curl -s http://127.0.0.1:8288/sql \\
   -d '{"query": "select net_supplied from positions where user_address = $1", "params": ["0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"]}'`;
 
 // Story 2 - a published nest. init --from is a design target.
-const initFrom = `nuthatch init --from https://github.com/nuthatch-indexer/horizon-nest`;
+const initFrom = `nuthatch init --from https://github.com/nightswatchhq/horizon-nest`;
 
 const indexersQuery = `select * from indexers order by total_rewards_earned desc limit 20;`;
 
@@ -122,7 +122,7 @@ const mcpConfig = `{
       </p>
       <p>
         He pulls a published nest - the
-        <a href="https://github.com/nuthatch-indexer/horizon-nest" rel="noopener">horizon-nest</a>,
+        <a href="https://github.com/nightswatchhq/horizon-nest" rel="noopener">horizon-nest</a>,
         with contracts, vendored ABIs, and derived views all included - and runs it against his own
         node. He wrote no indexing code; he ran someone else's definition:
       </p>

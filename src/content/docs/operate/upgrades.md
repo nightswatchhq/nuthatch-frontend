@@ -77,8 +77,8 @@ The procedure, canaried so nothing goes fully dark:
 
 ```sh
 # 1. Fetch the release for your platform and verify it.
-curl -fsSLO https://github.com/nuthatch-indexer/nuthatch/releases/download/vX.Y.Z/nuthatch-x86_64-unknown-linux-gnu.tar.gz
-curl -fsSLO https://github.com/nuthatch-indexer/nuthatch/releases/download/vX.Y.Z/nuthatch-x86_64-unknown-linux-gnu.tar.gz.sha256
+curl -fsSLO https://github.com/nightswatchhq/nuthatch/releases/download/vX.Y.Z/nuthatch-x86_64-unknown-linux-gnu.tar.gz
+curl -fsSLO https://github.com/nightswatchhq/nuthatch/releases/download/vX.Y.Z/nuthatch-x86_64-unknown-linux-gnu.tar.gz.sha256
 sha256sum -c nuthatch-x86_64-unknown-linux-gnu.tar.gz.sha256
 tar xzf nuthatch-x86_64-unknown-linux-gnu.tar.gz
 

@@ -1,6 +1,6 @@
 # nuthatch-frontend
 
-The website for [Nuthatch](https://github.com/nuthatch-indexer/nuthatch) - a self-hosted-first,
+The website for [Nuthatch](https://github.com/nightswatchhq/nuthatch) - a self-hosted-first,
 AI-native blockchain indexer in one Rust binary.
 
 Built with [Astro](https://astro.build), static output only. The site's pitch is "nothing

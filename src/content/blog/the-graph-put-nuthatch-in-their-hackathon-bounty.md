@@ -61,7 +61,7 @@ Two honest caveats, because this blog doesn't do brochures: the escape-hatch WAS
 
 ## We're on call
 
-For the duration of the hackathon we'll be watching [GitHub Discussions](https://github.com/nuthatch-indexer/nuthatch/discussions) and issues with unusual attentiveness. Sharp edges found under 36-hour pressure are the most valuable bug reports there are, and we'd rather you lose ten minutes asking than three hours guessing. If you hit a wall, open a discussion with what you ran and what it said; if you hit a genuine bug, we'll do our best to cut a fix while the weekend is still young. The deadlock war story from the last post should reassure you that we take "it just stopped" reports seriously.
+For the duration of the hackathon we'll be watching [GitHub Discussions](https://github.com/nightswatchhq/nuthatch/discussions) and issues with unusual attentiveness. Sharp edges found under 36-hour pressure are the most valuable bug reports there are, and we'd rather you lose ten minutes asking than three hours guessing. If you hit a wall, open a discussion with what you ran and what it said; if you hit a genuine bug, we'll do our best to cut a fix while the weekend is still young. The deadlock war story from the last post should reassure you that we take "it just stopped" reports seriously.
 
 And if you build something on nuthatch, win, lose, or abandoned-at-4am, tell us. The [stories](https://nuthatch-indexer.com/stories) page exists for exactly this.
 
@@ -71,4 +71,4 @@ Eleven weeks ago this project was a manifesto and an empty repo. Today it's load
 
 Good luck in Lisbon. Bring endpoints, plural. You've read why.
 
-*Nuthatch is [github.com/nuthatch-indexer/nuthatch](https://github.com/nuthatch-indexer/nuthatch): one Rust binary, MIT OR Apache-2.0. Point it at a contract; be your own indexer.*
+*Nuthatch is [github.com/nightswatchhq/nuthatch](https://github.com/nightswatchhq/nuthatch): one Rust binary, MIT OR Apache-2.0. Point it at a contract; be your own indexer.*

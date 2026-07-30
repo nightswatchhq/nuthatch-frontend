@@ -36,7 +36,7 @@ The numbers matched. Not "close enough" - identical. 93 delegations, 43 undelega
 
 The one genuine risk in a 0.3.0 to 0.6.0 jump is on-disk format drift. Between those versions we had landed data-corruption fixes and segment-recovery work, any of which *could* have changed the shape of the hot store or the sealed Parquet segments and forced a re-index. We planned for it: the fallback was to wipe the derived data (hot store, segments, DuckDB cache), keep the config, and re-backfill from scratch - cheap, given the sizes involved.
 
-We never needed it. The 0.6.0 binary read 0.3.0's hot store and segments as they were. Every CLI flag the service files used still existed and still meant the same thing, so the unit files did not change a character. The upgrade was, start to finish, *swap the binary and restart* - which is exactly the promise [RFC-0020](https://github.com/nuthatch-indexer/nuthatch/blob/main/docs/rfcs/0020-nest-lifecycle-and-the-n-1-upgrade.md) makes about nest lifecycle, now with the smug satisfaction of having done it on something with real users.
+We never needed it. The 0.6.0 binary read 0.3.0's hot store and segments as they were. Every CLI flag the service files used still existed and still meant the same thing, so the unit files did not change a character. The upgrade was, start to finish, *swap the binary and restart* - which is exactly the promise [RFC-0020](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0020-nest-lifecycle-and-the-n-1-upgrade.md) makes about nest lifecycle, now with the smug satisfaction of having done it on something with real users.
 
 ## Did the dashboard actually notice?
 

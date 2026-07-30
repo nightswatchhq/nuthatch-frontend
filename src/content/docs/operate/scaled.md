@@ -171,6 +171,6 @@ does not care whether the contenders share a kernel — but it is *not* a substi
 partitions or clock skew. If you run this across machines, we would like to hear how it went.
 
 The full design and its acceptance criteria are in
-[RFC-0022](https://github.com/nuthatch-indexer/nuthatch/blob/main/docs/rfcs/0022-distributed-scaled-mode.md);
+[RFC-0022](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0022-distributed-scaled-mode.md);
 the operator guide covers it at
-[docs/operators.md](https://github.com/nuthatch-indexer/nuthatch/blob/main/docs/operators.md#scaled-mode-a-fleet-across-machines-rfc-0022).
+[docs/operators.md](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#scaled-mode-a-fleet-across-machines-rfc-0022).

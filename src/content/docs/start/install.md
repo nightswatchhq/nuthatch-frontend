@@ -15,7 +15,7 @@ curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 
 The script detects your platform, downloads the matching release binary, verifies its checksum, and
 puts `nuthatch` on your `PATH`. It's short and
-[readable on GitHub](https://github.com/nuthatch-indexer/nuthatch-frontend/blob/main/public/install.sh) -
+[readable on GitHub](https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh) -
 audit it first if `curl | sh` makes you itch.
 
 Prebuilt binaries cover **macOS (Apple Silicon)** and **Linux x86_64**. Checksums ship with every
@@ -27,7 +27,7 @@ release; a Homebrew tap, an OCI image, and detached release signatures are on th
 Any platform with a Rust toolchain:
 
 ```sh
-cargo install --git https://github.com/nuthatch-indexer/nuthatch nuthatch
+cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch
 ```
 
 The pinned toolchain is in the repo's `rust-toolchain.toml`; a plain `cargo install` against a

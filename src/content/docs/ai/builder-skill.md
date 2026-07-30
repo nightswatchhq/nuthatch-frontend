@@ -7,7 +7,7 @@ order: 3
 The builder skill teaches a coding agent to *build with* nuthatch - scaffold nests, edit configs,
 add factories and compliance, package and publish, run roosts, and troubleshoot - the way an
 experienced operator would. It lives in the repo at
-[`skills/nuthatch-builder/`](https://github.com/nuthatch-indexer/nuthatch/tree/main/skills/nuthatch-builder)
+[`skills/nuthatch-builder/`](https://github.com/nightswatchhq/nuthatch/tree/main/skills/nuthatch-builder)
 and drops into any agent that reads Claude-style skills.
 
 ## The one rule: generate what can be generated

@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CopyBlock from '../components/CopyBlock.astro';
-const GH = 'https://github.com/nuthatch-indexer/nuthatch';
+const GH = 'https://github.com/nightswatchhq/nuthatch';
 ---
 <Layout
   path="/install"
@@ -37,16 +37,16 @@ const GH = 'https://github.com/nuthatch-indexer/nuthatch';
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="note">
         Piping to a shell asks for trust. Read it first:
-        <a href="https://github.com/nuthatch-indexer/nuthatch-frontend/blob/main/public/install.sh" rel="noopener">the script is short and on GitHub</a>,
+        <a href="https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh" rel="noopener">the script is short and on GitHub</a>,
         or download it, read it, then run it.
       </p>
 
       <h2 class="ih">Cargo</h2>
       <p>If you have a Rust toolchain (1.95 or newer), build from source straight from the repo. No prebuilt binary in the trust path.</p>
-      <CopyBlock command="cargo install --git https://github.com/nuthatch-indexer/nuthatch nuthatch" />
+      <CopyBlock command="cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch" />
       <p class="note">
         Or grab a tarball and its <code>.sha256</code> yourself from the
-        <a href="https://github.com/nuthatch-indexer/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>.
+        <a href="https://github.com/nightswatchhq/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>.
       </p>
 
       <h2 class="ih">Homebrew <span class="tag">planned</span></h2>

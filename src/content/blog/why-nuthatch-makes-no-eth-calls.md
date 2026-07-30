@@ -87,7 +87,7 @@ The obvious worry: is a derived number *actually* the number the contract would 
 gated by a parity test, the derived `total_supply` / `reserves` view is checked against what the chain's
 own `eth_call` returns at the same block, on fixed fixtures, and required to match **byte-for-byte**, not
 merely look right. A derivation that can't be proven correct doesn't ship as a recipe; it belongs in the
-fallback tier below. This is [RFC-0023](https://github.com/nuthatch-indexer/nuthatch/tree/main/docs/rfcs)
+fallback tier below. This is [RFC-0023](https://github.com/nightswatchhq/nuthatch/tree/main/docs/rfcs)
 tier 1, and it's the differentiator: where a read is derivable, we skip the archive node entirely. That's
 a strict win over fetching, not parity with it.
 
@@ -123,7 +123,7 @@ millions of calls, optional and spot-checkable by re-execution, never a dependen
 To be straight about status: **tiers 1 and 2 ship today**, the recipe library and the metadata cache, and
 they need no archive node, which is why they're the zero-dependency default. Tiers 3 and 4 are *designed*
 (RFC-0023), and the local-execution engine that would run the fallback without any archive RPC at all is
-[RFC-0024](https://github.com/nuthatch-indexer/nuthatch/tree/main/docs/rfcs), still a draft. An operator
+[RFC-0024](https://github.com/nightswatchhq/nuthatch/tree/main/docs/rfcs), still a draft. An operator
 only ever needs an archive RPC for the irreducible residue a nest genuinely can't derive, and the recipe
 library already covers the common surface for free.
 

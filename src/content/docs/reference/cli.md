@@ -7,7 +7,7 @@ order: 1
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
 The **authoritative, machine-generated** reference (every subcommand and flag, rendered from clap's
 own metadata and drift-gated in CI) ships in the repo as
-[`skills/nuthatch-builder/cli-reference.md`](https://github.com/nuthatch-indexer/nuthatch/blob/main/skills/nuthatch-builder/cli-reference.md).
+[`skills/nuthatch-builder/cli-reference.md`](https://github.com/nightswatchhq/nuthatch/blob/main/skills/nuthatch-builder/cli-reference.md).
 If a flag isn't there, it doesn't exist. This page is the guided tour.
 
 Every command that operates on a nest takes `--dir` (default `.`).

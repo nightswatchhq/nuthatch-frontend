@@ -5,7 +5,7 @@ order: 2
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
-[`docs/rfcs/`](https://github.com/nuthatch-indexer/nuthatch/tree/main/docs/rfcs). They're numbered
+[`docs/rfcs/`](https://github.com/nightswatchhq/nuthatch/tree/main/docs/rfcs). They're numbered
 in build order, each states its dependencies and what it blocks, and the status lifecycle is
 **Draft → Accepted → Implemented → (Superseded / Parked)**. Statuses are reconciled against the
 progress log; measured numbers are cited, and targets are labeled as targets, never as results.
@@ -64,5 +64,5 @@ in `docs/`: **backlog.md** (everything deferred across the series), **prod-readi
 a release clears before it's pointed at a real workload unattended), and the **progress log** (the
 running narrative the statuses are reconciled against).
 
-Proposing a change? Open a [discussion](https://github.com/nuthatch-indexer/nuthatch/discussions)
+Proposing a change? Open a [discussion](https://github.com/nightswatchhq/nuthatch/discussions)
 first; if it survives contact, it becomes the next number.
