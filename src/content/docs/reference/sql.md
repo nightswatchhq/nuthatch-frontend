@@ -42,9 +42,20 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   This matters more than it looks: `COPY … TO` and `ATTACH` write to disk regardless of the
   in-memory connection, so a stacked statement was a file-write primitive. Fixed in **v0.6.2** -
   see [upgrades](/docs/operate/upgrades/) if you are running anything older.
-- **No filesystem access.** A denylist rejects the file-reading functions outright. DuckDB's own
-  `allowed_directories` is not enforced on the build nuthatch bundles, so this denylist is the
-  control, not a second layer behind one.
+- **No filesystem access.** Two controls, deliberately with different failure modes. A denylist
+  rejects the file-reading functions outright, and since **v0.9.3** an allowlist asks DuckDB's own
+  parser what a statement references and refuses anything unrecognised — a table function must be one
+  of three, and a base table must be named like an identifier, which is what catches `FROM
+  '/x.parquet'`. The allowlist fails *open* if the parse is unavailable, so it cannot be the only
+  control; the denylist is still in front of it.
+
+  DuckDB's `allowed_directories` is **not** enforced on the build nuthatch bundles — measured, and
+  pinned by a test — so it is not a layer behind these two. Assume it buys nothing.
+
+  > **Upgrade to v0.9.3 if you expose `/sql` to anyone you do not trust.** Every earlier release is
+  > vulnerable to an arbitrary file read: DuckDB accepts a *quoted* function name, and the denylist
+  > matched a forbidden name only when the next character was `(`. `SELECT * FROM "read_csv"('/etc/passwd')`
+  > passed both guards and executed. See [upgrades](/docs/operate/upgrades/).
 - **Deterministic and finality-aware.** Sealed segments are immutable; only the hot tip can change
   under a reorg, and the union converges with it.
 - **Guarded:** a 30-second timeout, a 50,000-row cap, a 64 MiB result-byte ceiling, and 2
