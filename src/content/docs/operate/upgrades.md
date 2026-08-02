@@ -61,6 +61,16 @@ Everything above upgrades a *nest* - its schema, views, or decode. A separate ax
 *nuthatch runtime* serving your nests, from one release to the next. This is deliberately a plain
 binary swap, not a migration:
 
+> **Upgrade to v0.9.3 if you expose `/sql` to anyone you do not trust.** Every release before it is
+> vulnerable to an **arbitrary file read**. DuckDB accepts a quoted function name, and the guard
+> matched a forbidden name only when the next non-space character was `(` — so
+> `SELECT * FROM "read_csv"('/etc/passwd')` passed both guards and executed. Confirmed against a live
+> connection during a pre-1.0 adversary pass, returning the contents of `/etc/hosts`.
+>
+> Fixed by normalising quotes away before the scan, which collapses every placement at once rather
+> than patching one spelling. Same class as the stacked-`COPY TO` write below: the guard was right
+> about the shape it imagined, and the shape had another spelling. A binary swap, no data migration.
+
 > **Upgrade to v0.6.2 if you are exposing `/sql`.** Releases up to and including 0.6.1 accepted
 > `;`-stacked statements on the `/sql` surface. Since `COPY … TO` and `ATTACH` write to disk
 > regardless of the in-memory connection, a stacked statement was an arbitrary file-write primitive

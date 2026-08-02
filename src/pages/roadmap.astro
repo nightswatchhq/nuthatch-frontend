@@ -190,9 +190,24 @@ const progressLog = `${REPO}#progress-log`;
         <li>The health surface to see it with: <code>GET /nests</code> merges each nest's live health per request, <code>GET /ready</code> answers roost-wide while <code>GET /&lt;name&gt;/ready</code> answers per nest, and <code>nuthatch_nest_health</code> / <code>nuthatch_nest_quarantine_total</code> / <code>nuthatch_cursor_live</code> cover the metrics. <code>--fail-fast</code> restores exit-on-first-fault for CI and for operators who prefer a loud death to partial service.</li>
       </ul>
 
+      <p class="grp">The backfill that finishes, then flies (<a href={rfc('0028')} rel="noopener">RFC-0028</a>, <a href={rfc('0029')} rel="noopener">RFC-0029</a>)</p>
+      <ul class="rl">
+        <li>Found by running <strong>someone else's benchmark</strong>: Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a>. Case 1 - <code>Transfer</code> from LBTC across 22.2M Ethereum blocks - did not merely run slowly, it <strong>never finished</strong>: Alchemy returns its oversized-range refusal as HTTP <strong>400</strong>, a status the classifier did not enumerate, so a window that needed splitting was retried unchanged forever. It now completes in <strong>74.8 s</strong> for 294,278 events, in <strong>321 RPC requests</strong> and 320 MB - matching the record count in Sentio's own README exactly.</li>
+        <li>The rest was round-trip economics rather than compute: <strong>~85% of the wall clock</strong> was buying <code>block_timestamp</code>, one serial fan-out inside every window, for a column that workload never stores. Timestamps are now <strong>demand-driven</strong> - a nest that does not ask does not pay - and the log window <strong>adapts</strong>, widening while an endpoint keeps up and narrowing the instant it does not, so a provider's undocumented limits are discovered rather than configured.</li>
+        <li>RPC failures are also classified properly now: an auth rejection stops being retried forever, an unclassifiable wide-range failure splits speculatively rather than stalling, and a 429 escalates pool-wide.</li>
+      </ul>
+
+      <p class="grp">Scaled mode - a fleet (<a href={rfc('0022')} rel="noopener">RFC-0022</a>)</p>
+      <ul class="rl">
+        <li>One operator across many machines: a control plane holding <em>desired state</em>, a writer pool taking <strong>one lease per chain cursor</strong> with the fence enforced inside the store's own write transaction, and a query-FE tier scaled independently of ingestion. A plan is not permission - a scheduler that wants to rehome a live cursor is refused by the lease, which is correct rather than a bug.</li>
+        <li>Workers <strong>pull the nests they are assigned</strong> from a registry (<a href={rfc('0019')} rel="noopener">RFC-0019</a>), because the machine the scheduler picks may have nothing on disk. With a <code>bundle_hash</code> pinned the fetch is by <strong>content address</strong> and the registry's mutable index is never consulted, so re-tagging a version cannot change what a fleet runs.</li>
+        <li>Verified across <strong>real machines</strong>, not several processes on one box: a genuine lease handover with the fence advancing, a 10-minute clock jump moving expiry rather than ownership, and <strong>377 blocks indexed through a 90-second control-plane outage</strong> - losing the control plane stops rescheduling, not ingestion.</li>
+        <li><strong>And it did not write for a whole release.</strong> Until 0.9.3 <code>worker</code> registered, took leases, loaded secrets and reported - and contained no indexing code at all. Ten level-5 checks passed throughout, because every one of them tested the control plane and none asserted that a row appeared. We would rather you read that here than discover it.</li>
+      </ul>
+
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li>v0.6.2 is the current release (tagged, with prebuilt binaries on the GitHub release). The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools, on top of the delightful core and agent-grade MCP. 0.6.1 is an audit-hardening patch; <strong>0.6.2 is a security patch</strong> - releases up to 0.6.1 accepted <code>;</code>-stacked statements on <code>/sql</code>, which was an arbitrary file-write primitive for anyone who could reach the endpoint. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
+        <li>v0.9.3 is the current release (tagged, with prebuilt binaries and container images on ghcr). The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools; 0.7-0.8 the live roost, fault quarantine and the multichain runtime; 0.9 scaled mode's writer pool and the backfill work below. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
         <li>A CI footprint job fails the build above 256 MB of RAM.</li>
         <li>Measured peak: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - 2.8% of the 2 GB budget.</li>
       </ul>
@@ -217,14 +232,6 @@ const progressLog = `${REPO}#progress-log`;
           two-phase catch-up join, and the full control surface follow.
         </li>
         <li>
-          Adaptive log-range control (<a href={rfc('0028')} rel="noopener">RFC-0028</a>): a fix pack,
-          not a new capability. Adaptive <code>getLogs</code> splitting has existed since early on, but
-          the failure markers missed the message Arbitrum's own public endpoint returns - a shipped
-          default - so splitting never fired on that path. RPC failures are now classified properly
-          (an auth rejection stops being retried forever), unclassifiable wide-range failures split
-          speculatively, and a 429 escalates pool-wide.
-        </li>
-        <li>
           reth ExEx wiring (<a href={rfc('0003')} rel="noopener">RFC-0003</a>): the <code>Source</code>
           trait, the library split, and the push-to-pull bridge are in and tested, and rustc 1.95
           satisfies both reth and dbsp - the toolchain and dependency blockers are cleared.
@@ -241,9 +248,12 @@ const progressLog = `${REPO}#progress-log`;
           are out; signing and the extra channels are what harden the trust path.
         </li>
         <li>
-          Scaled mode (<a href={rfc('0013')} rel="noopener">RFC-0013</a>) - a Postgres hot store and a
-          DataFusion query layer federating hot and cold behind one SQL surface. The direction is
-          recorded; embedded DuckDB stays the default until a benchmark justifies the move.
+          DataFusion federation (<a href={rfc('0013')} rel="noopener">RFC-0013</a>) - one Arrow-native
+          engine federating hot and cold behind a single SQL surface. <strong>The benchmark gate was
+          run, and DataFusion did not meet it</strong>: 1.6-2.7&times; DuckDB's latency on the fold
+          that matters, with the gap <em>widening</em> as segments grow, at exact result parity. So
+          DuckDB stays in both modes. The destination is unmet, not repudiated - measure-then-switch
+          working as designed, and the measurement said don't.
         </li>
         <li>
           reth ExEx tip mode (<a href={rfc('0003')} rel="noopener">RFC-0003</a>) - in-process

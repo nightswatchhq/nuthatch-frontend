@@ -157,18 +157,53 @@ belong to a gateway in front of nuthatch and are deliberately out of scope.
 The line: *multi-nest co-tenancy* and *distributed self-hosted* mode are both in scope — one operator's
 cooperating nests. Charging strangers for isolated access is a different product.
 
+## Where nests come from
+
+The scheduler decides which machine holds a cursor, so the machine that ends up holding it may have
+nothing on disk. A worker indexes whatever is under `--nest-root` and **pulls anything else** from a
+registry:
+
+```sh
+nuthatch worker --registry s3://my-nests/registry …
+```
+
+What is on the box wins. A nest you placed there is a deliberate act — often a hand-edited view or a
+debug build — and is never silently replaced by the registry's copy.
+
+**Pin the bundle, not just the version.** With a `bundle_hash` pinned, a worker fetches by **content
+address** and never consults the registry's index, so re-tagging `1.0.0` cannot change what any worker
+runs. Unpinned, your fleet is exactly as trustworthy as your registry.
+
+Pulled bundles are cached at `<--nest-cache>/<name>/<hash>`. Content-addressed, so re-pinning resolves
+to a different directory and actually re-pulls rather than quietly reusing what is already there — and
+so the cache is safe to delete at any time.
+
 ## Honest limits
 
-**Verified:** the full stack stood up on a clean Ubuntu 24.04 box from the published release artifacts —
-control plane, two writers, two FE nodes — and every automated step of the acceptance runbook passed
-(10/10, nothing skipped): workers registering, a nest declared over HTTP and picked up within a tick,
-**exactly one** owner for the cursor, fleet-wide version pinning, and write-only secrets with a canary
-absent from disk.
+**Until 0.9.3 the writer pool did not write.** `worker` registered, took leases, loaded secrets and
+reported — and contained no indexing code at all. A worker acquired a cursor and did nothing with it.
 
-**Not verified:** nothing has run across **real machines**. Everything above is multiple processes and
-connections against one host, which is genuinely equivalent for every invariant tested — a lease race
-does not care whether the contenders share a kernel — but it is *not* a substitute for real network
-partitions or clock skew. If you run this across machines, we would like to hear how it went.
+Read the previous version of this section as a cautionary tale: it said *"10/10, nothing skipped"*, and
+that was **true**. Those ten checks are real and they passed. But every one of them tested the control
+plane — registration, planning, lease fencing, version pinning, secrets — and **not one asserted that a
+row appeared.** A suite that verifies the machinery around a thing rather than the thing reads exactly
+like a suite that works.
+
+**Now verified across real machines** (three Hetzner boxes on a private network, published artifacts,
+control plane and store on one box and writers on their own):
+
+- workers registering and being scheduled from another machine
+- a real lease handover under contention, with the store-enforced fence advancing
+- a 10-minute clock jump moving lease expiry rather than ownership
+- **indexing into the shared store** — `last_block` advancing, the check that could not have passed before
+- **377 blocks indexed through a 90-second control-plane outage.** Losing the control plane stops
+  *rescheduling*, not *ingestion*; that split is the design, and it now has a number attached.
+
+**Not yet verified:** the registry pull above has a runbook check that deletes a writer's nest and
+asserts it pulls one anyway, and that check has not been run on real machines yet.
+
+**Scaled mode remains younger and less exercised than embedded mode**, which runs in production. If one
+process per box is enough, that is still the shape to reach for.
 
 The full design and its acceptance criteria are in
 [RFC-0022](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0022-distributed-scaled-mode.md);

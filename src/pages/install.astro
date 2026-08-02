@@ -53,13 +53,19 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       <p>macOS and Linuxbrew, once a tap is published.</p>
       <CopyBlock command="brew install nuthatch" />
 
-      <h2 class="ih">Docker - scaled mode <span class="tag">planned</span></h2>
+      <h2 class="ih">Docker</h2>
       <p>
-        Embedded mode needs no Docker. The compose stack is for scaled mode - where Postgres
-        replaces the embedded hot store and DataFusion federates hot and cold behind one SQL
-        surface. That mode, and this stack, are not built yet.
+        Embedded mode needs no Docker at all - that is rather the point. Images are published for
+        anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
+        replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/docker-compose.yml -o docker-compose.yml && docker compose up" prompt={true} />
+      <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
+      <p class="note">
+        <code>:latest</code> is the embedded build. <code>:0.9.3-scaled</code> carries the Postgres
+        driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
+        commands. The compose files live in the
+        <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
+      </p>
 
       <h2 class="ih">First run</h2>
       <p>Point it at a contract and go. Public RPC defaults; no key required.</p>
