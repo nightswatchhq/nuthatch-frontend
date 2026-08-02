@@ -1,12 +1,27 @@
 ---
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
-order: 6
+order: 7
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`roost` at
 `http://127.0.0.1:8288/metrics`; see [Metrics & footprint](/docs/operate/metrics/) for the full
 list.
+
+## Is it me or the endpoint?
+
+Before diagnosing anything else, ask the endpoint directly:
+
+```sh
+nuthatch doctor --rpc https://your-endpoint.example --address 0xADDR
+```
+
+It probes and reports the largest `getLogs` window that endpoint will actually serve, its batch limit,
+and whether it has archive history — **measured against that endpoint**, not read from its
+documentation, which is frequently wrong and often differs by tier.
+
+Most "backfill is stuck" reports are an endpoint that lacks archive history for the deploy block, or
+one whose real window is a fraction of its published one. Both show up here in seconds.
 
 ## Backfill seems stuck
 
