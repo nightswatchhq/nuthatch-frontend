@@ -102,6 +102,12 @@ the wrong chain corrupts state silently.
 
 ## Next
 
+- **[Deploy it](/docs/operate/deploy/)** — systemd, Docker, and putting a proxy in front.
+- **[Performance](/docs/operate/performance/)** — what it measures at, and the three things that
+  decide your backfill's wall clock.
+- **[Security](/docs/operate/security/)** — read this before exposing `/sql` to anyone you do not trust.
+- **[Verifying a deployment](/docs/operate/verifying/)** — prove it works on your own hardware.
+
 - [What is a nest?](/docs/concepts/nests/) - the mental model
 - [Build a nest](/docs/build/config/) - `nuthatch.toml`, views, factories, recipes
 - [Run a roost](/docs/operate/roosts/) - many nests, one runtime, one or more chains
