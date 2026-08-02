@@ -6,8 +6,10 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: v0.8.1 (early 0.x software). This file separates what the binary does today from
-the design targets, so a model does not present unbuilt features as present-tense fact.
+MIT OR Apache-2.0. Status: **v1.0.0**. 1.0 is a promise about stability, not completeness: within 1.x no
+CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
+upgrading stays a binary swap with no data migration. This file separates what the binary does today
+from the design targets, so a model does not present unbuilt features as present-tense fact.
 
 Tagline: "Be your own indexer."
 
@@ -101,16 +103,37 @@ Tagline: "Be your own indexer."
   or a paid provider for real work. Measured footprint: ~37 MB single contract, ~58 MB three-contract
   23-table nest (2.8% of the 2 GB per-cursor budget; CI fails above 256 MB).
 
+- `nuthatch doctor --rpc <url> --address 0xAddr` probes an endpoint and reports the largest `getLogs`
+  window it will actually serve, its batch limit, and whether it has archive history - measured
+  against that endpoint rather than read from its documentation.
+- **Scaled mode** (RFC-0022, opt-in at build time with `--features postgres-store`, so the default
+  binary carries no database driver): the same crates run as a control plane holding desired state, a
+  writer pool whose members take **one lease per chain cursor**, and an independently-scaled query
+  tier. Ownership is enforced by the store - every write carries a fence, and a stalled worker that
+  wakes finds its writes refused. Workers **pull the nests they are assigned** from a registry; with a
+  `bundle_hash` pinned the fetch is by content address, so re-tagging a version in a registry cannot
+  change what a fleet runs. Verified across real machines, including 377 blocks indexed through a
+  90-second control-plane outage.
+- **Measured performance**: Sentio's OBIB benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum blocks)
+  completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS, against a
+  real provider. The event count matches Sentio's own README. `block_timestamp` is demand-driven (it
+  costs a header round trip per block - about 85% of backfill wall clock when enabled) and the
+  `getLogs` window adapts to what an endpoint will actually serve.
+
 ## Design targets (not built yet)
 
 - reth ExEx tip-ingestion against your own node (designed and stubbed; toolchain + dependency
   blockers cleared, needs a synced node; RPC is the working path), and firehose-class extraction of
   traces and state diffs on top of it (RFC-0014, deferred).
-- Scaled mode (Postgres hot store + DataFusion federation, RFC-0013 direction record; the
-  SQL-over-the-tip half of RFC-0013 already ships - `/sql` unions hot and cold).
-- Generated schema, views, and tests from an ABI or a subgraph manifest; a GraphQL compatibility
-  layer; streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP
-  egress for transform worlds (`kv` grant ships today); wildcard indexing.
+- DataFusion federation (RFC-0013 §2). **Decided against for 1.0 on measurement, not preference**:
+  the benchmark gate found DataFusion 1.6-2.7x DuckDB's latency on the fold that matters, with the gap
+  widening as segments grow, at exact result parity. DuckDB is the engine in both modes. Do not
+  describe nuthatch as using DataFusion.
+- Scaffolding a nest from a subgraph manifest (`init --from-subgraph`) - written and parked until
+  after 1.0. From an ABI ships today.
+- A GraphQL compatibility layer; streaming subscribe (SSE); local AI models (Ollama /
+  bring-your-own-key); effectful HTTP egress for transform worlds (`kv` grant ships today);
+  wildcard signature-scoped indexing.
 
 ## How it works
 
@@ -135,18 +158,24 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-v0.8.1 is the current release. The installer and `cargo` fetch the latest. **0.8.0 added scaled mode**
-- a control plane, a writer pool taking cursor leases, and an independently-scaled query-FE tier, all
-opt-in at build time so the default binary still carries no database driver. **0.8.1 fixes the compose
-deployment for it**, including a migration race that affected any fleet whose control plane and workers
-start together. Two artifacts per release: the default (embedded) one, and a `-scaled` one carrying
-`worker` and `control`. Earlier, v0.7.0 added the live roost (mount and unmount nests without restarting
-co-tenants), ingestion hardening, a bounded `/sql`, a container image, and relicensed the core to
-`MIT OR Apache-2.0`. **Earlier: v0.6.2 was a security patch** - releases up to and including 0.6.1 accepted
-`;`-stacked statements on `/sql`, which was an arbitrary file-write primitive for anyone able to
-reach the endpoint (nuthatch binds 127.0.0.1 by
-default). Upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags
-are stable, so no migration or re-backfill is involved.
+**v1.0.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
+`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:1.0.0`, `:1.0.0-scaled`, `:latest`).
+
+Upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
+no migration or re-backfill is involved. Minimum supported Rust version is **1.95**.
+
+**Two security patches are worth knowing about if you advise anyone on a version.** Both are on the
+`/sql` surface, which binds 127.0.0.1 by default:
+
+- **v0.9.3** fixes an **arbitrary file read**: DuckDB accepts a quoted function name and the guard
+  matched only an unquoted one, so `SELECT * FROM "read_csv"('/etc/passwd')` executed. Every earlier
+  release is affected.
+- **v0.6.2** fixes an **arbitrary file write** via `;`-stacked `COPY ... TO`.
+
+Earlier milestones: 0.9 brought scaled mode's writer pool and the backfill work above; 0.8 the
+control plane; 0.7 the live roost and the relicense to `MIT OR Apache-2.0`; 0.6 nest bundles, the
+registry, and zero-downtime N-1 upgrades.
 
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with
   SHA-256 checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
@@ -160,7 +189,7 @@ are stable, so no migration or re-backfill is involved.
 credited to Paul Barba) as a Nuthatch nest - Graph Horizon staking on Arbitrum One across three
 contracts, one `init` over several addresses, per-event tables queryable during backfill,
 AssemblyScript handlers rebuilt as declarative `views/*.sql` (reorgs retract; no rollback code),
-and parity via `nuthatch check`. Most of it runs on v0.8.1; the auto-generated GraphQL layer, SSE
+and parity via `nuthatch check`. Most of it runs on v1.0.0; the auto-generated GraphQL layer, SSE
 streams, and AI-assisted schema/test generation are marked as design targets.
 
 ## Who runs it
@@ -168,7 +197,7 @@ streams, and AI-assisted schema/test generation are marked as design targets.
 `/stories` answers "is this for me?" through three illustrative personas (not testimonials),
 each mapped to one of the three front doors: an SQL endpoint for application backends, published
 nests for analysts who write no indexing code, and the built-in MCP server for agents. These
-workflows run on v0.8.1 - multi-contract nests, every declared event as a table, Arbitrum One and
+workflows run on v1.0.0 - multi-contract nests, every declared event as a table, Arbitrum One and
 Base, user-authored views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance
 pack, the admin UI, and webhooks. The main forward-looking piece for these stories is a GraphQL
 layer for subgraph-shaped clients. It notes that derived views read finalized data while raw event
@@ -191,7 +220,7 @@ recipes), the governed semantic layer + agent-grade MCP (RFC-0016/0017), the nes
 range-control hardening (RFC-0028)**, **calldata decode and the `[extract]` surface (RFC-0014 slice 0 -
 decode, schemas and volume guard; extraction itself still needs a colocated node)**, and **distributed
 scaled mode (RFC-0022 - a control plane, a writer pool taking cursor leases, and an independently-scaled
-query-FE tier)**. v0.8.1 is the current release, with prebuilt binaries and container images - one
+query-FE tier)**. v1.0.0 is the current release, with prebuilt binaries and container images - one
 embedded, one `-scaled`. In progress: the
 Lodestar migration (RFC-0011, pilot live in production - two panels; horizon-nest carries the surface),
 and reth ExEx wiring (RFC-0003, needs a synced node - deliberately deferred). Planned: the remaining

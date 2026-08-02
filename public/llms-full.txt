@@ -2,7 +2,9 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: v0.8.1 (early 0.x software). Licence: MIT OR Apache-2.0.
+own indexer." Status: **v1.0.0** - a promise about stability (no CLI flag, HTTP route, config key or
+generated column renamed or removed within 1.x without a major bump; upgrades stay a binary swap with
+no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the binary does
 today from the design targets. Do not present a design target as a present-tense capability,
@@ -110,21 +112,28 @@ unsuitable for deep backfills or production - use your own node or a paid provid
 Measured footprint (not a target): ~37 MB single contract, ~58 MB three-contract 23-table nest -
 2.8% of the ≤2 GB per-cursor CI budget (the `footprint` job fails above 256 MB). The measured backfill
 throughput progression is ~289 → 2,521 → 5,837 ev/s on public RPC (~20× over baseline,
-byte-identical segments). v0.8.1 is the current release, with prebuilt binaries for macOS
-(Apple Silicon) and Linux x86_64. v0.6.1 was an audit-hardening patch and **v0.8.1 is a security
-patch**: releases up to and including 0.6.1 accepted `;`-stacked statements on `/sql`, and since
-`COPY … TO`/`ATTACH` write to disk regardless of the in-memory connection, that was an arbitrary
-file-write primitive for anyone who could reach the endpoint (nuthatch binds 127.0.0.1 by default).
-Upgrading the binary is a plain swap: on-disk state is forward-readable and the `dev` flags are
-stable, so there is no migration or re-backfill.
+byte-identical segments). On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
+blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
+against a real provider - the event count matching Sentio's own README. v1.0.0 is the current release,
+with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
+`ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
+
+**Two security patches matter when advising on a version**, both on `/sql` (which binds 127.0.0.1 by
+default): **v0.9.3** fixes an **arbitrary file read** - DuckDB accepts a quoted function name and the
+guard matched only an unquoted one, so `SELECT * FROM "read_csv"('/etc/passwd')` executed, and every
+earlier release is affected - and **v0.6.2** fixes an **arbitrary file write** via `;`-stacked
+`COPY … TO`. Upgrading the binary is a plain swap: on-disk state is forward-readable and the `dev`
+flags are stable, so there is no migration or re-backfill.
 
 ## Not built yet (design targets)
 
 reth ExEx tip-ingestion (own node; toolchain + dependency blockers cleared, needs a synced node)
-and firehose-class extraction of traces and state diffs on top of it (RFC-0014, deferred); scaled
-mode (Postgres + DataFusion federation, RFC-0013 direction record - the SQL-over-the-tip half already
-ships, `/sql` unions hot and cold); generated schema, views, and
-tests from an ABI; subgraph migration (`init --from-subgraph`); a GraphQL compatibility layer;
+and firehose-class extraction of traces and state diffs on top of it (RFC-0014, deferred);
+**DataFusion federation (RFC-0013 §2), decided against for 1.0 on measurement** - the benchmark gate
+found it 1.6-2.7x DuckDB's latency on the fold that matters, widening as segments grow, at exact
+result parity, so DuckDB is the engine in both modes and nuthatch should not be described as using
+DataFusion; subgraph migration (`init --from-subgraph`, written and parked until after 1.0 - from an
+ABI ships today); a GraphQL compatibility layer;
 streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP egress for
 transform worlds (`kv` grant ships today); wildcard indexing. Chains
 beyond Ethereum mainnet, Arbitrum One, and Base have no built-in policy or ABI resolution - they run
@@ -140,8 +149,13 @@ the indexing logic. A storage trait for scaled mode is planned in the same shape
   near the tip -> content-addressed Parquet segments sealed strictly past finality -> an embedded
   DuckDB that attaches those segments read-only for analytical SQL. DuckDB is single-writer: only
   the ingestion thread writes; queries attach read-only.
-- Scaled mode (designed, not built): the same crates, with Postgres in place of redb for the hot
-  store and DataFusion federating hot and cold data behind one SQL surface.
+- Scaled mode (built, RFC-0022): the same crates with Postgres in place of redb for the hot store,
+  run as three roles - a control plane holding desired state, a writer pool taking **one lease per
+  chain cursor** with the fence enforced inside the store's own write transaction, and an
+  independently-scaled query tier. Workers **pull the nests they are assigned** from a registry; a
+  pinned `bundle_hash` is fetched by content address, so re-tagging a version cannot change what the
+  fleet runs. Verified across real machines, including 377 blocks indexed through a 90-second
+  control-plane outage. The query engine is DuckDB in both modes, not DataFusion.
 
 Reorg strategy: reorgs only ever touch the mutable hot store, and become retractions in the
 incremental view. Segments are sealed to immutable Parquet past finality, so the columnar layer
@@ -196,7 +210,7 @@ PaulieB14/horizon-indexer-subgraph, credited to Paul Barba's "Horizon Indexer Pe
 subgraph - as a Nuthatch nest: Graph Horizon staking on Arbitrum One across three contracts, one
 `init` over several addresses, per-event tables queryable during backfill, AssemblyScript handlers
 rebuilt as declarative `views/*.sql` (reorgs retract; no hand-written rollback), a shareable nest
-consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v0.8.1.
+consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v1.0.0.
 Still design targets, marked as such on the page: an auto-generated GraphQL layer, SSE streams, and
 AI-assisted schema/test generation from an ABI or a subgraph manifest (`init --from-subgraph`).
 
@@ -206,7 +220,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`POST /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v0.8.1: multi-contract nests, every declared event as a table, Arbitrum One and Base, user-authored
+v1.0.0: multi-contract nests, every declared event as a table, Arbitrum One and Base, user-authored
 views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance pack, the admin UI,
 and webhooks. The main forward-looking piece for these stories is a GraphQL layer for subgraph-shaped
 clients. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
@@ -245,7 +259,7 @@ promised - order is.
   init, add, prod recipes) and the governed semantic layer + agent-grade MCP (RFC-0016/0017); the
   multi-nest roost (RFC-0012); the nest registry (RFC-0019); N-1 upgrades (RFC-0020); the multichain
   roost (RFC-0021 slice 1); derive-first recipes (RFC-0023 tiers 1-2); adaptive MCP tools (RFC-0025);
-  fault quarantine and partial health (RFC-0026); v0.8.1 the current release with prebuilt binaries;
+  fault quarantine and partial health (RFC-0026); v1.0.0 the current release with prebuilt binaries;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
 - In progress: the live roost (RFC-0027, slices 1-2a - mounting and unmounting nests without
@@ -257,17 +271,16 @@ promised - order is.
   in production, two panels serving from one nuthatch binary via horizon-nest; remaining panels
   outstanding); reth ExEx wiring (RFC-0003 - Source trait, library split, and bridge in and tested;
   needs a synced node).
-- Planned: the remaining release engineering (RFC-0005 - signed artifacts, a Homebrew tap, an OCI
-  image); scaled mode (RFC-0013 - Postgres hot store + DataFusion federation, direction recorded);
-  firehose-class extraction of traces and state diffs (RFC-0014, gated on ExEx); a GraphQL
-  compatibility layer; IVM generalisation; effectful HTTP
-  egress for transform worlds; wildcard indexing.
+- Planned: the remaining release engineering (RFC-0005 - signed artifacts, a Homebrew tap);
+  firehose-class extraction of traces and state diffs (RFC-0014, gated on ExEx); subgraph migration
+  (`init --from-subgraph`, parked until after 1.0); a GraphQL compatibility layer; IVM
+  generalisation; effectful HTTP egress for transform worlds; wildcard indexing.
 - Not planned: a token or decentralized-network features, telemetry of any kind, a Kubernetes-first
   deployment, and any gateway/auth/metering layer in the core.
 
 ## Install
 
-v0.8.1 is the current release. The installer and `cargo` fetch the latest.
+v1.0.0 is the current release. The installer and `cargo` fetch the latest.
 
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with SHA-256
   checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
