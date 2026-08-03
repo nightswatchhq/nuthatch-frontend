@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v1.0.0**. 1.0 is a promise about stability, not completeness: within 1.x no
+MIT OR Apache-2.0. Status: **v1.0.1**. 1.0 is a promise about stability, not completeness: within 1.x no
 CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
 upgrading stays a binary swap with no data migration. This file separates what the binary does today
 from the design targets, so a model does not present unbuilt features as present-tense fact.
@@ -103,6 +103,14 @@ Tagline: "Be your own indexer."
   or a paid provider for real work. Measured footprint: ~37 MB single contract, ~58 MB three-contract
   23-table nest (2.8% of the 2 GB per-cursor budget; CI fails above 256 MB).
 
+- **Scaffolding a nest from a subgraph manifest**: `nuthatch init --from-subgraph <CID|url>` maps
+  `dataSources` -> `[[contracts]]` and `templates` -> `[[templates]]`, vendors every ABI from the CID the
+  manifest pins, carries `startBlock` across, and carries each dataSource's `eventHandlers` over as that
+  contract's event allowlist. The pinned ABIs beat Sourcify for proxy-heavy codebases, where Sourcify
+  returns the proxy ABI that declares none of the events the contract emits. Factory rules are inferred
+  only where a parameter unambiguously names a template - which template a factory creates lives in the
+  mapping WASM, not the manifest, so anything ambiguous is reported with candidates rather than guessed.
+  A CID names what to ask a gateway for; nothing recomputes the multihash over the bytes it returns.
 - `nuthatch doctor --rpc <url> --address 0xAddr` probes an endpoint and reports the largest `getLogs`
   window it will actually serve, its batch limit, and whether it has archive history - measured
   against that endpoint rather than read from its documentation.
@@ -129,8 +137,7 @@ Tagline: "Be your own indexer."
   the benchmark gate found DataFusion 1.6-2.7x DuckDB's latency on the fold that matters, with the gap
   widening as segments grow, at exact result parity. DuckDB is the engine in both modes. Do not
   describe nuthatch as using DataFusion.
-- Scaffolding a nest from a subgraph manifest (`init --from-subgraph`) - written and parked until
-  after 1.0. From an ABI ships today.
+
 - A GraphQL compatibility layer; streaming subscribe (SSE); local AI models (Ollama /
   bring-your-own-key); effectful HTTP egress for transform worlds (`kv` grant ships today);
   wildcard signature-scoped indexing.
@@ -158,9 +165,9 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v1.0.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v1.0.1 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
-`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:1.0.0`, `:1.0.0-scaled`, `:latest`).
+`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:1.0.1`, `:1.0.1-scaled`, `:latest`).
 
 Upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
 no migration or re-backfill is involved. Minimum supported Rust version is **1.95**.
@@ -189,7 +196,7 @@ registry, and zero-downtime N-1 upgrades.
 credited to Paul Barba) as a Nuthatch nest - Graph Horizon staking on Arbitrum One across three
 contracts, one `init` over several addresses, per-event tables queryable during backfill,
 AssemblyScript handlers rebuilt as declarative `views/*.sql` (reorgs retract; no rollback code),
-and parity via `nuthatch check`. Most of it runs on v1.0.0; the auto-generated GraphQL layer, SSE
+and parity via `nuthatch check`. Most of it runs on v1.0.1; the auto-generated GraphQL layer, SSE
 streams, and AI-assisted schema/test generation are marked as design targets.
 
 ## Who runs it
@@ -197,7 +204,7 @@ streams, and AI-assisted schema/test generation are marked as design targets.
 `/stories` answers "is this for me?" through three illustrative personas (not testimonials),
 each mapped to one of the three front doors: an SQL endpoint for application backends, published
 nests for analysts who write no indexing code, and the built-in MCP server for agents. These
-workflows run on v1.0.0 - multi-contract nests, every declared event as a table, Arbitrum One and
+workflows run on v1.0.1 - multi-contract nests, every declared event as a table, Arbitrum One and
 Base, user-authored views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance
 pack, the admin UI, and webhooks. The main forward-looking piece for these stories is a GraphQL
 layer for subgraph-shaped clients. It notes that derived views read finalized data while raw event
@@ -220,12 +227,11 @@ recipes), the governed semantic layer + agent-grade MCP (RFC-0016/0017), the nes
 range-control hardening (RFC-0028)**, **calldata decode and the `[extract]` surface (RFC-0014 slice 0 -
 decode, schemas and volume guard; extraction itself still needs a colocated node)**, and **distributed
 scaled mode (RFC-0022 - a control plane, a writer pool taking cursor leases, and an independently-scaled
-query-FE tier)**. v1.0.0 is the current release, with prebuilt binaries and container images - one
+query-FE tier)**. v1.0.1 is the current release, with prebuilt binaries and container images - one
 embedded, one `-scaled`. In progress: the
 Lodestar migration (RFC-0011, pilot live in production - two panels; horizon-nest carries the surface),
 and reth ExEx wiring (RFC-0003, needs a synced node - deliberately deferred). Planned: the remaining
-release engineering (RFC-0005: signing, Homebrew, OCI), DataFusion federation (RFC-0013 §2/§4, behind a
-benchmark gate), firehose-class *extraction* (RFC-0014, needs the node), a GraphQL layer, IVM
+release engineering (RFC-0005: signing, Homebrew, OCI), firehose-class *extraction* (RFC-0014, needs the node), a GraphQL layer, IVM
 generalisation, and wildcard indexing. Not planned: a token or decentralized-network
 features, telemetry, a Kubernetes-first deployment, and any gateway/auth/metering layer in the
 core. It promises order, not dates, and defers to the README progress log when the two disagree.

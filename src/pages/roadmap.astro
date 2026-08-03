@@ -1,11 +1,11 @@
 <!-- Regenerate against the repo README + docs/rfcs when either changes materially.
      Ground-truth rule: README / progress log wins over this page.
-     Last regenerated against the progress log through the v0.6.2 release: RFC-0012 (bundles +
-     roost), RFC-0015/0016/0017 (delightful core, agent-grade MCP, builder skill), RFC-0019 (nest
-     registry), RFC-0020 (N-1 upgrade), RFC-0021 slice 1 (multichain roost), RFC-0023 tiers 1-2
-     (derive-first recipes + metadata cache), RFC-0025 (adaptive MCP tools), and RFC-0026 (fault
-     quarantine) all shipped; RFC-0027 (live roost) and RFC-0028 (adaptive log-range control) are
-     part-landed. v0.6.2 is the current release (0.6.1 audit hardening, 0.6.2 a /sql security patch).
+     Last regenerated against docs/rfcs/README.md at the v1.0.1 release. Since v0.6.2: RFC-0027
+     (live roost) and RFC-0028 (adaptive log-range control) completed, RFC-0029 (the fastest
+     indexer) shipped all five slices, RFC-0022 (distributed scaled mode) went from design-only to
+     implemented-and-verified-across-machines, RFC-0013's benchmark gate was run and DataFusion did
+     not meet it, and `init --from-subgraph` landed as the first external contribution.
+     v1.0.1 is the current release.
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -34,10 +34,14 @@ const RFCS = {
   '0019': '0019-nest-registry-and-distribution.md',
   '0020': '0020-nest-lifecycle-and-the-n-1-upgrade.md',
   '0021': '0021-the-multichain-roost.md',
+  '0022': '0022-distributed-scaled-mode.md',
   '0023': '0023-contract-state-eth-call-derive-first.md',
+  '0024': '0024-eth-call-execution-engine.md',
+  '0025': '0025-adaptive-mcp-tool-advertisement.md',
   '0026': '0026-fault-quarantine-and-partial-health.md',
   '0027': '0027-the-live-roost.md',
   '0028': '0028-adaptive-log-range-control.md',
+  '0029': '0029-the-fastest-indexer.md',
 };
 const rfc = (n) => `${REPO}/blob/main/docs/rfcs/${RFCS[n]}`;
 const rfcsDir = `${REPO}/tree/main/docs/rfcs`;
@@ -190,6 +194,16 @@ const progressLog = `${REPO}#progress-log`;
         <li>The health surface to see it with: <code>GET /nests</code> merges each nest's live health per request, <code>GET /ready</code> answers roost-wide while <code>GET /&lt;name&gt;/ready</code> answers per nest, and <code>nuthatch_nest_health</code> / <code>nuthatch_nest_quarantine_total</code> / <code>nuthatch_cursor_live</code> cover the metrics. <code>--fail-fast</code> restores exit-on-first-fault for CI and for operators who prefer a loud death to partial service.</li>
       </ul>
 
+      <p class="grp">The live roost (<a href={rfc('0027')} rel="noopener">RFC-0027</a>)</p>
+      <ul class="rl">
+        <li>A roost's nest set used to be frozen at boot, so onboarding one tenant's nest restarted every <em>co-tenant's</em> - the blast radius of a config change was larger than that of a fault. Now <code>POST /_admin/nests</code> mounts one and <code>DELETE /_admin/nests/&lt;name&gt;</code> unmounts one, live. A mount is admitted only if it fits the cursor's RAM budget (refused with <code>507</code>, never a warning - a budget that can be quietly exceeded is not a budget), catches up <em>before</em> it joins so it never drags co-tenants back through history, and only then gets routes. An unmount is a <strong>drain</strong>: the cursor finishes its window and releases the store before anything is torn down.</li>
+      </ul>
+
+      <p class="grp">Scaffold a nest from a subgraph (<a href={rfc('0019')} rel="noopener">RFC-0019</a>, <a href={REPO + '/issues/241'} rel="noopener">#241</a>)</p>
+      <ul class="rl">
+        <li><code>nuthatch init --from-subgraph &lt;CID&gt;</code> maps a subgraph manifest's <code>dataSources</code> to <code>[[contracts]]</code> and its <code>templates</code> to <code>[[templates]]</code>, vendors every ABI from the CID the manifest pins, and carries <code>startBlock</code> and each dataSource's <code>eventHandlers</code> across - so a subgraph that handled only <code>Transfer</code> does not silently grow a table for every other event. The pinned ABIs beat Sourcify on proxy-heavy codebases, where Sourcify returns the <em>proxy</em> ABI that declares none of the events the contract emits. Factory rules are inferred only where a parameter unambiguously names a template; anything ambiguous is reported with candidates rather than guessed, because a wrong guess is a nest that quietly indexes the wrong children. <strong>Our first external contribution</strong>, from <a href="https://github.com/PaulieB14" rel="noopener">@PaulieB14</a>.</li>
+      </ul>
+
       <p class="grp">The backfill that finishes, then flies (<a href={rfc('0028')} rel="noopener">RFC-0028</a>, <a href={rfc('0029')} rel="noopener">RFC-0029</a>)</p>
       <ul class="rl">
         <li>Found by running <strong>someone else's benchmark</strong>: Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a>. Case 1 - <code>Transfer</code> from LBTC across 22.2M Ethereum blocks - did not merely run slowly, it <strong>never finished</strong>: Alchemy returns its oversized-range refusal as HTTP <strong>400</strong>, a status the classifier did not enumerate, so a window that needed splitting was retried unchanged forever. It now completes in <strong>74.8 s</strong> for 294,278 events, in <strong>321 RPC requests</strong> and 320 MB - matching the record count in Sentio's own README exactly.</li>
@@ -207,7 +221,7 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li><strong>v1.0.0 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). 1.0 is a promise about <strong>stability</strong>, not completeness: within 1.x no CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and upgrading stays a binary swap with no data migration. MSRV is 1.95 - measured, not asserted. The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools; 0.7-0.8 the live roost, fault quarantine and the multichain runtime; 0.9 scaled mode's writer pool and the backfill work below. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
+        <li><strong>v1.0.1 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). 1.0 is a promise about <strong>stability</strong>, not completeness: within 1.x no CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and upgrading stays a binary swap with no data migration. MSRV is 1.95 - measured, not asserted. The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools; 0.7-0.8 the live roost, fault quarantine and the multichain runtime; 0.9 scaled mode's writer pool and the backfill work below. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
         <li>A CI footprint job fails the build above 256 MB of RAM.</li>
         <li>Measured peak: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - 2.8% of the 2 GB budget.</li>
       </ul>
@@ -223,13 +237,6 @@ const progressLog = `${REPO}#progress-log`;
           carries the Horizon staking/service surface; the migration is parked after the proven pilot,
           with the remaining panels (Indexer Directory, Curation, Epochs) folded into
           <code>horizon-nest</code> as they're needed rather than as a second nest.
-        </li>
-        <li>
-          The live roost (<a href={rfc('0027')} rel="noopener">RFC-0027</a>): a roost's nest set is
-          frozen at boot today, so onboarding one tenant's nest restarts every co-tenant's. The first
-          slices have landed - a roost is now served through a swappable composition, with a lifecycle
-          channel and retirement so an operator's unmount is not counted as a fault. Admission, the
-          two-phase catch-up join, and the full control surface follow.
         </li>
         <li>
           reth ExEx wiring (<a href={rfc('0003')} rel="noopener">RFC-0003</a>): the <code>Source</code>

@@ -55,6 +55,7 @@ Denying a query is cheaper than an OOM that takes co-tenants with it:
 | row cap | 50,000 |
 | result bytes | 64 MiB |
 | concurrent analytical queries | 2 |
+| query text length | 16 KiB |
 | unsealed tip rows per query | 2,000,000, then `503` |
 
 The tip bound **refuses rather than truncates** — a partial tip would silently change the answer to an
