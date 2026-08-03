@@ -6,7 +6,11 @@ order: 1
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
 zero external services. **Scaled mode** swaps the storage backends behind the same crates for
-operator-run deployments (RFC-0022 - designed, deferred). Everything below describes embedded mode.
+operator-run deployments (RFC-0022 - built, and verified across real machines, though younger than
+embedded). Everything below describes embedded mode.
+
+This page is the map. For the component-by-component walk - what each part refuses to do, and why a
+reorg cannot reach sealed history - see [Internals](/docs/contributing/internals/).
 
 ## The pipeline
 
