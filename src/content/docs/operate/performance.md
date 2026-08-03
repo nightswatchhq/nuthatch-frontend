@@ -13,7 +13,7 @@ LBTC across 22.2M Ethereum blocks, write-only, no serving.
 | | |
 |---|---|
 | wall clock | **74.8 s** |
-| events | **294,278** — matches Sentio's own README exactly |
+| events | **294,278** - matches Sentio's own README exactly |
 | RPC requests | **321** |
 | peak RSS | **320 MB** |
 
@@ -29,7 +29,7 @@ much stronger signal than a stopwatch.
 Worth stating plainly, because it is the reason we now run outside benchmarks.
 
 Alchemy returns its oversized-range refusal as HTTP **400**. Our status classifier did not enumerate
-400, so it fell through to `Transient` — which meant the window was retried **unchanged**, forever.
+400, so it fell through to `Transient` - which meant the window was retried **unchanged**, forever.
 Case 1 never completed. Our own test suite was green throughout, because every fixture returned the
 error shape we had thought to write down.
 
@@ -40,7 +40,7 @@ the failures you imagined.
 
 Not CPU. Nuthatch is round-trip bound on ordinary workloads, and three things dominate:
 
-### 1. `block_timestamp` — about 85% of it, if you let it
+### 1. `block_timestamp` - about 85% of it, if you let it
 
 Timestamps cost a block-header round trip per block, and the fan-out is *serial inside each window*,
 which is why throwing concurrency at it barely helps (16-way bought 1.2×).
@@ -50,7 +50,7 @@ column at scaffold time with `init --no-timestamps`.
 
 This is an **init-time** decision, deliberately not a flag you can flip: changing it later is a
 breaking schema change and a full re-index. Blocks give you ordering; only timestamps give you time.
-If you are unsure, keep them — the default is on for a reason.
+If you are unsure, keep them - the default is on for a reason.
 
 ### 2. The log window, and whether it fits your provider
 
@@ -65,7 +65,7 @@ nuthatch doctor --rpc https://your-endpoint.example --address 0xADDR
 ```
 
 It reports the largest window the endpoint will actually serve, its batch limit, and whether it has
-archive history — measured against that endpoint, not read from its documentation.
+archive history - measured against that endpoint, not read from its documentation.
 
 ### 3. Your endpoint
 
@@ -80,7 +80,7 @@ failover as well as throughput.
 sum of its cursors, and a nest whose projected footprint would exceed the budget is **refused** at
 mount with a `507` rather than admitted with a warning.
 
-Measured peaks: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest — under 3%
+Measured peaks: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - under 3%
 of the budget. The 320 MB in the OBIB run above is a full-throttle backfill, which is the expensive
 case, not the steady state.
 
@@ -88,7 +88,7 @@ case, not the steady state.
 
 Analytical queries run on DuckDB, attaching sealed Parquet segments read-only alongside the hot tip.
 
-DataFusion — one Arrow-native, pure-Rust engine across both modes — has been the recorded *direction*
+DataFusion - one Arrow-native, pure-Rust engine across both modes - has been the recorded *direction*
 since RFC-0013, gated on a benchmark. We ran the gate rather than arguing about it, on the fold that
 matters (a signed 128-bit aggregate over a string-typed `uint256` column):
 
@@ -99,7 +99,7 @@ matters (a signed 128-bit aggregate over a string-typed `uint256` column):
 | 20 M | 229 ms | 606 ms | 2.65× |
 
 Each size was run twice with the engine order reversed, because whichever goes first warms the page
-cache. Results were **identical** at every size, in both orders — correctness was never the question.
+cache. Results were **identical** at every size, in both orders - correctness was never the question.
 
 What failed the gate is that the gap **widens with segment size**, and segments only grow. So DuckDB
 stays in both modes. The destination is unmet, not repudiated: measure-then-switch worked, and the

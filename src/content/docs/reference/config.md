@@ -26,7 +26,7 @@ block_timestamps = true       # default; set at init, not editable afterwards - 
 Whether every row carries `block_timestamp`. On by default, and the most consequential decision
 `init` makes on your behalf.
 
-Timestamps cost a block-header round trip per block — around **85% of backfill wall clock** — for a
+Timestamps cost a block-header round trip per block - around **85% of backfill wall clock** - for a
 column many nests never query. A nest that will never ask a time-series question can drop it:
 
 ```sh
@@ -35,7 +35,7 @@ nuthatch init 0xAddr --no-timestamps
 
 **It is an init-time choice, deliberately not a flag you can flip.** Changing it later removes a
 column that consumers may be reading, which RFC-0020 classifies as *breaking*, and it means a full
-re-index. Blocks give you ordering; only timestamps give you time. If you are unsure, keep them —
+re-index. Blocks give you ordering; only timestamps give you time. If you are unsure, keep them - 
 the default is on for a reason.
 
 Flipping the value in `nuthatch.toml` by hand is refused at startup rather than honoured silently,

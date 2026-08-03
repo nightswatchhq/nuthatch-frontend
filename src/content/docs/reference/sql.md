@@ -44,13 +44,13 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   see [upgrades](/docs/operate/upgrades/) if you are running anything older.
 - **No filesystem access.** Two controls, deliberately with different failure modes. A denylist
   rejects the file-reading functions outright, and since **v0.9.3** an allowlist asks DuckDB's own
-  parser what a statement references and refuses anything unrecognised — a table function must be one
+  parser what a statement references and refuses anything unrecognised - a table function must be one
   of three, and a base table must be named like an identifier, which is what catches `FROM
   '/x.parquet'`. The allowlist fails *open* if the parse is unavailable, so it cannot be the only
   control; the denylist is still in front of it.
 
-  DuckDB's `allowed_directories` is **not** enforced on the build nuthatch bundles — measured, and
-  pinned by a test — so it is not a layer behind these two. Assume it buys nothing.
+  DuckDB's `allowed_directories` is **not** enforced on the build nuthatch bundles - measured, and
+  pinned by a test - so it is not a layer behind these two. Assume it buys nothing.
 
   > **Upgrade to v0.9.3 if you expose `/sql` to anyone you do not trust.** Every earlier release is
   > vulnerable to an arbitrary file read: DuckDB accepts a *quoted* function name, and the denylist

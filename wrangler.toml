@@ -2,7 +2,7 @@
 #
 #   Build command:      npm run build
 #   Build output dir:   dist
-#   Framework preset:   Astro (or "None" — the output is plain static files)
+#   Framework preset:   Astro (or "None" - the output is plain static files)
 #
 # The build produces a self-contained dist/ that works on any static host
 # (Cloudflare Pages, Netlify, GitHub Pages, a plain nginx box, an S3 bucket).

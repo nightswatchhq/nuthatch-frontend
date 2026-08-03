@@ -17,7 +17,7 @@ nuthatch doctor --rpc https://your-endpoint.example --address 0xADDR
 ```
 
 It probes and reports the largest `getLogs` window that endpoint will actually serve, its batch limit,
-and whether it has archive history — **measured against that endpoint**, not read from its
+and whether it has archive history - **measured against that endpoint**, not read from its
 documentation, which is frequently wrong and often differs by tier.
 
 Most "backfill is stuck" reports are an endpoint that lacks archive history for the deploy block, or

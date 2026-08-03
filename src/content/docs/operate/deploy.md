@@ -5,7 +5,7 @@ order: 2
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one
-process — so deploying is running that under a supervisor. There is no separate server to stand up,
+process - so deploying is running that under a supervisor. There is no separate server to stand up,
 no queue, no database.
 
 ## systemd
@@ -52,14 +52,14 @@ docker run -d --name nuthatch --restart unless-stopped \
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
 build, so the two cannot drift. It runs as an unprivileged user (uid 10001), carries only
-`ca-certificates` beyond the binary, and mounts the nest directory at `/nest` — the only writable
+`ca-certificates` beyond the binary, and mounts the nest directory at `/nest` - the only writable
 state.
 
 The default command binds `0.0.0.0:8288` *inside* the container. Publish it to `127.0.0.1` on the host
 as above and put a proxy in front, exactly as on bare metal. `docker stop` sends SIGTERM, which drains
 and checkpoints cleanly.
 
-Pin the version tag rather than `:latest` for anything you care about. `linux/amd64` only for now — a
+Pin the version tag rather than `:latest` for anything you care about. `linux/amd64` only for now - a
 multi-arch image needs an aarch64-linux build we do not yet produce.
 
 **Scaled mode needs the `-scaled` tag.** The default image is the embedded build and carries no
@@ -85,14 +85,14 @@ Two things worth deciding deliberately:
 
 - **`/sql` is a real analytical surface**, which means a caller can ask an expensive question. It is
   guarded (30 s timeout, 50,000-row cap, 64 MiB result ceiling, 2 concurrent queries), and those
-  guards are what make exposure survivable — but read [security](/docs/operate/security/) before you
+  guards are what make exposure survivable - but read [security](/docs/operate/security/) before you
   put it in front of anyone you do not trust.
-- **`/_admin/` mutates state** — mounting and unmounting nests. It is open on localhost and requires
+- **`/_admin/` mutates state** - mounting and unmounting nests. It is open on localhost and requires
   `NUTHATCH_ADMIN_TOKEN` on every request off it. If you do not want remote admin at all, bind
   `127.0.0.1` and do not set the token.
 
 `/health` and `/ready` are unauthenticated by design so a load balancer can probe them. `/ready`
-answers the question that actually matters for a load balancer — *is this nest caught up?* — and
+answers the question that actually matters for a load balancer - *is this nest caught up?* - and
 reports `stalled` when every endpoint in the pool is refusing a window.
 
 ## Back it up
@@ -105,7 +105,7 @@ rsync -a /var/lib/nuthatch/mynest/ backup:/backups/mynest/
 ```
 
 Restoring is putting the directory back and starting the binary. There is no schema to migrate and no
-external state to reconcile — which is the reason the hot/cold split exists in the first place.
+external state to reconcile - which is the reason the hot/cold split exists in the first place.
 
 ## Upgrading the binary
 
@@ -118,5 +118,5 @@ install -m755 nuthatch /usr/local/bin/nuthatch
 systemctl start nuthatch
 ```
 
-Upgrading a *nest* — its schema, views or decode — is a different axis with its own zero-downtime
+Upgrading a *nest* - its schema, views or decode - is a different axis with its own zero-downtime
 path. See [upgrades](/docs/operate/upgrades/).

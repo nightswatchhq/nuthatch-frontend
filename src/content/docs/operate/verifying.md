@@ -9,7 +9,7 @@ which claims we have and have not tested ourselves.
 
 The full runbook lives in the repo at
 [`docs/verification.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/verification.md).
-Levels 0–4 are automated:
+Levels 0 - 4 are automated:
 
 ```sh
 ./scripts/verify.sh 0 4
@@ -19,38 +19,38 @@ Levels 0–4 are automated:
 
 | level | verified by us? | how |
 |---|---|---|
-| **0** Artifact | yes | every release — checksums, the binary runs, `--version` matches the tag |
+| **0** Artifact | yes | every release - checksums, the binary runs, `--version` matches the tag |
 | **1** Single nest | yes | CI, plus a production box serving public traffic |
-| **2** Correctness | yes | CI — deterministic fixtures, reorg property tests |
+| **2** Correctness | yes | CI - deterministic fixtures, reorg property tests |
 | **3** Roost | yes | a live two-chain run and an 8-nest density run |
 | **4** Guards | yes | CI, plus a live `/sql` adversary pass |
 | **5** Scaled mode | yes, across real machines | three boxes on a private network, published artifacts |
 
 Level 5 is where independent verification is worth the most, and where we have most recently been
-wrong — see below.
+wrong - see below.
 
 ## Level 5 is worth reading before you trust it
 
 Until v0.9.3, **the writer pool did not write.** A worker registered, took a cursor lease, loaded
-secrets and reported — and contained no indexing code at all.
+secrets and reported - and contained no indexing code at all.
 
 Ten level-5 checks passed throughout. They were real checks and they genuinely passed: registration,
 scheduling, lease fencing with a store-enforced fence, fleet-wide version pinning, write-only secrets.
 **Not one of them asserted that a row appeared.**
 
-That is the failure worth learning from — a suite that verifies the machinery *around* a thing reads
+That is the failure worth learning from - a suite that verifies the machinery *around* a thing reads
 exactly like a suite that verifies the thing. The runbook now has a check that could not have passed
 before the fix: `last_block` advancing in the shared store.
 
 ## What level 5 proves now
 
-Measured on three Hetzner boxes on a private network, from published release artifacts — control plane
+Measured on three Hetzner boxes on a private network, from published release artifacts - control plane
 and store on one, writers on their own:
 
 - workers registering and being scheduled from another machine
 - a **real lease handover** under contention, with the store-enforced fence advancing
 - a **10-minute clock jump** moving lease expiry rather than ownership
-- **indexing into the shared store** — the check that could not have passed before 0.9.3
+- **indexing into the shared store** - the check that could not have passed before 0.9.3
 - **377 blocks indexed through a 90-second control-plane outage**
 
 That last one is the design claim with a number attached: losing the control plane must stop
@@ -76,7 +76,7 @@ export HCLOUD_SSH_KEY="my-key"     # the name of a key already in that project
 ./scripts/fleet-lab.sh down        # destroy everything it created
 ```
 
-Hetzner bills hourly — three boxes are roughly €0.03/hr — which is only cheap if you destroy them, so
+Hetzner bills hourly - three boxes are roughly €0.03/hr - which is only cheap if you destroy them, so
 `down` is a first-class verb and every resource is tagged.
 
 It installs the **published artifacts**, not a local build, so what gets verified is what you would

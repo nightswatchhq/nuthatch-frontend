@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
-  "description": "Website for Nuthatch — the self-hosted, AI-native blockchain indexer.",
+  "description": "Website for Nuthatch - the self-hosted, AI-native blockchain indexer.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

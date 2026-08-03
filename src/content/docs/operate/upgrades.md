@@ -63,7 +63,7 @@ binary swap, not a migration:
 
 > **Upgrade to v0.9.3 if you expose `/sql` to anyone you do not trust.** Every release before it is
 > vulnerable to an **arbitrary file read**. DuckDB accepts a quoted function name, and the guard
-> matched a forbidden name only when the next non-space character was `(` — so
+> matched a forbidden name only when the next non-space character was `(` - so
 > `SELECT * FROM "read_csv"('/etc/passwd')` passed both guards and executed. Confirmed against a live
 > connection during a pre-1.0 adversary pass, returning the contents of `/etc/hosts`.
 >

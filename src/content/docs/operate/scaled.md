@@ -8,7 +8,7 @@ Everything else in these docs is **embedded mode**: one binary, no external serv
 `curl | sh` gets you. That is still the primary way to run nuthatch and the one you should reach for
 first.
 
-Scaled mode is a different deployment for a different problem — **one operator running many nests
+Scaled mode is a different deployment for a different problem - **one operator running many nests
 across many machines**. It is opt-in at build time (`--features postgres-store`), so the published
 binary carries no database driver and embedded mode stays a single file with nothing beside it.
 
@@ -30,9 +30,9 @@ The same crates, run three ways. A role flag, never a fork.
 
 | Role | Command | Owns |
 |---|---|---|
-| **Control plane** | `nuthatch control --db <postgres>` | *desired state* — what should run |
+| **Control plane** | `nuthatch control --db <postgres>` | *desired state* - what should run |
 | **Writer** | `nuthatch dev --dir <nest>` | cursors it holds a **lease** on; ingests, decodes, seals |
-| **Query-FE** | `nuthatch serve --dir <nest> --hot-store <postgres>` | nothing — serves from shared state |
+| **Query-FE** | `nuthatch serve --dir <nest> --hot-store <postgres>` | nothing - serves from shared state |
 
 ```sh
 nuthatch init 0xYourContract --chain arbitrum-one --dir nest
@@ -44,12 +44,12 @@ docker compose -f docker-compose.scaled.yml --profile fleet up \
 
 Two prerequisites, both of which cost us time before they were written down:
 
-- **The fleet mounts `./nest`.** Without it the FE nodes exit and the **writers keep running** — they
+- **The fleet mounts `./nest`.** Without it the FE nodes exit and the **writers keep running** - they
   take work from the control plane rather than from disk. That asymmetry makes it look like an FE bug
   rather than a missing directory.
 - **It must be owned by uid 10001.** The image runs unprivileged, so a root-owned bind mount is
   unwritable to it and the FE nodes exit with `Permission denied`. This **passes on Docker Desktop and
-  fails on Linux**, because Desktop fakes mount permissions — so a Mac that works is not evidence.
+  fails on Linux**, because Desktop fakes mount permissions - so a Mac that works is not evidence.
 
 ## Three things to understand before you run it
 
@@ -57,7 +57,7 @@ These are the ones that will otherwise puzzle you at an unsociable hour.
 
 ### The control plane states intent; it commands nothing
 
-`POST /nests` records that a nest should run and returns `200`. That does **not** mean it is running —
+`POST /nests` records that a nest should run and returns `200`. That does **not** mean it is running - 
 it means the fleet has been told to run it. A writer picks it up on its next tick.
 
 There is deliberately no "start this nest on worker w3" endpoint. It would be the one call able to put
@@ -65,8 +65,8 @@ a cursor somewhere the scheduler did not choose and the lease did not arbitrate.
 
 ### Ownership is a lease, and the store enforces it
 
-A cursor is held by exactly one writer at a time. If a writer stalls — long GC, paused container, a
-host that goes away for ninety seconds — its lease expires and another writer takes over.
+A cursor is held by exactly one writer at a time. If a writer stalls - long GC, paused container, a
+host that goes away for ninety seconds - its lease expires and another writer takes over.
 
 When the original wakes up, **its writes are refused by the store**, not merely unlikely to collide.
 Every write carries a fence, and a stale fence is rejected inside the same transaction as the write. A
@@ -97,8 +97,8 @@ why:
 
 The two reasons need different responses:
 
-- `noroomrightnow` — every worker is at its budget. **Add a worker.**
-- `toolargeforanyworker` — the cursor alone exceeds the largest worker's entire budget. **Adding
+- `noroomrightnow` - every worker is at its budget. **Add a worker.**
+- `toolargeforanyworker` - the cursor alone exceeds the largest worker's entire budget. **Adding
   workers will not help.** Split the nests across chains, or raise the budget.
 
 Collapsing those into one message would send you shopping for hardware that cannot fix it.
@@ -114,7 +114,7 @@ curl -XPUT localhost:8290/nests/usdc/pin \
 ```
 
 If each node read `latest` for itself, then during an upgrade one node would serve the new schema
-while another served the old — **the same endpoint answering differently depending on where the load
+while another served the old - **the same endpoint answering differently depending on where the load
 balancer sent the request.** Nothing errors; the only symptom is a consumer watching a column appear
 and disappear.
 
@@ -122,7 +122,7 @@ A declared-but-unpinned endpoint is explicitly **not servable**. An FE refuses r
 because guessing is each node choosing a version for itself.
 
 A *compatible* update re-pins the same endpoint. A *breaking* one is a second endpoint served
-alongside the first, so existing consumers keep working — which is the whole point of the breaking
+alongside the first, so existing consumers keep working - which is the whole point of the breaking
 path.
 
 ## Secrets never enter a bundle
@@ -135,7 +135,7 @@ curl -XPUT localhost:8290/nests/usdc/secrets \
 ```
 
 A writer receives only the secrets of the nests it is actually assigned. The interface is
-**write-only** — you can list which keys exist, never read a value back.
+**write-only** - you can list which keys exist, never read a value back.
 
 Baking a credential into a content-addressed bundle would leak it *and* break addressing, since two
 nests differing only in credentials would hash differently. Because secrets sit outside, **rotating
@@ -143,7 +143,7 @@ one changes no bundle hash**, so it never invalidates segment reuse or forces a 
 
 ## Exposure
 
-The control plane **refuses to start** off-localhost without `NUTHATCH_CONTROL_TOKEN`. Not a warning —
+The control plane **refuses to start** off-localhost without `NUTHATCH_CONTROL_TOKEN`. Not a warning - 
 a refusal. It decides what an entire fleet runs, so an unauthenticated one on a public interface is
 not a configuration anyone chooses on purpose.
 
@@ -154,7 +154,7 @@ not a configuration anyone chooses on purpose.
 Per-tenant billing, metering, quotas, or authz between mutually-untrusting **paying** customers. Those
 belong to a gateway in front of nuthatch and are deliberately out of scope.
 
-The line: *multi-nest co-tenancy* and *distributed self-hosted* mode are both in scope — one operator's
+The line: *multi-nest co-tenancy* and *distributed self-hosted* mode are both in scope - one operator's
 cooperating nests. Charging strangers for isolated access is a different product.
 
 ## Where nests come from
@@ -167,25 +167,25 @@ registry:
 nuthatch worker --registry s3://my-nests/registry …
 ```
 
-What is on the box wins. A nest you placed there is a deliberate act — often a hand-edited view or a
-debug build — and is never silently replaced by the registry's copy.
+What is on the box wins. A nest you placed there is a deliberate act - often a hand-edited view or a
+debug build - and is never silently replaced by the registry's copy.
 
 **Pin the bundle, not just the version.** With a `bundle_hash` pinned, a worker fetches by **content
 address** and never consults the registry's index, so re-tagging `1.0.0` cannot change what any worker
 runs. Unpinned, your fleet is exactly as trustworthy as your registry.
 
 Pulled bundles are cached at `<--nest-cache>/<name>/<hash>`. Content-addressed, so re-pinning resolves
-to a different directory and actually re-pulls rather than quietly reusing what is already there — and
+to a different directory and actually re-pulls rather than quietly reusing what is already there - and
 so the cache is safe to delete at any time.
 
 ## Honest limits
 
 **Until 0.9.3 the writer pool did not write.** `worker` registered, took leases, loaded secrets and
-reported — and contained no indexing code at all. A worker acquired a cursor and did nothing with it.
+reported - and contained no indexing code at all. A worker acquired a cursor and did nothing with it.
 
 Read the previous version of this section as a cautionary tale: it said *"10/10, nothing skipped"*, and
 that was **true**. Those ten checks are real and they passed. But every one of them tested the control
-plane — registration, planning, lease fencing, version pinning, secrets — and **not one asserted that a
+plane - registration, planning, lease fencing, version pinning, secrets - and **not one asserted that a
 row appeared.** A suite that verifies the machinery around a thing rather than the thing reads exactly
 like a suite that works.
 
@@ -195,7 +195,7 @@ control plane and store on one box and writers on their own):
 - workers registering and being scheduled from another machine
 - a real lease handover under contention, with the store-enforced fence advancing
 - a 10-minute clock jump moving lease expiry rather than ownership
-- **indexing into the shared store** — `last_block` advancing, the check that could not have passed before
+- **indexing into the shared store** - `last_block` advancing, the check that could not have passed before
 - **377 blocks indexed through a 90-second control-plane outage.** Losing the control plane stops
   *rescheduling*, not *ingestion*; that split is the design, and it now has a number attached.
 

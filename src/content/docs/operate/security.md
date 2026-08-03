@@ -9,12 +9,12 @@ order: 10
 Two released defects, both on `/sql`, both fixed. If you expose that surface to anyone you do not
 fully trust, be on a current release before reading further.
 
-> **v0.9.3 — arbitrary file read.** DuckDB accepts a **quoted** function name, and the guard matched a
+> **v0.9.3 - arbitrary file read.** DuckDB accepts a **quoted** function name, and the guard matched a
 > forbidden name only when the next non-space character was `(`. So `SELECT * FROM "read_csv"('/etc/passwd')`
 > passed both guards and executed. Confirmed against a live connection during a pre-1.0 adversary pass,
 > returning the contents of `/etc/hosts`. **Every earlier release is affected.**
 
-> **v0.6.2 — arbitrary file write.** Releases up to 0.6.1 accepted `;`-stacked statements. Since
+> **v0.6.2 - arbitrary file write.** Releases up to 0.6.1 accepted `;`-stacked statements. Since
 > `COPY … TO` and `ATTACH` write to disk regardless of the in-memory connection, a stacked statement
 > was a file-write primitive for anyone who could reach the endpoint.
 
@@ -29,12 +29,12 @@ shape had another spelling. That is what shaped the fix below.
 Two controls with deliberately **different failure modes**, not one behind the other.
 
 **A denylist** rejects the file-reading and environment-disclosing functions by name, scanning after
-quotes are normalised away — so `"read_csv"(`, `read"_"csv(`, and anything else quoting can do to break
+quotes are normalised away - so `"read_csv"(`, `read"_"csv(`, and anything else quoting can do to break
 a name apart all collapse to the same match.
 
 **An allowlist** (since v0.9.3) asks DuckDB's own parser what a statement references and refuses
 anything unrecognised: a table function must be one of three, and a base table must be *named like an
-identifier* — which is what catches a replacement scan, `FROM '/x.parquet'`, that the parse tree
+identifier* - which is what catches a replacement scan, `FROM '/x.parquet'`, that the parse tree
 otherwise reports as an ordinary table whose name happens to be a path.
 
 The allowlist **fails open** if the parse is unavailable, which is why it does not replace the
@@ -58,7 +58,7 @@ Denying a query is cheaper than an OOM that takes co-tenants with it:
 | query text length | 16 KiB |
 | unsealed tip rows per query | 2,000,000, then `503` |
 
-The tip bound **refuses rather than truncates** — a partial tip would silently change the answer to an
+The tip bound **refuses rather than truncates** - a partial tip would silently change the answer to an
 aggregate, and a wrong number is worse than an error. The `503` names `sealed_through` so a caller can
 narrow to sealed data and get a correct answer immediately.
 
@@ -70,7 +70,7 @@ are the operator's layer.
 - **`/_admin/`** mutates state (mounting and unmounting nests). Open on localhost; off it, every
   request requires `NUTHATCH_ADMIN_TOKEN`. Bind localhost and leave the token unset to disable remote
   admin entirely.
-- **The scaled-mode control plane** *refuses to start* off-localhost without `NUTHATCH_CONTROL_TOKEN` —
+- **The scaled-mode control plane** *refuses to start* off-localhost without `NUTHATCH_CONTROL_TOKEN` - 
   a refusal, not a warning. It decides what an entire fleet runs.
 - **Token comparison is constant-time**, on both surfaces.
 - **`/health` and `/ready`** stay unauthenticated so a load balancer can probe them. They reveal
@@ -80,10 +80,10 @@ are the operator's layer.
 
 A nest bundle is content-addressed and hash-verified on install: the manifest, every file's bytes, and
 the decode registry regenerated from the inputs must all agree, or it is refused. That makes a bundle
-*tamper-evident*, not *safe* — a valid bundle can still declare endpoints you would rather it did not.
+*tamper-evident*, not *safe* - a valid bundle can still declare endpoints you would rather it did not.
 
-So `nest load` **warns about every non-loopback outbound endpoint** a bundle declares — webhooks, alert
-sinks, RPC URLs — with credentials redacted. Link-local and cloud-metadata addresses (`169.254.169.254`)
+So `nest load` **warns about every non-loopback outbound endpoint** a bundle declares - webhooks, alert
+sinks, RPC URLs - with credentials redacted. Link-local and cloud-metadata addresses (`169.254.169.254`)
 are logged at `error` rather than buried among them, because that is where an SSRF actually pays: on a
 cloud host, instance credentials are served there.
 
@@ -95,20 +95,20 @@ runs. Unpinned, your fleet is exactly as trustworthy as your registry.
 
 ## Secrets
 
-Private RPC URLs and webhook HMAC secrets never enter a published bundle — baking a credential into a
+Private RPC URLs and webhook HMAC secrets never enter a published bundle - baking a credential into a
 content-addressed artifact would leak it *and* break addressing.
 
 - **Embedded**: they live in the nest's `nuthatch.toml`. Keep the directory `0700`, owned by the
   service user.
 - **Scaled**: they live in the control plane and are injected per nest, per worker, scoped to the
-  cursors that worker actually holds. The interface is **write-only** — you can list which keys exist
+  cursors that worker actually holds. The interface is **write-only** - you can list which keys exist
   and never read a value back. Rotating one changes no bundle hash, so it neither invalidates segment
   reuse nor forces a re-index.
 
 ## The full audit
 
 A pre-1.0 adversary pass found one exploitable issue (the file read above) and six others. All seven
-are closed, and the write-up records *how* — including finding 3, closed as **not ours to fix** rather
+are closed, and the write-up records *how* - including finding 3, closed as **not ours to fix** rather
 than fixed, because the belief attached to it was the actual problem.
 
 Read it at
