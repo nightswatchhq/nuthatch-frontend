@@ -1,11 +1,11 @@
 <!-- Regenerate against the repo README + docs/rfcs when either changes materially.
      Ground-truth rule: README / progress log wins over this page.
-     Last regenerated against docs/rfcs/README.md at the v1.0.1 release. Since v0.6.2: RFC-0027
+     Last regenerated against docs/rfcs/README.md at the v1.0.2 release. Since v0.6.2: RFC-0027
      (live roost) and RFC-0028 (adaptive log-range control) completed, RFC-0029 (the fastest
      indexer) shipped all five slices, RFC-0022 (distributed scaled mode) went from design-only to
      implemented-and-verified-across-machines, RFC-0013's benchmark gate was run and DataFusion did
      not meet it, and `init --from-subgraph` landed as the first external contribution.
-     v1.0.1 is the current release.
+     v1.0.2 is the current release.
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -221,7 +221,7 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li><strong>v1.0.1 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). 1.0 is a promise about <strong>stability</strong>, not completeness: within 1.x no CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and upgrading stays a binary swap with no data migration. MSRV is 1.95 - measured, not asserted. The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools; 0.7-0.8 the live roost, fault quarantine and the multichain runtime; 0.9 scaled mode's writer pool and the backfill work below. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
+        <li><strong>v1.0.2 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). 1.0 is a promise about <strong>stability</strong>, not completeness: within 1.x no CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and upgrading stays a binary swap with no data migration. MSRV is 1.95 - measured, not asserted. The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools; 0.7-0.8 the live roost, fault quarantine and the multichain runtime; 0.9 scaled mode's writer pool and the backfill work below. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
         <li>A CI footprint job fails the build above 256 MB of RAM.</li>
         <li>Measured peak: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - 2.8% of the 2 GB budget.</li>
       </ul>
