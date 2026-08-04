@@ -40,6 +40,12 @@ nuthatch dev
 # ✓ indexing USDC on mainnet - serving http://127.0.0.1:8288
 ```
 
+> **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with
+> zero setup, and they are fine for trying it out or following a low-traffic contract. They are shared
+> and rate-limited, and under load they often return *nothing* rather than an error - so a deep backfill
+> will crawl or stall. For anything you care about, point at your own node or a paid provider with
+> `--rpc`. See [free public RPCs](/docs/operate/troubleshooting/#free-public-rpcs-stalls-and-empty-results).
+
 ## 4. Query it
 
 Point-read an entity, run analytical SQL over the hot tip ∪ sealed history, or read a derived view.
