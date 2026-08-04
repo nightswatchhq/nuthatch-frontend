@@ -36,7 +36,7 @@ src/
     manifesto.astro      the essay
   styles/global.css      design tokens (dark default + light) and shared styles
 astro.config.mjs         static output, inlined CSS, compressed HTML
-wrangler.toml            Cloudflare Pages config
+wrangler.toml            static-host config (Cloudflare Pages); production is Vercel
 ```
 
 ## Design
@@ -63,14 +63,25 @@ npm run preview    # serve the built site locally
 
 `dist/` is plain static files and works on any static host.
 
-## Deploy - Cloudflare Pages
+## Deploy - Vercel
+
+Production is Vercel, and a deploy is one command from a linked checkout:
+
+```sh
+vercel --prod
+```
+
+That is the whole procedure: `nuthatch-frontend` under the `nbgn` team, promoted straight to
+production. Check what is live with `vercel ls --prod`, and confirm against
+https://nuthatch-indexer.com rather than the deployment URL.
 
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Framework preset: Astro (or "None")
 
-`wrangler.toml` is included. The same `dist/` also deploys to Netlify, GitHub Pages, or a
-plain nginx box with no changes.
+`dist/` is plain static files with no server, functions or runtime, so it also deploys unchanged to
+Cloudflare Pages, Netlify, GitHub Pages, or a plain nginx box. `wrangler.toml` is kept for that
+reason. It is **not** what production uses, and nothing in `package.json` or CI invokes wrangler.
 
 ## Performance budget
 
