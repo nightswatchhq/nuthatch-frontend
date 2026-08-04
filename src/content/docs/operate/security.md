@@ -1,7 +1,7 @@
 ---
 title: "Security"
 description: The advisories you need to know about, what the guards actually stop, and what to decide before you expose /sql.
-order: 10
+order: 4
 ---
 
 ## Upgrade first

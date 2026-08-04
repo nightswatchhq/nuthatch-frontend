@@ -8,6 +8,11 @@ order: 2
 process - so deploying is running that under a supervisor. There is no separate server to stand up,
 no queue, no database.
 
+> This page is the **mechanics**: systemd, Docker, a proxy, backups. If you want the whole path from a
+> fresh box to something you can leave running unattended, follow
+> [Run it in production](/docs/operate/production/) instead, which puts these pieces in order and ends
+> in a pre-flight checklist.
+
 ## systemd
 
 ```ini
@@ -110,7 +115,8 @@ external state to reconcile - which is the reason the hot/cold split exists in t
 ## Upgrading the binary
 
 A binary swap. No data migration, no re-backfill: a newer release reads an older one's hot store and
-sealed segments as they are. Proven in production across 0.3.0 → 0.6.0 → 0.9.x.
+sealed segments as they are. Proven in production across 0.3.0 → 0.6.0 → 0.6.2 → 1.0.0 on a box that
+has been serving public traffic throughout.
 
 ```sh
 systemctl stop nuthatch

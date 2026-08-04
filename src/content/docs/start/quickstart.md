@@ -102,6 +102,8 @@ the wrong chain corrupts state silently.
 
 ## Next
 
+- **[Run it in production](/docs/operate/production/)** - the whole path from a fresh box to a nest
+  serving unattended, ending in a pre-flight checklist. Start here if this is going anywhere real.
 - **[Deploy it](/docs/operate/deploy/)** - systemd, Docker, and putting a proxy in front.
 - **[Performance](/docs/operate/performance/)** - what it measures at, and the three things that
   decide your backfill's wall clock.

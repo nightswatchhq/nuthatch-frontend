@@ -1,7 +1,7 @@
 ---
 title: Run a roost
 description: One runtime hosting many nests across one or more chains - one isolated cursor per chain.
-order: 4
+order: 7
 ---
 
 A **roost** is one runtime hosting many nests. Nests on the same chain share a single cursor and

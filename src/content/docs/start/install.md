@@ -18,9 +18,19 @@ puts `nuthatch` on your `PATH`. It's short and
 [readable on GitHub](https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh) -
 audit it first if `curl | sh` makes you itch.
 
-Prebuilt binaries cover **macOS (Apple Silicon)** and **Linux x86_64**. Checksums ship with every
-release; a Homebrew tap, an OCI image, and detached release signatures are on the
+Prebuilt binaries cover **macOS (Apple Silicon)** and **Linux x86_64**. Intel Mac is deliberately not
+built. Checksums ship with every release; a Homebrew tap and detached release signatures are on the
 [roadmap](/roadmap).
+
+## Container image
+
+```sh
+docker run --rm ghcr.io/nightswatchhq/nuthatch:1.0.1 --version
+```
+
+`linux/amd64` only for now. The image carries the **same binary attached to the GitHub Release**, so
+the two cannot drift. Scaled mode needs the `-scaled` tag: the default image is the embedded build and
+carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source
 

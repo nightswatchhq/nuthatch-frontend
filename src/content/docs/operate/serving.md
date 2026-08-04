@@ -33,6 +33,14 @@ raise:
   otherwise materialise unbounded Rust-side (outside DuckDB's memory limit); this keeps a query inside
   the footprint budget. Hitting it flags the result truncated, same as the row cap.
 - **2 concurrent analytical queries.** A third gets a `503` - retry, don't remove the gate.
+- **2,000,000 unsealed rows** scanned per query. Every `/sql` call parses the whole unsealed tip into
+  memory, so on a deep-finality chain with a busy contract this is the largest RAM risk the process
+  carries - and in a roost it is a co-tenant's problem too, because the budget is per cursor. Past the
+  ceiling the query is refused with a `503` naming the reason, rather than the box falling over. It is
+  generous on purpose: a nest at tip on a normal chain is nowhere near it, so you should only ever meet
+  this guard when something is genuinely wrong. Note it is a **refusal, not a downgrade** - an
+  over-budget tip is never silently answered from sealed data alone, which would return a different
+  number without saying so.
 - **SELECT/WITH only.** The query surface is read-only by construction; the ingest thread is the
   only writer.
 

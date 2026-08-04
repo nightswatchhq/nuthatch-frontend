@@ -1,0 +1,235 @@
+---
+title: "Run it in production"
+description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
+order: 3
+---
+
+The other pages in this section each cover one surface. This one is the **path**: follow it top to
+bottom on a fresh box and you end up with something you can leave running.
+
+It assumes one machine and one chain. For many nests see [roosts](/docs/operate/roosts/); for more
+than one machine see [scaled mode](/docs/operate/scaled/). Neither is a prerequisite, and one box is
+the honest default.
+
+## 0. What you need
+
+- A Linux box. Two cores and 4 GB of RAM is comfortable for a single cursor, whose budget is 2 GB.
+- Disk for sealed history. Parquet segments are compact but they grow forever, so give it room and
+  watch it. A busy nest's segments are the thing that fills a disk, not the hot store.
+- **An RPC endpoint that can actually serve a backfill.** This is the single most common cause of a
+  bad first day, and it is checkable in advance. Do not skip step 1.
+
+## 1. Check the endpoint before you trust it
+
+```sh
+nuthatch doctor --rpc https://your-endpoint/ --address 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48
+```
+
+`doctor` probes the three limits that otherwise surface mid-backfill as a retry loop that merely looks
+like slowness: max `eth_getLogs` width, max JSON-RPC batch size, and archive depth. It prints the
+largest safe `--window` for that endpoint.
+
+Two failure modes worth knowing before they cost you an afternoon:
+
+- **Archive depth.** Several well-known free endpoints answer only ~100 blocks behind tip and return
+  an "archive requests require a token" error beyond that. Such an endpoint cannot serve a backfill at
+  all, however fast it looks on a tip query.
+- **Range caps.** Providers refuse an oversized range in inconsistent ways, sometimes with a 400 that
+  reads like a client error. nuthatch splits and adapts around these, but an endpoint with a tight cap
+  and no batching will be slow no matter what you set.
+
+Pass `--address` so the probe matches what a real nest asks for; some endpoints cap an unfiltered
+query harder than a filtered one.
+
+## 2. Lay the box out
+
+```text
+/opt/nuthatch/my-nest/       the nest: nuthatch.toml, abis/, views/, checks/, and its data
+/usr/local/bin/nuthatch      the binary
+```
+
+Create an unprivileged user that owns only the nest directory:
+
+```sh
+sudo useradd --system --home /opt/nuthatch --shell /usr/sbin/nologin nuthatch
+sudo install -d -o nuthatch -g nuthatch /opt/nuthatch
+```
+
+Get the nest itself either by scaffolding from an address, or by loading a published one:
+
+```sh
+# from a contract address
+nuthatch init 0xA0b8… --chain mainnet --dir /opt/nuthatch/my-nest
+
+# or a published nest, verified by content hash
+nuthatch nest load https://…/my-nest.bundle --dir /opt/nuthatch/my-nest
+```
+
+A loaded bundle is checked against its manifest: every file's hash, plus a decode registry
+regenerated from the inputs and compared to the pinned one. A nest that loads decodes exactly as its
+author intended. See [the registry](/docs/operate/registry/).
+
+## 3. Do the backfill deliberately, before it is a service
+
+Run the history once by hand so you watch it finish and know how long it takes:
+
+```sh
+sudo -u nuthatch nuthatch dev --dir /opt/nuthatch/my-nest \
+  --seal-direct --concurrency 8 --window "$(: use what doctor told you)"
+```
+
+`--seal-direct` writes finalized history straight to Parquet instead of through the hot store, which
+is much faster for a from-deployment backfill. Let it reach the tip, then stop it. The service you
+install next will resume rather than start over.
+
+If the nest ships `checks/`, prove it before serving anyone:
+
+```sh
+nuthatch check --dir /opt/nuthatch/my-nest
+```
+
+## 4. Install the service
+
+```ini
+# /etc/systemd/system/nuthatch@.service   (templated, so one unit serves many nests)
+[Unit]
+Description=nuthatch indexer (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nuthatch
+WorkingDirectory=/opt/nuthatch/%i
+ExecStart=/usr/local/bin/nuthatch dev --dir /opt/nuthatch/%i \
+          --listen 127.0.0.1:8288 --seal-direct --concurrency 8
+Restart=on-failure
+RestartSec=5
+# The per-cursor budget. A regression gets killed and restarted rather than taking the box with it.
+MemoryMax=2G
+# Least privilege: it needs its own directory and the network, nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/nuthatch/%i
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable --now nuthatch@my-nest
+journalctl -u nuthatch@my-nest -f
+```
+
+`MemoryMax=2G` matches the budget nuthatch holds itself to, so the two agree rather than fight.
+
+Shutdown is graceful: SIGTERM drains in-flight requests and checkpoints the ingest task, so a restart
+resumes cleanly.
+
+## 5. Decide exposure on purpose
+
+nuthatch binds `127.0.0.1` by default and that default is doing real work. **The API has no
+authentication of its own** - the guards bound *how much* a query can cost, never *who* may ask.
+
+Put a reverse proxy in front and give it TLS and auth:
+
+```caddy
+indexer.example.com {
+    basic_auth {
+        reader $2a$14$…          # caddy hash-password
+    }
+    reverse_proxy 127.0.0.1:8288
+}
+```
+
+Then make three decisions explicitly rather than by default:
+
+| Surface | Decision |
+|---|---|
+| `/sql` | A real analytical surface. Guarded, but a caller can still ask expensive questions. Read [security](/docs/operate/security/) before exposing it to anyone you do not trust. |
+| `/_admin/` | **Mutates state** - it mounts and unmounts nests. Off localhost it requires `NUTHATCH_ADMIN_TOKEN` set *and* presented per request. Want no remote admin at all? Bind localhost and pass `--no-admin`. |
+| `/health`, `/ready` | Unauthenticated by design so a load balancer can probe them. Leave them reachable. |
+
+## 6. Watch the two numbers that matter
+
+Scrape `GET /metrics`. Alert on these and treat everything else as diagnosis material:
+
+- **`nuthatch_tip_lag_blocks`** - sustained growth means you are not keeping up, and it is nearly
+  always the RPC endpoint rather than nuthatch.
+- **`nuthatch_rss_bytes`** - approaching the 2 GB per-cursor ceiling.
+
+A frozen `nuthatch_last_poll_unixtime` means a stalled poller, which is the failure that otherwise
+looks like "the data just stopped being interesting". In a roost, add `nuthatch_nest_health` and
+`nuthatch_cursor_live`, because a *partly* unwell roost still answers `/health` on the whole. Full
+list in [metrics](/docs/operate/metrics/).
+
+`/ready` is the honest liveness signal for a load balancer: it answers *is this nest caught up*, and
+reports `stalled` when every endpoint in the pool is refusing a window.
+
+## 7. Back it up
+
+The nest directory is the whole of it. Sealed segments are content-addressed and immutable, so they
+copy safely **while the process runs**:
+
+```sh
+rsync -a /opt/nuthatch/my-nest/ backup:/backups/my-nest/
+```
+
+Restoring is putting the directory back and starting the binary. No schema migration, no external
+state to reconcile.
+
+Worth knowing what is precious and what is not: `nuthatch.toml`, `abis/`, `views/` and `checks/` are
+authored and must be kept. `nuthatch.redb`, `segments/` and `.duckdb/` are derived - losing them costs
+a re-backfill, not data you cannot recover.
+
+## 8. Know your upgrade path before you need it
+
+Two different axes, and conflating them is the usual confusion:
+
+- **The binary**: a swap and a restart. A newer release reads an older one's hot store and sealed
+  segments as they are. Back up the old binary first, restart one nest, check it, then the rest.
+- **The nest** (its schema, views or decode): `nest diff` classifies the change as compatible or
+  breaking, and `nest upgrade` performs it with no downtime. See [upgrades](/docs/operate/upgrades/).
+
+Verify parity rather than assuming it: note a few row counts before, re-run them after. Query
+responses carry a `provenance` block whose `registry_hash` fingerprints the decode and schema, so an
+unchanged hash across an upgrade is proof the nest still produces the same answers.
+
+## 9. Prove it, do not assume it
+
+```sh
+./scripts/verify.sh 0 4
+```
+
+An acceptance runbook where every step is falsifiable, covering the artifact, a single nest,
+correctness, a roost, and the guards. See [verifying a deployment](/docs/operate/verifying/), which
+also states plainly which levels we have run ourselves and which we have not.
+
+## Pre-flight checklist
+
+Before you walk away from it:
+
+- [ ] `doctor` passed against the endpoint you are actually using
+- [ ] Backfill completed by hand, and you know how long it took
+- [ ] `nuthatch check` passes, if the nest ships checks
+- [ ] Service is enabled, survives `systemctl restart`, and comes back after a reboot
+- [ ] `MemoryMax` set, and the box has headroom above it for queries
+- [ ] Bound to localhost, with a proxy terminating TLS and auth in front
+- [ ] `NUTHATCH_ADMIN_TOKEN` set, or `--no-admin` passed, and you know which and why
+- [ ] `/metrics` scraped, with alerts on tip lag and RSS
+- [ ] A backup that has been **restored once**, because an untested backup is a hope
+- [ ] Someone knows where [troubleshooting](/docs/operate/troubleshooting/) lives
+
+## When it breaks
+
+Start at [troubleshooting](/docs/operate/troubleshooting/), which is organised symptom to metric to
+remedy. The three that account for most of it:
+
+- **Tip lag climbing** - the endpoint, nearly always. Re-run `doctor` against it.
+- **A `503` from `/sql`** - a guard did its job. Two queries are already running, or one asked for
+  more of the unsealed tip than the budget allows. Retry or narrow the query; do not raise the gate.
+- **A nest quarantined in a roost** - its siblings are fine by design. `GET /nests` carries the fault
+  and the re-admission time.

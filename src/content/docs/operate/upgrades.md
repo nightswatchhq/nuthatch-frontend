@@ -1,7 +1,7 @@
 ---
 title: "Upgrading a nest"
 description: "nest diff + nest upgrade - the N-1 problem solved (RFC-0020)."
-order: 6
+order: 9
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill,
