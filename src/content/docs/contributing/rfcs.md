@@ -25,7 +25,7 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0009 Factories** *(Implemented)* - dynamic child-contract discovery.
 - **0010 Admin UI & webhooks** *(Implemented)* - ease-of-use parity.
 - **0011 The graph-network nest** *(Parked after pilot)* - the wedge proven in prod.
-- **0012 Multi-nest runtime & packaging** *(Implemented)* - roosts and content-addressed bundles.
+- **0012 Multi-nest runtime & packaging** *(Implemented)* - runtimes and content-addressed bundles.
 - **0013 Storage & query-engine direction** *(Accepted; the gate was run)* - the DuckDB union
   shipped. DataFusion convergence was **benchmark-gated, and DataFusion did not meet the gate**:
   1.6-2.7× DuckDB's latency on the fold that matters, widening as segments grow, at exact result
@@ -43,7 +43,7 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   re-tagging a version in a registry cannot change what a fleet runs.
 - **0020 Nest lifecycle & the N-1 upgrade** *(Implemented)* - `diff`, hot-swap, deprecation,
   segment reuse. The resync tax, killed.
-- **0021 The multichain roost** *(Accepted; slice 1 shipped, live two-chain run done)* - one
+- **0021 The multichain runtime** *(Accepted; slice 1 shipped, live two-chain run done)* - one
   runtime, one isolated cursor per chain.
 - **0022 Distributed scaled mode** *(Implemented - control plane and ingestion both)* - read/write
   planes for operators, proven across real machines including **377 blocks indexed through a
@@ -57,9 +57,9 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   demands it.
 - **0025 Adaptive MCP tool advertisement** *(Implemented)* - advertise only the tools a nest can
   answer, so an agent is never handed an inert tool that returns `{"count":0}`.
-- **0026 Fault quarantine & partial health** *(Implemented)* - a roost survives its sick nests: a
-  nest's error no longer kills its cursor, and a cursor's death no longer kills the roost.
-- **0027 The live roost** *(Implemented; all 7 slices)* - mounting and unmounting nests without a
+- **0026 Fault quarantine & partial health** *(Implemented)* - a runtime survives its sick nests: a
+  nest's error no longer kills its cursor, and a cursor's death no longer kills the runtime.
+- **0027 The live runtime** *(Implemented; all 7 slices)* - mounting and unmounting nests without a
   restart, so onboarding one tenant doesn't restart every co-tenant.
 - **0028 Adaptive log-range control** *(Implemented)* - a fix pack for `eth_getLogs` range control:
   classify RPC failures properly rather than retrying an auth rejection forever.

@@ -189,7 +189,7 @@ and ranks link-local/metadata addresses at `error`.
 
 A registry (a directory, or any S3-compatible bucket) adds `publish`/`pull` by `name@version`.
 
-## The roost - `roost.rs`
+## The runtime - `runtime.rs`
 
 One runtime, many nests, **one isolated cursor per distinct chain**. Nests on the same chain share a
 cursor and one `getLogs` per window - N nests for roughly one nest's RPC cost - with per-nest
@@ -204,7 +204,7 @@ quietly exceeded is not a budget.
 
 A faulting nest is **quarantined**, not fatal: its healthy siblings keep indexing and serving, and it
 is re-admitted on a backoff if the fault was retryable. Blast radius is bounded in both directions - 
-a nest's error no longer kills its cursor, a cursor's death no longer kills the roost.
+a nest's error no longer kills its cursor, a cursor's death no longer kills the runtime.
 
 ## What changes in scaled mode - `pgstore.rs`, `worker.rs`, `scheduler.rs`, `controlplane.rs`
 

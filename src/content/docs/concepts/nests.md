@@ -59,6 +59,6 @@ never phones home for them at runtime. Every declared event of every contract be
 
 ## Next
 
-- [Roosts &amp; cursors](/docs/concepts/roosts/) - hosting many nests in one runtime
+- [Runtimes &amp; cursors](/docs/concepts/runtimes/) - hosting many nests in one runtime
 - [Storage &amp; sealing](/docs/concepts/storage/) - where a nest's data lives
 - [Build a nest](/docs/build/config/) - the config, tables, views, and recipes

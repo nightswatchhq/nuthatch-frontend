@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v0.6.2: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. The 0.6 line brings portable nest bundles, a nest registry, zero-downtime upgrades, multichain roosts, derive-first contract reads, and fault quarantine; 0.6.2 is a security patch for the /sql surface. Checksums verified; a Homebrew tap, an OCI image, and release signatures are on the way."
+  description="Install Nuthatch v1.0.2: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,10 +19,10 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-        <strong>v0.6.2 is out.</strong> The 0.6 line brings portable nest bundles, a nest registry
-        (<code>name@version</code>, filesystem or S3), zero-downtime nest upgrades, multichain roosts,
-        derive-first contract reads (<code>recipe add</code>), and fault quarantine so a roost survives
-        its sick nests - on top of the delightful core and agent-grade MCP. <strong>0.6.2 is a security
+        <strong>v1.0.2 is out.</strong> Portable nest bundles, a nest registry
+        (<code>name@version</code>, filesystem or S3), no-resync nest upgrades, multichain runtimes,
+        derive-first contract reads (<code>recipe add</code>), and fault quarantine so a runtime survives
+        its sick nests - on top of the delightful core and agent-grade MCP. <strong>1.0.2 is a maintenance
         patch:</strong> releases up to 0.6.1 accepted <code>;</code>-stacked statements on
         <code>/sql</code>, which was an arbitrary file-write primitive for anyone who could reach the
         endpoint. If you are running an older build, swap the binary - there is no data migration.

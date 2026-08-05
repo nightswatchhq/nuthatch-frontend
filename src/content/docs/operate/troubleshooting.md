@@ -4,7 +4,7 @@ description: "RPC failover, stalls, corrupt-segment recovery, and common errors.
 order: 12
 ---
 
-Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`roost` at
+Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
 `http://127.0.0.1:8288/metrics`; see [Metrics & footprint](/docs/operate/metrics/) for the full
 list.
 
@@ -102,9 +102,9 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 
 ## RAM near the 2 GB budget
 
-The budget is per-cursor and CI-enforced; in a roost it's shared across that cursor's nests
+The budget is per-cursor and CI-enforced; in a runtime it's shared across that cursor's nests
 (`max_rss_mb`, default 2048), and a mount projected to exceed it is refused. Check the per-nest
-estimated footprint (and the roost-wide actual `nuthatch_rss_bytes`) in the `/nests` roster. DuckDB
+estimated footprint (and the runtime-wide actual `nuthatch_rss_bytes`) in the `/nests` roster. DuckDB
 queries carry their own per-query memory cap and thread limit;
 if you're tight, lower query concurrency rather than the per-query cap.
 

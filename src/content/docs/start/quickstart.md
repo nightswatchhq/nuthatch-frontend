@@ -73,7 +73,7 @@ curl http://127.0.0.1:8288/balance/0xYourAddress
 - **An MCP server** so an agent can drive it offline. See [MCP](/docs/ai/mcp/).
 
 > **Under two minutes.** That's the whole demo - install, `init`, `dev`, query. Everything after this
-> page is about going deeper: authored logic, factories, roosts, upgrades, and operating it in
+> page is about going deeper: authored logic, factories, runtimes, upgrades, and operating it in
 > production.
 
 ## A word on the free public RPCs
@@ -118,4 +118,4 @@ the wrong chain corrupts state silently.
 
 - [What is a nest?](/docs/concepts/nests/) - the mental model
 - [Build a nest](/docs/build/config/) - `nuthatch.toml`, views, factories, recipes
-- [Run a roost](/docs/operate/roosts/) - many nests, one runtime, one or more chains
+- [Run many nests](/docs/operate/many-nests/) - one runtime, one or more chains, tenancy included

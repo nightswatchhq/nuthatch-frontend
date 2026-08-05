@@ -5,7 +5,7 @@ order: 3
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). All endpoints are
-read-only GETs; the ingest thread is the only writer. In a [roost](/docs/operate/roosts/), each
+read-only GETs; the ingest thread is the only writer. In a [runtime](/docs/operate/many-nests/), each
 nest's full surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 ## Status & introspection
@@ -46,16 +46,16 @@ nest's full surface appears under its `/<name>/…` prefix, byte-identical to a 
 - `GET /flags?kind=threshold|velocity` - compliance flags: single transfers over the configured
   amount, or addresses over the windowed-volume threshold.
 
-## Admin & roost
+## Admin & runtime
 
 - `GET /_admin/` - the built-in read-only dashboard; `GET /_admin/events` streams live activity
   (SSE). Off-localhost both require the admin token; `--no-admin` removes them. See
   [Serving & the admin UI](/docs/operate/serving/).
-- `GET /nests` *(roost only)* - the roster of mounted nests: name, chain, registry hash, table
+- `GET /nests` *(runtime only)* - the roster of mounted nests: name, chain, registry hash, table
   count, footprint, plus each nest's **live health** (`indexing` or `quarantined`, with the reason
   and the next re-admission attempt). The health half is merged per request, not cached at boot, so
   a quarantined nest reports what is true now.
-- `GET /ready` *(roost root)* - roost-wide readiness, for a supervisor to poll. Each nest also
+- `GET /ready` *(runtime root)* - runtime-wide readiness, for a supervisor to poll. Each nest also
   answers its own `GET /<name>/ready`, so one sick nest is diagnosable without guessing.
 
 During a breaking [upgrade](/docs/operate/upgrades/), the old version's responses additionally

@@ -35,7 +35,7 @@ raise:
 - **2 concurrent analytical queries.** A third gets a `503` - retry, don't remove the gate.
 - **2,000,000 unsealed rows** scanned per query. Every `/sql` call parses the whole unsealed tip into
   memory, so on a deep-finality chain with a busy contract this is the largest RAM risk the process
-  carries - and in a roost it is a co-tenant's problem too, because the budget is per cursor. Past the
+  carries - and in a runtime it is a co-tenant's problem too, because the budget is per cursor. Past the
   ceiling the query is refused with a `503` naming the reason, rather than the box falling over. It is
   generous on purpose: a nest at tip on a normal chain is nowhere near it, so you should only ever meet
   this guard when something is genuinely wrong. Note it is a **refusal, not a downgrade** - an
@@ -71,4 +71,4 @@ Access follows the exposure rule:
   constant-time, so the token can't be recovered through a timing side-channel.
 - `--no-admin` removes the routes entirely, for hosted deployments fronting their own dashboard.
 
-In a [roost](/docs/operate/roosts/), each nest's UI lives under its prefix: `/<name>/_admin/`.
+With [many nests in one runtime](/docs/operate/many-nests/), each mount's UI lives under its prefix: `/<alias>/_admin/`.

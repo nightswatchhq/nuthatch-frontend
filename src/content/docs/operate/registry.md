@@ -68,4 +68,4 @@ rejected"_, never a silent empty result, and never mistaken for "not found".
 ## See also
 
 - [Upgrading a nest](/docs/operate/upgrades/) - how a new version of a published nest is rolled out
-- [Run a roost](/docs/operate/roosts/) - mounting nests from a registry across a fleet
+- [Run a runtime](/docs/operate/many-nests/) - mounting nests from a registry across a fleet

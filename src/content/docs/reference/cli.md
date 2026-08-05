@@ -56,11 +56,15 @@ Every command that operates on a nest takes `--dir` (default `.`).
   asserts the hash; `--registry` resolves a `name[@version]` reference instead.
 - **`nuthatch nest publish <bundle> --registry <store>`** - publish under `name@version`, advancing
   `latest`.
-- **`nuthatch nest diff <old> <new>`** / **`nest upgrade --to <dir>`** - classify an update and
-  perform the zero-downtime flip. See [Upgrading a nest](/docs/operate/upgrades/).
-- **`nuthatch roost dev`** - run many nests behind one listener; `--fail-fast` exits on the first
+- **`nuthatch migrate --dir <dir>`** - move a pre-2.0 directory to identity-keyed datasets, and apply
+  a staged nest upgrade. Classifies the change and **refuses a breaking one by name**
+  (`--allow-breaking` to accept). Moves data and never re-indexes; `--dry-run` prints the plan.
+- **`nuthatch prune --dir <dir>`** - reclaim datasets and shared segments nothing mounts any more.
+  Lists by default; `--yes` deletes.
+
+- **`nuthatch dev`** - run many nests behind one listener; `--fail-fast` exits on the first
   fault instead of quarantining it (RFC-0026). See
-  [Run a roost](/docs/operate/roosts/).
+  [Run a runtime](/docs/operate/many-nests/).
 
 ## The compliance pack (RFC-0008)
 

@@ -64,4 +64,4 @@ Absent stages cost nothing - a nest with none of them is a plain, fast log index
 
 - [ABIs, events &amp; tables](/docs/build/tables/) - how config becomes SQL tables
 - [Authored SQL views](/docs/build/views/) - add derived logic
-- [Configuration reference](/docs/reference/config/) - every field, `nuthatch.toml` and `roost.toml`
+- [Configuration reference](/docs/reference/config/) - every field, `nuthatch.toml` and `mounts.toml`

@@ -16,12 +16,12 @@ binary carries no database driver and embedded mode stays a single file with not
 
 Two reasons, and neither of them is "it sounds more serious":
 
-- **A single box can no longer hold your cursors** inside its RAM budget. A roost is bounded per
+- **A single box can no longer hold your cursors** inside its RAM budget. A runtime is bounded per
   cursor at 2 GB, and Σ cursors has to fit the machine.
 - **Serving load and ingestion load want different dials.** A backfill that saturates a writer
   shouldn't slow queries, and a traffic spike shouldn't slow indexing.
 
-If neither applies, a [roost](/docs/operate/roosts/) on one machine is simpler, and that simplicity is
+If neither applies, a [runtime](/docs/operate/many-nests/) on one machine is simpler, and that simplicity is
 the point of the embedded path. Scaled mode is not an upgrade; it is a trade.
 
 ## The three roles
