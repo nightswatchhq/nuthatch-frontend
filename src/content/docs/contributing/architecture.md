@@ -52,7 +52,7 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
 - **Compliance**: `labels`, `lists`, `screen`, `flags`, `velocity`, `exposure`, `alerts`,
   `webhooks`, `pack`, `audit`.
 - **Lifecycle & ops**: `config`, `project` (init/add/scaffolding), `lifecycle` (diff/upgrade),
-  `roost`, `metrics`, `bench`, `check`, `cli`, `starlark_config` (legacy, retired).
+  `runtime`, `metrics`, `bench`, `check`, `cli`, `starlark_config` (legacy, retired).
 
 ## Where to start reading
 

@@ -7,7 +7,7 @@ order: 3
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
 bottom on a fresh box and you end up with something you can leave running.
 
-It assumes one machine and one chain. For many nests see [roosts](/docs/operate/roosts/); for more
+It assumes one machine and one chain. For many nests see [running many nests](/docs/operate/many-nests/); for more
 than one machine see [scaled mode](/docs/operate/scaled/). Neither is a prerequisite, and one box is
 the honest default.
 
@@ -162,8 +162,8 @@ Scrape `GET /metrics`. Alert on these and treat everything else as diagnosis mat
 - **`nuthatch_rss_bytes`** - approaching the 2 GB per-cursor ceiling.
 
 A frozen `nuthatch_last_poll_unixtime` means a stalled poller, which is the failure that otherwise
-looks like "the data just stopped being interesting". In a roost, add `nuthatch_nest_health` and
-`nuthatch_cursor_live`, because a *partly* unwell roost still answers `/health` on the whole. Full
+looks like "the data just stopped being interesting". In a runtime, add `nuthatch_nest_health` and
+`nuthatch_cursor_live`, because a *partly* unwell runtime still answers `/health` on the whole. Full
 list in [metrics](/docs/operate/metrics/).
 
 `/ready` is the honest liveness signal for a load balancer: it answers *is this nest caught up*, and
@@ -191,8 +191,10 @@ Two different axes, and conflating them is the usual confusion:
 
 - **The binary**: a swap and a restart. A newer release reads an older one's hot store and sealed
   segments as they are. Back up the old binary first, restart one nest, check it, then the rest.
-- **The nest** (its schema, views or decode): `nest diff` classifies the change as compatible or
-  breaking, and `nest upgrade` performs it with no downtime. See [upgrades](/docs/operate/upgrades/).
+- **The nest** (its schema, views or decode): stage the new version and run `nuthatch migrate`. The
+  runtime classifies the change itself and **refuses a breaking one by name** until you accept it; a
+  cosmetic edit adopts the existing data and re-indexes nothing. See
+  [upgrades](/docs/operate/upgrades/).
 
 Verify parity rather than assuming it: note a few row counts before, re-run them after. Query
 responses carry a `provenance` block whose `registry_hash` fingerprints the decode and schema, so an
@@ -205,7 +207,7 @@ unchanged hash across an upgrade is proof the nest still produces the same answe
 ```
 
 An acceptance runbook where every step is falsifiable, covering the artifact, a single nest,
-correctness, a roost, and the guards. See [verifying a deployment](/docs/operate/verifying/), which
+correctness, a runtime, and the guards. See [verifying a deployment](/docs/operate/verifying/), which
 also states plainly which levels we have run ourselves and which we have not.
 
 ## Pre-flight checklist
@@ -231,5 +233,5 @@ remedy. The three that account for most of it:
 - **Tip lag climbing** - the endpoint, nearly always. Re-run `doctor` against it.
 - **A `503` from `/sql`** - a guard did its job. Two queries are already running, or one asked for
   more of the unsealed tip than the budget allows. Retry or narrow the query; do not raise the gate.
-- **A nest quarantined in a roost** - its siblings are fine by design. `GET /nests` carries the fault
+- **A nest quarantined in a runtime** - its siblings are fine by design. `GET /nests` carries the fault
   and the re-admission time.

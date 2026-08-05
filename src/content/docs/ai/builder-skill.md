@@ -5,7 +5,7 @@ order: 3
 ---
 
 The builder skill teaches a coding agent to *build with* nuthatch - scaffold nests, edit configs,
-add factories and compliance, package and publish, run roosts, and troubleshoot - the way an
+add factories and compliance, package and publish, run runtimes, and troubleshoot - the way an
 experienced operator would. It lives in the repo at
 [`skills/nuthatch-builder/`](https://github.com/nightswatchhq/nuthatch/tree/main/skills/nuthatch-builder)
 and drops into any agent that reads Claude-style skills.
@@ -28,7 +28,7 @@ The way a skill lies is drift - it confidently describes a flag that changed two
 The skill front-loads the **non-negotiables** the binary enforces (one writer; one cursor per
 chain; sealed segments are immutable; the `/sql` guards are self-protection), the 90-second happy
 path (`init` → `dev` → `sql`), and a routing map into focused references: the generated CLI
-reference, the config reference, workflows (init→dev→sql, factories, bundle/publish, roosts,
+reference, the config reference, workflows (init→dev→sql, factories, bundle/publish, runtimes,
 wiring an AI client), the views layer and its footguns, the compliance pack, and
 symptom → metric → remedy troubleshooting.
 

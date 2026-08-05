@@ -1,45 +1,67 @@
 ---
-title: Run a roost
-description: One runtime hosting many nests across one or more chains - one isolated cursor per chain.
+title: Run many nests
+description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 7
 ---
 
-A **roost** is one runtime hosting many nests. Nests on the same chain share a single cursor and
-one `getLogs` per window - N nests for roughly one nest's RPC cost - and a roost can also span
+One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
+`getLogs` per window - N nests for roughly one nest's RPC cost - and a runtime can also span
 **multiple chains**, running one isolated cursor per chain: a Base nest and an Arbitrum nest in one
 process. Each cursor has its own tip, finality, and reorg boundary, and a per-cursor footprint
 budget.
 
+:::note[The runtime is gone in 2.0]
+There used to be a separate *runtime* concept and a `dev` command, so you had to choose which
+shape you wanted before you knew which you wanted. There is now **one command**: `nuthatch dev`. What it runs is a
+property of the directory - a `nuthatch.toml` runs that one nest, a `mounts.toml` runs every nest it
+mounts. Run `nuthatch migrate` on a pre-2.0 directory and it rewrites itself; it moves data and never
+re-indexes.
+:::
+
 ## Layout
 
-A roost is a directory with a `roost.toml` and a `nests/` folder of ordinary nests:
+A runtime directory holds a `mounts.toml` and its datasets, keyed by **nest identity** rather than by
+a name you picked:
 
 ```text
-my-roost/
-  roost.toml
-  nests/
-    usdc/        # a normal nest - nuthatch.toml, abis/, views/, …
-    weth/
+my-runtime/
+  mounts.toml
+  segments/      # shared, content-addressed: two nests that decode the same
+                 #   contract hold ONE copy here, not two
+  data/
+    9f2c…/       # a dataset: nuthatch.toml, abis/, views/, its own hot store
+    4a71…/
 ```
 
 ```toml
-[roost]
-name = "my-roost"
+[runtime]
+name = "my-runtime"
+max_rss_mb = 2048            # optional per-cursor RAM ceiling
+
+[[chains]]
 chain = "mainnet"
 chain_id = 1
 rpc_urls = ["https://…"]
-nests = ["usdc", "weth"]     # subdirectories under nests/ to mount
-max_rss_mb = 2048            # optional per-cursor RAM ceiling
+
+[[mounts]]
+tenant = "default"           # opaque to nuthatch; omit it and you get "default"
+alias = "usdc"               # what it is served as: /usdc/…
+nid = "9f2c…"                # which nest identity it serves
 ```
 
-A nest can't tell it's co-hosted: its config, storage, and routes are identical to a solo `dev`.
-Mount an existing nest by copying (or [`nest load`](/docs/operate/registry/)-ing) it into `nests/`
-and adding its name.
+`mounts.toml` is **runtime state, not authored config**: `nuthatch migrate` writes it and the runtime
+keeps it in step. You do not hand-write it.
+
+A nest cannot tell it is co-hosted: its config, storage, and routes are identical to a solo `dev`.
+
+**Two mounts may name the same nest identity, and that is the point.** They share one dataset: one
+store, one place in the cursor, one backfill, two routes. Two tenants running the same nest never
+index it twice.
 
 ## Run it
 
 ```sh
-nuthatch roost dev
+nuthatch dev --dir my-runtime
 ```
 
 This brings up every mounted nest and serves them behind one listener (`--listen`, default
@@ -54,8 +76,8 @@ The backfill flags you know from `dev` apply to every mounted nest: `--backfill 
 
 ## Mount and unmount without a restart
 
-Since **0.7.0** a roost's nest set is changeable while it runs. Before that, adding or removing a nest
-meant editing `roost.toml` and restarting - which stops every *co-tenant* nest too, so a configuration
+Since **0.7.0** the mounted set is changeable while it runs. Before that, adding or removing a nest
+meant editing config and restarting - which stops every *co-tenant* nest too, so a configuration
 change had a wider blast radius than an actual fault.
 
 ```sh
@@ -69,27 +91,27 @@ What the runtime guarantees:
 
 - **A mount is admitted, not assumed.** It is refused with `507` if it would breach the cursor's RAM
   budget (the response carries the projected and ceiling figures), and `409` for a name already mounted
-  or a chain this roost has no cursor for. Every refusal is decided before a store is opened or a block
+  or a chain this runtime has no cursor for. Every refusal is decided before a store is opened or a block
   is fetched, so a rejected mount leaves nothing behind.
 - **It catches up before it joins.** A cursor advances from the *slowest* of its live nests, so a nest
   spliced in while far behind would drag every co-tenant back through history. A new nest backfills
   alongside the cursor and joins once it is level.
 - **An unmount is a drain.** The cursor finishes its current window and releases the nest's store
   before the routes are removed - not the other way round.
-- **The set is persisted** to `roost.toml`, so a restart comes back with what you last asked for. At
+- **The set is persisted** to `runtime.toml`, so a restart comes back with what you last asked for. At
   runtime nuthatch owns that list; use `--no-admin` if you manage the file with configuration
   management.
 
 ## When one nest goes wrong
 
-A roost survives its sick nests (RFC-0026). A nest that faults is **quarantined**, not fatal: its
+A runtime survives its sick nests (RFC-0026). A nest that faults is **quarantined**, not fatal: its
 healthy siblings keep indexing and serving, and it is re-admitted on a backoff if the fault was
 retryable. A terminal fault (a corrupt registry, a config that can't load) stays quarantined until
 you fix it. The blast radius is bounded in both directions - a nest's error doesn't kill its cursor,
-and a cursor's death doesn't kill the roost.
+and a cursor's death doesn't kill the runtime.
 
 You see it in three places: `GET /nests` carries each nest's live health and re-admission time,
-`GET /ready` at the roost root answers roost-wide while `GET /<name>/ready` answers per nest, and
+`GET /ready` at the runtime root answers runtime-wide while `GET /<name>/ready` answers per nest, and
 `nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` cover the
 [metrics](/docs/operate/metrics/) side.
 
@@ -99,14 +121,14 @@ deterministic tests, and for operators who would rather a process die loudly tha
 ## Multichain
 
 To span more than one chain, drop the top-level `chain`/`chain_id`/`rpc_urls` and list chains under
-`[[chains]]` (a top-level array beside `[roost]`); each nest declares its own `chain` in its
+`[[chains]]` (a top-level array beside `[runtime]`); each nest declares its own `chain` in its
 `nuthatch.toml`:
 
 ```toml
-[roost]
-name = "my-roost"
+[runtime]
+name = "my-runtime"
 nests = ["usdc", "base-app"]   # usdc → mainnet, base-app → base
-max_rss_mb = 2048              # per-cursor; a roost's total budget is Σ cursors
+max_rss_mb = 2048              # per-cursor; a runtime's total budget is Σ cursors
 
 [[chains]]
 chain = "mainnet"
@@ -135,10 +157,10 @@ cursor.
 
 ## When one machine is not enough
 
-A roost is bounded **per cursor** at 2 GB, and the sum of a machine's cursors has to fit the machine.
+A runtime is bounded **per cursor** at 2 GB, and the sum of a machine's cursors has to fit the machine.
 When it stops fitting - or when serving load and ingestion load want different dials - the same crates
 run as a fleet across machines: a writer pool taking cursor leases, and an independently-scaled serving
 tier. See [scaled mode](/docs/operate/scaled/).
 
-It is a trade rather than an upgrade: one roost on one box is simpler, and that simplicity is the point
+It is a trade rather than an upgrade: one runtime on one box is simpler, and that simplicity is the point
 of the embedded path.

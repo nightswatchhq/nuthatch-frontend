@@ -76,7 +76,7 @@ failover as well as throughput.
 
 ## Footprint
 
-**≤2 GB RAM per active-chain cursor**, enforced in CI rather than aspired to. A roost's total is the
+**≤2 GB RAM per active-chain cursor**, enforced in CI rather than aspired to. A runtime's total is the
 sum of its cursors, and a nest whose projected footprint would exceed the budget is **refused** at
 mount with a `507` rather than admitted with a warning.
 

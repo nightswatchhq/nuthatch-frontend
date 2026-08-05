@@ -22,7 +22,7 @@ Levels 0 - 4 are automated:
 | **0** Artifact | yes | every release - checksums, the binary runs, `--version` matches the tag |
 | **1** Single nest | yes | CI, plus a production box serving public traffic |
 | **2** Correctness | yes | CI - deterministic fixtures, reorg property tests |
-| **3** Roost | yes | a live two-chain run and an 8-nest density run |
+| **3** Runtime | yes | a live two-chain run and an 8-nest density run |
 | **4** Guards | yes | CI, plus a live `/sql` adversary pass |
 | **5** Scaled mode | yes, across real machines | three boxes on a private network, published artifacts |
 

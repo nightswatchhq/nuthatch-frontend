@@ -1,11 +1,11 @@
 ---
 title: "Configuration"
-description: "nuthatch.toml and roost.toml, field by field."
+description: "nuthatch.toml and mounts.toml, field by field."
 order: 2
 ---
 
 Three files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `semantic.toml` is
-covered in [The semantic layer](/docs/build/semantic/); `roost.toml` mounts many nests. A nest
+covered in [The semantic layer](/docs/build/semantic/); `mounts.toml` mounts many nests. A nest
 declaring a `schema_version` newer than the binary understands is rejected on load - the guard that
 makes `init --from` and `nest load` safe.
 
@@ -13,7 +13,7 @@ makes `init --from` and `nest load` safe.
 
 ```toml
 [nest]
-name = "usdc"                 # nest name (also the roost mount name)
+name = "usdc"                 # nest name (also the runtime mount name)
 chain = "mainnet"             # mainnet | arbitrum-one | base
 chain_id = 1
 rpc_urls = ["https://…"]      # tried in order, with failover
@@ -60,7 +60,7 @@ Ethereum mainnet, Arbitrum One and Base are **built in** - keyless public endpoi
 them a contract lives on.
 
 **Any other EVM chain works too** - World Chain, Base Sepolia, your own devnet - it just has to be
-configured by hand. `dev`, `sql`, `bench`, and `roost dev` are chain-agnostic; `init` and `add` are
+configured by hand. `dev`, `sql`, `bench`, and `dev` are chain-agnostic; `init` and `add` are
 not, since ABI resolution is chain-gated. So the recipe is: write `nuthatch.toml` yourself, vendor
 the ABI, and run.
 
@@ -80,7 +80,7 @@ abi = "abis/router.json"     # vendor the ABI by hand
 events = ["Swapped"]
 ```
 
-Then `nuthatch dev --dir .` as usual - decode, sealing, `/sql`, views, MCP, roosts, and bundles are
+Then `nuthatch dev --dir .` as usual - decode, sealing, `/sql`, views, MCP, runtimes, and bundles are
 all chain-agnostic downstream. Two caveats worth knowing:
 
 1. **You inherit default finality and window.** An unlisted chain gets depth-64 finality and a
@@ -150,11 +150,11 @@ secret = "…"                      # optional; adds X-Nuthatch-Signature: sha25
 `since = "registration"` means a `--seal-direct` backfill won't fire history at your endpoint. See
 [Webhooks](/docs/build/webhooks/).
 
-## `roost.toml`
+## `mounts.toml`
 
 ```toml
-[roost]
-name = "my-roost"
+[runtime]
+name = "my-runtime"
 chain = "mainnet"
 chain_id = 1
 rpc_urls = ["https://…"]
@@ -162,7 +162,7 @@ nests = ["usdc", "weth"]      # subdirectories under nests/ to mount
 max_rss_mb = 2048             # optional per-cursor RAM ceiling (default 2048)
 ```
 
-See [Run a roost](/docs/operate/roosts/) for the multichain `[[chains]]` shape (RFC-0021).
+See [Run a runtime](/docs/operate/many-nests/) for the multichain `[[chains]]` shape (RFC-0021).
 
 ## A note on `nest.star`
 

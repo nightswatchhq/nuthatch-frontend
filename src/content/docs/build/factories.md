@@ -53,8 +53,8 @@ that child and its rows along with everything else - factories inherit the same 
 ## Runaway factories are bounded
 
 A factory that discovers a vast number of children is exactly the kind of thing that could blow the
-[≤2 GB per-cursor budget](/docs/concepts/roosts/). Discovery is bounded and observable per nest, and in a
-[roost](/docs/operate/roosts/) one nest's runaway factory is isolated to its own cursor - it can't starve
+[≤2 GB per-cursor budget](/docs/concepts/runtimes/). Discovery is bounded and observable per nest, and in a
+[runtime](/docs/operate/many-nests/) one nest's runaway factory is isolated to its own cursor - it can't starve
 a co-tenant.
 
 ## Next

@@ -33,9 +33,9 @@ does, it's telling you the chain did something the finality assumption didn't al
 
 ## Per-cursor isolation
 
-In a multichain roost, a reorg on one chain touches only that chain's cursor. Another chain's data is
+In a multichain runtime, a reorg on one chain touches only that chain's cursor. Another chain's data is
 left **byte-identical** - a property that's tested, not merely asserted. See
-[Roosts &amp; cursors](/docs/concepts/roosts/).
+[Runtimes &amp; cursors](/docs/concepts/runtimes/).
 
 ## Guarantees
 

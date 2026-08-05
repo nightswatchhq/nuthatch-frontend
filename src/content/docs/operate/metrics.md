@@ -33,12 +33,12 @@ Process-level counters:
 | `nuthatch_sql_rejections_total` | Queries refused by the guards (timeout, interrupt, bad SQL). |
 | `nuthatch_rpc_requests_total` | Upstream RPC calls made. |
 
-In a [roost](/docs/operate/roosts/), the process-level series blend every mounted nest into one
+With [many nests in one runtime](/docs/operate/many-nests/), the process-level series blend every mounted nest into one
 number, so each nest also gets labelled per-nest counterparts: `nuthatch_nest_last_block`,
 `nuthatch_nest_sealed_through`, `nuthatch_nest_rows_decoded_total`,
 `nuthatch_nest_rows_sealed_total`, and `nuthatch_nest_reorgs_total`.
 
-Health series (RFC-0026), which is where you look when *part* of a roost is unwell:
+Health series (RFC-0026), which is where you look when *part* of a runtime is unwell:
 
 | Series | Meaning |
 |---|---|
@@ -49,9 +49,9 @@ Health series (RFC-0026), which is where you look when *part* of a roost is unwe
 ## The footprint budget
 
 The budget is a non-negotiable, CI-enforced: **≤2 GB RAM per active-chain cursor** - one chain's
-tip-following plus serving, whether that cursor hosts one nest or twelve. A single-chain roost is
-one cursor (≤2 GB total, shared across its nests); a multichain roost's total is the sum of its
-cursors. Density is RAM-bounded, not free: a roost refuses to mount a nest whose projected
+tip-following plus serving, whether that cursor hosts one nest or twelve. A single-chain runtime is
+one cursor (≤2 GB total, shared across its nests); a multichain runtime's total is the sum of its
+cursors. Density is RAM-bounded, not free: a runtime refuses to mount a nest whose projected
 footprint would blow the ceiling (`max_rss_mb`, default 2048).
 
 Inside the budget, the analytical path is separately bounded - each DuckDB query runs under its own
