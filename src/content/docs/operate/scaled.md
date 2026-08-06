@@ -38,11 +38,22 @@ The same crates, run three ways. A role flag, never a fork.
 nuthatch init 0xYourContract --chain arbitrum-one --dir nest
 sudo chown -R 10001:10001 nest      # see below - this one is easy to miss
 
+# Both are required. The stack refuses to start without them, by design.
+export POSTGRES_PASSWORD=$(openssl rand -hex 16)
+export NUTHATCH_CONTROL_TOKEN=$(openssl rand -hex 32)
+
 docker compose -f docker-compose.scaled.yml --profile fleet up \
   --scale writer=2 --scale fe=3
 ```
 
-Two prerequisites, both of which cost us time before they were written down:
+Three prerequisites, all of which cost us time before they were written down:
+
+- **The credentials have no defaults, deliberately.** The compose file used to ship
+  `POSTGRES_PASSWORD: nuthatch` and a `dev-token-change-me` fallback, which defeated the binary's own
+  guard in the one case it exists for: `CONTROL_BIND` is parameterised, so reaching the control plane
+  from another host means setting it to `0.0.0.0` - at which point a baked-in token means the bind is
+  *accepted*, protected by a string published in a public repo. Compose now fails with a message
+  naming what to set, rather than starting something reachable with a credential anyone can read.
 
 - **The fleet mounts `./nest`.** Without it the FE nodes exit and the **writers keep running** - they
   take work from the control plane rather than from disk. That asymmetry makes it look like an FE bug

@@ -18,6 +18,7 @@ parent announces a new child, and which field holds its address):
 name = "pool"
 abi = "abis/uniswap-v3-pool.json"
 # filter = "topic0"        # optional backfill-strategy override for templates with very many children
+# events = ["Swap"]        # optional: which of the ABI's events to decode (default: all of them)
 
 [[factories]]
 # When `factory` emits PoolCreated, the child in the `pool` param is indexed as a `pool`.

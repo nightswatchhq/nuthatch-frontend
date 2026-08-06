@@ -99,6 +99,7 @@ all chain-agnostic downstream. Two caveats worth knowing:
 name = "pool"                 # shared table prefix for all discovered children
 abi = "abis/pool.json"
 filter = "topic0"             # optional: force the topic0-only backfill strategy
+events = ["Swap"]             # optional: which of the ABI's events to decode (default: all)
 
 [[factories]]
 watch = "factory"             # the *alias* of the watched contract (or a template, for nesting)
@@ -112,6 +113,16 @@ All children of one template share tables (`{template}__{event}`), distinguished
 `address` column. `filter = "topic0"` is a strategy override for templates known to have many
 children; omit it for the automatic address-list → topic0 flip (around ~500 children). See
 [Factories](/docs/build/factories/).
+
+`events` chooses **what is decoded**, where `filter` chooses **how the range is fetched** - two
+different questions that are easy to confuse. Without it the vendored ABI is the only filter, so a full
+`UniswapV2Pair` ABI decodes Swap, Sync, Mint, Burn, Transfer *and* Approval when the nest wanted Swap:
+not wrong, but a different workload, and nothing said so. An absent or empty list still decodes
+everything, so existing nests are unaffected. A name the ABI does not define is a config error, caught
+when the nest loads rather than surfacing as an empty table after the backfill.
+
+`--from-subgraph` fills this in for you: a subgraph declares `eventHandlers` per template, so an
+imported nest decodes what the subgraph decoded rather than a superset of it.
 
 ### Screening, flags, alerts (RFC-0008)
 
