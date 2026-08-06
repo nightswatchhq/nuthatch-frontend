@@ -134,6 +134,12 @@ resumes cleanly.
 nuthatch binds `127.0.0.1` by default and that default is doing real work. **The API has no
 authentication of its own** - the guards bound *how much* a query can cost, never *who* may ask.
 
+**A public nest without an allowlist is an open query engine.** `sql = "open"` is the default, and it
+is the right one for a local `nuthatch dev` where exploration is the point. On an endpoint strangers
+can reach it means anyone may run arbitrary analytical SQL over your disk. Set `sql = "allowlist"` on
+the mount and declare the queries it answers, or `sql = "deny"` to close SQL while the typed routes
+keep serving - see [Security](/docs/operate/security/#bounding-what-a-mount-will-answer).
+
 Put a reverse proxy in front and give it TLS and auth:
 
 ```caddy
