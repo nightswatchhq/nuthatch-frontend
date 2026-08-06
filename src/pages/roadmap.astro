@@ -1,11 +1,14 @@
 <!-- Regenerate against the repo README + docs/rfcs when either changes materially.
      Ground-truth rule: README / progress log wins over this page.
-     Last regenerated against docs/rfcs/README.md at the v1.0.2 release. Since v0.6.2: RFC-0027
-     (live roost) and RFC-0028 (adaptive log-range control) completed, RFC-0029 (the fastest
-     indexer) shipped all five slices, RFC-0022 (distributed scaled mode) went from design-only to
-     implemented-and-verified-across-machines, RFC-0013's benchmark gate was run and DataFusion did
-     not meet it, and `init --from-subgraph` landed as the first external contribution.
-     v1.0.2 is the current release.
+     Last regenerated against docs/rfcs/README.md at the v2.0.0 release. Since v1.0.2: RFC-0032
+     (the tenant runtime) retired the roost and keyed nest data by content address, RFC-0033
+     (identity and grafting) added early cutoff and cross-nest segment reuse, RFC-0034 landed the
+     query allowlist, and RFC-0035 coordinated the breaking surface and `nuthatch migrate`.
+     Earlier: RFC-0027 (live mount/unmount) and RFC-0028 completed, RFC-0029 shipped all five
+     slices, RFC-0022 went from design-only to implemented-and-verified-across-machines, RFC-0013's
+     benchmark gate was run and DataFusion did not meet it, and `init --from-subgraph` landed as the
+     first external contribution.
+     v2.0.0 is the current release.
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -99,7 +102,7 @@ const progressLog = `${REPO}#progress-log`;
         <li>Errors as prompts - a failed query returns a one-line fix hint (nearest real table/column, reserved word, big-int) over the raw engine message; <code>explain</code> validates a query without executing it, so an agent self-corrects in one round-trip.</li>
         <li>Result shaping + provenance - MCP results come back as compact aligned tables with truncation-as-guidance and a citable stamp (<code>as of block N, sealed_through M, registry &lt;hash&gt;</code>).</li>
         <li>The full MCP surface - 12 tools, 3 resources (<code>nuthatch://schema|tables|status</code>), and 3 prompts (<code>profile-contract</code>, <code>investigate-address</code>, <code>verify-a-number</code>), all offline; nothing in the data path touched.</li>
-        <li>A repo-installable Claude Code skill (<a href={rfc('0017')} rel="noopener">RFC-0017</a>) teaches an agent to <em>drive</em> nuthatch - init, config, factories, roost, ops - with CLI/config references generated from the source and CI-checked for drift.</li>
+        <li>A repo-installable Claude Code skill (<a href={rfc('0017')} rel="noopener">RFC-0017</a>) teaches an agent to <em>drive</em> nuthatch - init, config, factories, runtimes, ops - with CLI/config references generated from the source and CI-checked for drift.</li>
       </ul>
 
       <p class="grp">Nests</p>
@@ -164,7 +167,7 @@ const progressLog = `${REPO}#progress-log`;
       <p class="grp">Nest packaging (<a href={rfc('0012')} rel="noopener">RFC-0012</a>)</p>
       <ul class="rl">
         <li><code>nuthatch nest bundle</code> packs a nest's authored inputs into a single portable, content-addressed <code>.bundle</code> file whose hash is a Merkle root over a canonical manifest; <code>nest load</code> verifies and installs one - from a local file or an <code>http(s)</code> URL - regenerating the decode registry from the installed inputs and asserting it matches the author's pinned hash. Determinism carried across the wire, not just the disk.</li>
-        <li><code>nuthatch roost</code> - one runtime hosts several nests on the same chain under a single cursor, one hot store, and one finality view, with strict per-nest isolation and a per-runtime RSS budget: a mount whose projection exceeds the budget is refused before it starts. Verified live on Arbitrum.</li>
+        <li>One runtime hosts several nests on the same chain under a single cursor, one hot store, and one finality view, with strict per-nest isolation and a per-cursor RSS budget: a mount whose projection exceeds the budget is refused before it starts. Verified live on Arbitrum. <em>(2.0 retired the separate <code>roost</code> command - it is <code>nuthatch dev</code>, and the directory decides what runs.)</em></li>
       </ul>
 
       <p class="grp">Nest registry (<a href={rfc('0019')} rel="noopener">RFC-0019</a>)</p>
@@ -180,7 +183,7 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Multichain roost (<a href={rfc('0021')} rel="noopener">RFC-0021</a>, in progress)</p>
       <ul class="rl">
-        <li>A roost can host nests across <strong>more than one chain</strong> in a single runtime - <code>[[chains]]</code> in <code>roost.toml</code>, and one <strong>isolated cursor per chain</strong> (its own tip, finality, and reorg boundary): a Base nest and an Arbitrum nest served from one process. The footprint budget is <strong>per active-chain cursor</strong> (≤2 GB), and each cursor is its own observable boundary, held per chain. A capability, not a mandate: one-chain-per-roost stays the simple default and is byte-identical to running the nest solo. The single-cursor law holds per chain - two chains are never multiplexed behind one cursor.</li>
+        <li>A runtime can host nests across <strong>more than one chain</strong> in a single runtime - <code>[[chains]]</code> in <code>mounts.toml</code>, and one <strong>isolated cursor per chain</strong> (its own tip, finality, and reorg boundary): a Base nest and an Arbitrum nest served from one process. The footprint budget is <strong>per active-chain cursor</strong> (≤2 GB), and each cursor is its own observable boundary, held per chain. A capability, not a mandate: one chain per runtime stays the simple default and is byte-identical to running the nest solo. The single-cursor law holds per chain - two chains are never multiplexed behind one cursor.</li>
       </ul>
 
       <p class="grp">Derive-first - the eth_call you don't need (<a href={rfc('0023')} rel="noopener">RFC-0023</a>, in progress)</p>
@@ -188,15 +191,15 @@ const progressLog = `${REPO}#progress-log`;
         <li>The Foundation reports that &gt;70% of subgraphs call <code>eth_call</code> - but most of those reads are <em>derivable</em> from the events a nest already indexes; subgraphs fetch them only because they have no incremental-view engine. Nuthatch does. <code>nuthatch recipe add total_supply</code> drops in a derived view that computes an ERC-20's <code>totalSupply()</code> as &#931; minted &#8722; &#931; burned from Transfer events - deterministic, free, and with no archive node. It derives what a subgraph pays an archive node to fetch. The ERC-20-generic trio - <code>total_supply</code>, <code>balances</code>, and <code>holder_count</code> - all derive from Transfer events, and <code>reserves</code> derives Uniswap-V2 <code>getReserves()</code> as the latest <code>Sync</code> per pair - the AMM read a subgraph fetches on every swap. For the handful of reads that aren't derivable but never change - <code>decimals</code>/<code>symbol</code>/<code>name</code> - <code>nuthatch metadata fetch</code> calls once and caches forever. For the genuinely non-derivable residue, a verifiable eth_call fallback follows; its local-execution engine (a demand-driven state cache, not an archive node) is designed but deferred, so the derive-first path stays fully self-hosted with no external data dependency.</li>
       </ul>
 
-      <p class="grp">Fault quarantine - a roost survives its sick nests (<a href={rfc('0026')} rel="noopener">RFC-0026</a>)</p>
+      <p class="grp">Fault quarantine - a runtime survives its sick nests (<a href={rfc('0026')} rel="noopener">RFC-0026</a>)</p>
       <ul class="rl">
-        <li>A faulting nest is <strong>quarantined</strong> rather than fatal: its healthy siblings keep indexing and serving, and it is re-admitted on a backoff if the fault was retryable. A terminal fault stays quarantined until an operator fixes it. The blast radius is now bounded in both directions - a nest's error no longer kills its cursor, and a cursor's death no longer kills the roost.</li>
-        <li>The health surface to see it with: <code>GET /nests</code> merges each nest's live health per request, <code>GET /ready</code> answers roost-wide while <code>GET /&lt;name&gt;/ready</code> answers per nest, and <code>nuthatch_nest_health</code> / <code>nuthatch_nest_quarantine_total</code> / <code>nuthatch_cursor_live</code> cover the metrics. <code>--fail-fast</code> restores exit-on-first-fault for CI and for operators who prefer a loud death to partial service.</li>
+        <li>A faulting nest is <strong>quarantined</strong> rather than fatal: its healthy siblings keep indexing and serving, and it is re-admitted on a backoff if the fault was retryable. A terminal fault stays quarantined until an operator fixes it. The blast radius is now bounded in both directions - a nest's error no longer kills its cursor, and a cursor's death no longer kills the runtime.</li>
+        <li>The health surface to see it with: <code>GET /nests</code> merges each nest's live health per request, <code>GET /ready</code> answers runtime-wide while <code>GET /&lt;name&gt;/ready</code> answers per nest, and <code>nuthatch_nest_health</code> / <code>nuthatch_nest_quarantine_total</code> / <code>nuthatch_cursor_live</code> cover the metrics. <code>--fail-fast</code> restores exit-on-first-fault for CI and for operators who prefer a loud death to partial service.</li>
       </ul>
 
       <p class="grp">The live roost (<a href={rfc('0027')} rel="noopener">RFC-0027</a>)</p>
       <ul class="rl">
-        <li>A roost's nest set used to be frozen at boot, so onboarding one tenant's nest restarted every <em>co-tenant's</em> - the blast radius of a config change was larger than that of a fault. Now <code>POST /_admin/nests</code> mounts one and <code>DELETE /_admin/nests/&lt;name&gt;</code> unmounts one, live. A mount is admitted only if it fits the cursor's RAM budget (refused with <code>507</code>, never a warning - a budget that can be quietly exceeded is not a budget), catches up <em>before</em> it joins so it never drags co-tenants back through history, and only then gets routes. An unmount is a <strong>drain</strong>: the cursor finishes its window and releases the store before anything is torn down.</li>
+        <li>A runtime's nest set used to be frozen at boot, so onboarding one tenant's nest restarted every <em>co-tenant's</em> - the blast radius of a config change was larger than that of a fault. Now <code>POST /_admin/nests</code> mounts one and <code>DELETE /_admin/nests/&lt;name&gt;</code> unmounts one, live. A mount is admitted only if it fits the cursor's RAM budget (refused with <code>507</code>, never a warning - a budget that can be quietly exceeded is not a budget), catches up <em>before</em> it joins so it never drags co-tenants back through history, and only then gets routes. An unmount is a <strong>drain</strong>: the cursor finishes its window and releases the store before anything is torn down.</li>
       </ul>
 
       <p class="grp">Scaffold a nest from a subgraph (<a href={rfc('0019')} rel="noopener">RFC-0019</a>, <a href={REPO + '/issues/241'} rel="noopener">#241</a>)</p>
@@ -221,7 +224,9 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li><strong>v1.0.2 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). 1.0 is a promise about <strong>stability</strong>, not completeness: within 1.x no CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and upgrading stays a binary swap with no data migration. MSRV is 1.95 - measured, not asserted. The 0.6 line brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, the multichain roost, derive-first recipes, and adaptive MCP tools; 0.7-0.8 the live roost, fault quarantine and the multichain runtime; 0.9 scaled mode's writer pool and the backfill work below. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
+        <li><strong>v2.0.0 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). Semantic versioning applies to the <strong>2.x</strong> line: a minor is <code>2.1</code>, <code>2.2</code>, and breaking changes wait for <code>3.0</code>. MSRV is 1.95 - measured, not asserted.</li>
+        <li><strong>2.0 is the one release that moves data on disk</strong>, and it ships the command that does it. <code>nuthatch migrate</code> moves files and rewrites a config; it never re-indexes. Measured on a real two-nest deployment: <strong>0.259s</strong>. Tenancy moved into the runtime and the roost was retired - not renamed, removed - so there is one <code>nuthatch dev</code> and the directory decides what runs. Nest data is keyed by content address, so two tenants mounting the same nest share one dataset and it is never indexed twice. See the <a href="/docs/operate/upgrades/">upgrade notes</a>.</li>
+        <li>Every prior line, for context: 0.6 brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, multichain runtimes, derive-first recipes and adaptive MCP tools; 0.7-0.8 the live mount/unmount surface and fault quarantine; 0.9 scaled mode's writer pool and the backfill work below; 1.0 the stability commitment itself. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> builds on rustc 1.95 or newer.</li>
         <li>A CI footprint job fails the build above 256 MB of RAM.</li>
         <li>Measured peak: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - 2.8% of the 2 GB budget.</li>
       </ul>

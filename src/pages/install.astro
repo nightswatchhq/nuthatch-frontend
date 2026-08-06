@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v1.0.2: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
+  description="Install Nuthatch v2.0.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,15 +19,18 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-        <strong>v1.0.2 is out.</strong> Portable nest bundles, a nest registry
-        (<code>name@version</code>, filesystem or S3), no-resync nest upgrades, multichain runtimes,
-        derive-first contract reads (<code>recipe add</code>), and fault quarantine so a runtime survives
-        its sick nests - on top of the delightful core and agent-grade MCP. <strong>1.0.2 is a maintenance
-        patch:</strong> releases up to 0.6.1 accepted <code>;</code>-stacked statements on
-        <code>/sql</code>, which was an arbitrary file-write primitive for anyone who could reach the
-        endpoint. If you are running an older build, swap the binary - there is no data migration.
+        <strong>v2.0.0 is out.</strong> Tenancy moved into the runtime: one <code>nuthatch dev</code>,
+        and the directory decides whether it runs one nest or many. Nest data is keyed by content
+        address, so two tenants mounting the same nest share one dataset and it is never indexed
+        twice, and a cosmetic edit adopts the existing data instead of re-backfilling. Plus a query
+        allowlist for public endpoints - on top of the delightful core and agent-grade MCP.
+        <strong>2.0 is the one release that moves data on disk</strong>, and it ships the command
+        that does it: <code>nuthatch migrate</code> moves files and rewrites a config, and never
+        re-indexes - 0.259s on a real two-nest deployment. Read the
+        <a href="/docs/operate/upgrades/">upgrade notes</a> first.
         Prebuilt binaries ship for macOS (Apple Silicon) and Linux x86_64.
-        Nuthatch is early 0.x software under a config-stability contract - see the
+        Nuthatch follows semantic versioning on the <code>2.x</code> line under a published
+        <a href="https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract">stability contract</a> - see also the
         <a href="/roadmap">roadmap</a>. A Homebrew tap, an OCI image, and detached release signatures
         are still on the way; other platforms build from source with <code>cargo</code> for now.
       </p>
@@ -61,7 +64,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:1.0.2-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:2.0.0-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
