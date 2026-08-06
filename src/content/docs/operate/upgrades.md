@@ -73,7 +73,16 @@ A **cycle** among views is different: it is refused at load, with the cycle name
 
 ## Coming from 1.x
 
-Measured on a real two-nest deployment rather than a fixture:
+**If you run a single nest - `nuthatch dev --dir <nest>` on a directory with a `nuthatch.toml` - there
+is nothing to migrate.** Stop the service, swap the binary, start it. 2.0's layout change is to
+*runtime* directories, and a solo nest does not have one. Verified on a production box: two solo nests
+upgraded 1.0.2 → 2.0.0 by binary swap, row counts byte-identical before and after, back at tip in
+seconds.
+
+`nuthatch migrate` is for a directory that has a **`roost.toml`** in it. If you do not have that file,
+skip the rest of this section.
+
+Measured on a real two-nest runtime rather than a fixture:
 
 ```text
 BEFORE   882 MB   504 parquet files
@@ -88,7 +97,8 @@ were only ~4 MB of that 882 MB - the bulk is per-dataset hot stores, which are m
 reorg-affected and so cannot be shared. The **file count** is what shows the collapse; nests with more
 sealed history save bytes too.
 
-The order: dry-run against a copy, stop the service, swap the binary, migrate, start.
+The order for a runtime directory: dry-run against a copy, stop the service, swap the binary, migrate,
+start.
 
 What changed, all of it reserved for a major:
 
