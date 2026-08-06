@@ -71,6 +71,36 @@ is legal to author - it simply cannot be reused, because two runs may honestly d
 
 A **cycle** among views is different: it is refused at load, with the cycle named.
 
+## Coming from 1.x
+
+Measured on a real two-nest deployment rather than a fixture:
+
+```text
+BEFORE   882 MB   504 parquet files
+$ nuthatch migrate --dir /opt/my-runtime
+Shared 504 segment(s) into segments/ (504 duplicate copies reclaimed).
+real 0m0.259s
+AFTER    880 MB   252 parquet files      per-dataset leftovers: 0
+```
+
+A quarter of a second, and **nothing re-indexed**. The disk total barely moves because the segments
+were only ~4 MB of that 882 MB - the bulk is per-dataset hot stores, which are mutable and
+reorg-affected and so cannot be shared. The **file count** is what shows the collapse; nests with more
+sealed history save bytes too.
+
+The order: dry-run against a copy, stop the service, swap the binary, migrate, start.
+
+What changed, all of it reserved for a major:
+
+- `roost.toml` → `mounts.toml`, `[roost]` → `[runtime]`
+- `nuthatch roost dev` → **`nuthatch dev`**; the directory decides what runs
+- `nuthatch nest diff` and `nest upgrade` removed - the runtime classifies at the moment identity changes
+- on-disk `nests/<name>/` → `data/<nid>/`, plus a shared content-addressed `segments/`
+- the `GET /nests` roster field `roost` → `runtime`
+
+`provenance` also gained `nid`, naming *which dataset* answered rather than only how it decoded. That
+one is additive - nothing to do.
+
 ## The upgrade you will eventually do at 2am
 
 Rehearse it. `nuthatch migrate --dir <copy> --dry-run` against a non-production copy prints the whole
