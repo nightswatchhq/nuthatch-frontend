@@ -10,7 +10,7 @@ them is the whole story.
 
 In 2.0 the runtime also owns **tenancy**: a mount is `(tenant, nest identity)`, two tenants mounting
 the same nest share one dataset, and a single-tenant runtime is simply `N=1` with a default tenant
-nobody has to type. There used to be a separate *runtime* concept wrapping all this; it was retired, and
+nobody has to type. There used to be a separate *roost* concept wrapping all this; it was retired, and
 the runtime absorbed it.
 
 ## The single-cursor law
@@ -27,8 +27,10 @@ fanned out to the owning nests. So N nests cost roughly one nest's worth of RPC 
 win. Per-nest tables stay byte-identical to running each nest solo, because the same per-window code
 runs either way.
 
-Isolation is by construction: each nest keeps its own directory (`nests/<name>/` - its own hot store,
-segments, and views), so one nest's bad view or runaway factory can't touch another's data.
+Isolation is by construction: each nest keeps its own dataset directory (`data/<nid>/` - its own hot
+store and views), so one nest's bad view or runaway factory can't touch another's data. Sealed
+segments are the deliberate exception: they are content-addressed and shared in `segments/`, so two
+nests that decode the same contract hold one byte-identical copy between them rather than two.
 
 ## Many chains, one runtime
 
@@ -39,9 +41,17 @@ cursor; another chain's data is left byte-identical.
 
 ```toml
 # mounts.toml - multichain form: declare each chain's RPC, nests carry their own chain.
+# Written by `nuthatch migrate` and kept in step by the runtime; you do not hand-write it.
 [runtime]
 name = "my-runtime"
-nests = ["base-pool", "arb-pool"]
+
+[[mounts]]
+alias = "base-pool"
+nid = "9f2c…"
+
+[[mounts]]
+alias = "arb-pool"
+nid = "4a71…"
 
 [[chains]]
 chain = "base"

@@ -10,8 +10,8 @@ One **runtime** hosts one nest or many. Nests on the same chain share a single c
 process. Each cursor has its own tip, finality, and reorg boundary, and a per-cursor footprint
 budget.
 
-:::note[The runtime is gone in 2.0]
-There used to be a separate *runtime* concept and a `dev` command, so you had to choose which
+:::note[The roost is gone in 2.0]
+There used to be a separate *roost* concept and a `nuthatch roost dev` command, so you had to choose which
 shape you wanted before you knew which you wanted. There is now **one command**: `nuthatch dev`. What it runs is a
 property of the directory - a `nuthatch.toml` runs that one nest, a `mounts.toml` runs every nest it
 mounts. Run `nuthatch migrate` on a pre-2.0 directory and it rewrites itself; it moves data and never
@@ -47,6 +47,7 @@ rpc_urls = ["https://…"]
 tenant = "default"           # opaque to nuthatch; omit it and you get "default"
 alias = "usdc"               # what it is served as: /usdc/…
 nid = "9f2c…"                # which nest identity it serves
+sql = "open"                 # how much SQL this mount exposes - see Security
 ```
 
 `mounts.toml` is **runtime state, not authored config**: `nuthatch migrate` writes it and the runtime
@@ -98,7 +99,7 @@ What the runtime guarantees:
   alongside the cursor and joins once it is level.
 - **An unmount is a drain.** The cursor finishes its current window and releases the nest's store
   before the routes are removed - not the other way round.
-- **The set is persisted** to `runtime.toml`, so a restart comes back with what you last asked for. At
+- **The set is persisted** to `mounts.toml`, so a restart comes back with what you last asked for. At
   runtime nuthatch owns that list; use `--no-admin` if you manage the file with configuration
   management.
 

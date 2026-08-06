@@ -35,6 +35,14 @@ nest's full surface appears under its `/<name>/…` prefix, byte-identical to a 
 - `GET /explain?q=…` - validate a query **without executing it**: binds every table, column, and
   type and returns `{valid: true}` or an error with a fix hint. Cheaper than `/sql`; agents use it
   to check shape before spending a query.
+- `GET /queries` - the mount's sanctioned query surface: `sql` (`open` | `deny` | `allowlist`),
+  `free_form`, and each named query with its parameters and path. On an `open` mount this simply
+  reports that free-form SQL is available.
+- `GET /q/{name}?<params>` - run a **named, parameterised** query by name, passing its declared
+  arguments as the query string. The caller never supplies SQL. Available on any mount that declares
+  queries, and the *only* SQL route on an `sql = "allowlist"` mount - where `/sql` and `/explain` are
+  refused with the list of names you may ask for instead. See
+  [Bounding what a mount will answer](/docs/operate/security/#bounding-what-a-mount-will-answer).
 
 ## Derived & compliance
 

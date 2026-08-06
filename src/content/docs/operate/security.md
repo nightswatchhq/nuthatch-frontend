@@ -62,6 +62,53 @@ The tip bound **refuses rather than truncates** - a partial tip would silently c
 aggregate, and a wrong number is worse than an error. The `503` names `sealed_through` so a caller can
 narrow to sealed data and get a correct answer immediately.
 
+## Bounding what a mount will answer
+
+The guards above are **node self-protection, not a security boundary**. They bound the damage one
+query can do; they say nothing about *which* queries a nest is willing to answer. Since 2.0 that is a
+per-mount decision, set in `mounts.toml`:
+
+```toml
+[[mounts]]
+alias = "usdc"
+nid = "9f2c…"
+sql = "allowlist"          # "open" (default) | "deny" | "allowlist"
+
+  [[mounts.queries]]
+  name = "transfers_to"
+  sql = "SELECT block_number, value FROM usdc__transfer WHERE \"to\" = {addr} ORDER BY block_number DESC LIMIT {n}"
+  params = { addr = "address", n = "int" }
+```
+
+- **`open`** - arbitrary `/sql`, bounded only by the node guards. The default, and the right one for a
+  local `nuthatch dev`: exploration is the point.
+- **`deny`** - no SQL at all. `/sql` and `/explain` are refused; the typed routes (`/tables`,
+  `/entity/{id}`, `/balances`, …) still serve.
+- **`allowlist`** - only the declared queries answer, by name.
+
+**The client sends a name, never SQL.** `GET /usdc/q/transfers_to?addr=0x…&n=3` supplies typed
+arguments; it never supplies a statement. Matching caller-supplied SQL against a regex or a
+"is it a SELECT" check is the shape of every SQL-filter bypass ever written - this is deliberately not
+that.
+
+Parameters are `int` or `address` only. Both have a *total validating parse* into a form with no
+escaping hazard, so rendering them is safe by construction rather than by careful escaping. `text` is
+absent on purpose: free text needs escaping, escaping needs to be right in every dialect and context,
+and "we escaped it carefully" is how this class of bug ships.
+
+Queries are validated **at load, not at first call** - a nest facing the public fails to start rather
+than serving a surface whose parameters turn out to be wrong the first time someone asks. Refusals name
+what you *can* ask:
+
+```json
+{ "error": "this nest answers only its declared queries, not arbitrary SQL",
+  "allowed_queries": ["transfers_to"],
+  "hint": "call GET /q/{name} … ; GET /queries lists them with their parameters" }
+```
+
+Because this is **mount config, not manifest**, changing it leaves the nest's identity untouched and
+re-indexes nothing - and two tenants can share one dataset while exposing different surfaces.
+
 ## Exposure
 
 nuthatch binds `127.0.0.1` by default and is built to be **fronted**. TLS, authentication and metering

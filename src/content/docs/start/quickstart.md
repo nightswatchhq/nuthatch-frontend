@@ -25,10 +25,14 @@ cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch
 locally, and generates the schema, views, and AI surface - no API key required.
 
 ```sh
-nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --chain mainnet
+nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc --chain mainnet
 ```
 
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `views/`, `llms.txt`.
+
+`--alias` is the table prefix, so this contract's events land in `usdc__transfer`, `usdc__approval`,
+and so on. Leave it out and the contract is called `c0`, giving you `c0__transfer` - which works
+identically, just reads worse in a query.
 
 ## 3. Run it
 
@@ -51,15 +55,22 @@ nuthatch dev
 Point-read an entity, run analytical SQL over the hot tip ∪ sealed history, or read a derived view.
 
 ```sh
-nuthatch sql "SELECT to, value FROM usdc__transfer ORDER BY block_number DESC LIMIT 5"
+nuthatch sql 'SELECT "to", value FROM usdc__transfer ORDER BY block_number DESC LIMIT 5'
 ```
+
+`to` and `from` are SQL reserved words, so double-quote them. nuthatch spots this one and tells you
+so rather than just failing.
 
 …or over HTTP:
 
 ```sh
 curl 'http://127.0.0.1:8288/sql?q=SELECT+count(*)+FROM+usdc__transfer'
-curl http://127.0.0.1:8288/balance/0xYourAddress
+curl 'http://127.0.0.1:8288/balances?limit=5'    # top holders - derived, no eth_call
+curl http://127.0.0.1:8288/balance/0xSomeHolder  # one address
 ```
+
+Balances are derived from the Transfers you have indexed, so an address answers `no balance` until it
+appears in that range - start from `/balances` if you want an address that definitely does.
 
 ## What you just got
 
