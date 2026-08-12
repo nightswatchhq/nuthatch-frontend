@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v2.0.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
+  description="Install Nuthatch v2.2.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,12 +19,16 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-        <strong>v2.0.0 is out.</strong> Tenancy moved into the runtime: one <code>nuthatch dev</code>,
-        and the directory decides whether it runs one nest or many. Nest data is keyed by content
-        address, so two tenants mounting the same nest share one dataset and it is never indexed
-        twice, and a cosmetic edit adopts the existing data instead of re-backfilling. Plus a query
-        allowlist for public endpoints - on top of the delightful core and agent-grade MCP.
-        <strong>2.0 is the one release that moves data on disk</strong>, and it ships the command
+        <strong>v2.2.0 is out.</strong> This one is about what happens when the data underneath you
+        is not perfect. A sealed segment that has gone bad no longer takes the whole query down with
+        it: nuthatch serves the rest of the table and <em>tells you</em> it did, naming the affected
+        tables in <code>/sql</code>, on the <code>nuthatch sql</code> command line, and through MCP.
+        A caveat you have to notice is worth more than a query that simply fails. Blocks-only nests -
+        the ones that index chain structure rather than a contract - now start, derive one row per
+        block, and no longer ask an endpoint for every log on the chain. And the per-nest memory
+        estimate was measured rather than guessed: it had been about 13x pessimistic, which was
+        refusing mounts that fit comfortably.
+        <strong>2.0 is still the one release that moves data on disk</strong>, and it ships the command
         that does it: <code>nuthatch migrate</code> moves files and rewrites a config, and never
         re-indexes - 0.259s on a real two-nest deployment. Read the
         <a href="/docs/operate/upgrades/">upgrade notes</a> first.
@@ -64,7 +68,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:2.0.0-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:2.2.0-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
