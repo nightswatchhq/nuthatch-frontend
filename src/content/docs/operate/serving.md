@@ -47,6 +47,30 @@ raise:
 DuckDB itself runs with a per-query memory cap and a bounded thread count, so the analytical path
 stays inside the [footprint budget](/docs/operate/metrics/).
 
+## When cold data is damaged (2.2.0)
+
+A sealed segment can go bad on disk in a way that survives a footer check - the file still binds, and
+the failure only arrives when the data region is read. Before 2.2.0 that took the whole query down
+with an unhelpful `Invalid Error: don't know what type:` and named nothing.
+
+Now the damaged segment reduces its own table, the rest of the data is served, and the response says
+so. Two fields on every `/sql` result:
+
+- `degraded` - true when this nest could not serve complete cold data
+- `degraded_tables` - the table names affected
+
+`nuthatch sql` prints a warning line for the same condition, and the MCP server carries the same
+notice, so an agent querying your nest is told as plainly as a human is.
+
+The important detail is what the caveat is *about*. It states a fact about the **nest**, not about the
+rows this particular query returned - so it still appears when your query happened to miss the damaged
+range. A warning you can dodge by asking a slightly different question would be worse than none,
+because the query that misses the gap is exactly the one whose number you would trust.
+
+This is the same principle as the unsealed-row ceiling above: never quietly return a different number.
+The difference is that a reduced table is recoverable and worth serving, so here nuthatch answers *and*
+tells you, rather than refusing.
+
 ## Exposure
 
 **The API has no authentication.** Bound to localhost (the default) that's the point. Bound off
