@@ -25,7 +25,7 @@ built. Checksums ship with every release; a Homebrew tap and detached release si
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:2.4.0 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:2.5.0 --version
 ```
 
 `linux/amd64` only for now. The image carries the **same binary attached to the GitHub Release**, so

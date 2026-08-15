@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v2.4.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
+  description="Install Nuthatch v2.5.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,17 +19,21 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-        <strong>v2.4.0 is out.</strong> <code>init</code> works on <em>any</em> EVM chain now: name
-        it and say where it lives with <code>--rpc</code>, and the chain id is read from the endpoint
-        rather than typed. Everything downstream was always chain-agnostic - <code>init</code>'s
-        allow-list was the only thing narrower than what nuthatch actually scaffolds.
-        A failed query also teaches instead of relaying: a DuckDB error is classified against the
-        nest's own schema and an actionable line appended, so an unknown table names the closest real
-        one, and a view that failed to <em>build</em> says so rather than reporting "does not exist"
-        and sending you hunting for a missing view. And a seal-direct backfill no longer dies on one
-        transient RPC failure - it used to give up after five attempts spanning four seconds, shorter
-        than an endpoint's own cooldown, which killed multi-hour backfills over a blip a restart
-        walked straight past.
+        <strong>v2.5.0 is out.</strong> <code>/ready</code> stops reporting a wedged cursor as
+        healthy: it used to ask only whether the chain was still answering, so a cursor with a
+        perfectly live endpoint that had stopped advancing returned <code>200</code> for as long as
+        you cared to watch it. It now returns <code>503</code> with <code>"wedged": true</code>, and
+        a cursor that has caught up to the tip is <em>not</em> wedged - the two look identical from
+        the outside and telling them apart is the whole of the fix. Logs got a second reader:
+        <code>--log-format json</code> emits one object per line so you can point an aggregator at
+        stdout instead of scraping a human-readable format nobody promised to keep stable, and a
+        <code>TipHeartbeat</code> answers "is it alive" from the log stream alone.
+        Two silent wrong answers are gone. A malformed row in the hot store used to be
+        <em>skipped</em>, so a query came back short and looked healthy; it now errors. And an
+        adopted nest kept only the files <code>migrate</code> had been taught about, quietly leaving
+        behind <code>views/</code>, <code>semantic.toml</code> and anything else its author had put
+        there. <code>nuthatch doctor</code> also runs on a nest that <code>serve</code> would refuse,
+        which is the state you actually reach for it in.
         <strong>2.0 is still the one release that moves data on disk</strong>, and it ships the command
         that does it: <code>nuthatch migrate</code> moves files and rewrites a config, and never
         re-indexes - 0.259s on a real two-nest deployment. Read the
@@ -70,7 +74,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:2.4.0-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:2.5.0-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
