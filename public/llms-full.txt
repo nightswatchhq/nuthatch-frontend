@@ -209,7 +209,7 @@ PaulieB14/horizon-indexer-subgraph, credited to Paul Barba's "Horizon Indexer Pe
 subgraph - as a Nuthatch nest: Graph Horizon staking on Arbitrum One across three contracts, one
 `init` over several addresses, per-event tables queryable during backfill, AssemblyScript handlers
 rebuilt as declarative `views/*.sql` (reorgs retract; no hand-written rollback), a shareable nest
-consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v1.0.2.
+consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v2.4.0.
 Still design targets, marked as such on the page: an auto-generated GraphQL layer, SSE streams, and
 AI-assisted schema/test generation from an ABI. Scaffolding from a **subgraph manifest** ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
@@ -224,7 +224,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`POST /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v1.0.2: multi-contract nests, every declared event as a table, Arbitrum One and Base, user-authored
+v2.4.0: multi-contract nests, every declared event as a table, Arbitrum One and Base, user-authored
 views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance pack, the admin UI,
 and webhooks. The main forward-looking piece for these stories is a GraphQL layer for subgraph-shaped
 clients. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
