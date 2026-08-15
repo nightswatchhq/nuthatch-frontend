@@ -289,7 +289,7 @@ v1.0.2 is the current release. The installer and `cargo` fetch the latest.
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with SHA-256
   checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
   downloads and verifies them. Read any install script before running it.
-- `cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch` (rustc 1.95 or newer).
+- `cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch` (**exactly 1.95.0** - `rust-toolchain.toml` does not apply to `cargo install`, and 1.97 hits a dbsp ICE).
 - A Homebrew tap, an OCI image, and detached release signatures (minisign/cosign) are on the way;
   embedded mode needs no Docker.
 

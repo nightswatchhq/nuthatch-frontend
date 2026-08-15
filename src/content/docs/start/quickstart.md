@@ -13,10 +13,13 @@ your own machine, with no external data service.
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 ```
 
-Or build it with cargo:
+Or build it with cargo, which needs the pinned toolchain - `rust-toolchain.toml` does **not** apply
+to `cargo install --git`, so without `+1.95.0` you hit a `dbsp` compiler ICE on rustc 1.97 and get
+nothing:
 
 ```sh
-cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch
+rustup toolchain install 1.95.0
+cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
 ```
 
 ## 2. Scaffold a nest from an address

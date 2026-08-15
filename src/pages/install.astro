@@ -49,8 +49,8 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <h2 class="ih">Cargo</h2>
-      <p>If you have a Rust toolchain (1.95 or newer), build from source straight from the repo. No prebuilt binary in the trust path.</p>
-      <CopyBlock command="cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch" />
+      <p>Build from source straight from the repo. The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
+      <CopyBlock command="cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" />
       <p class="note">
         Or grab a tarball and its <code>.sha256</code> yourself from the
         <a href="https://github.com/nightswatchhq/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>.
