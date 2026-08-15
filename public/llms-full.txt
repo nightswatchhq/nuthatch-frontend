@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v1.0.2** - a promise about stability (no CLI flag, HTTP route, config key or
+own indexer." Status: **v2.4.0** - a promise about stability (no CLI flag, HTTP route, config key or
 generated column renamed or removed within 1.x without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
@@ -114,7 +114,7 @@ Measured footprint (not a target): ~37 MB single contract, ~58 MB three-contract
 throughput progression is ~289 → 2,521 → 5,837 ev/s on public RPC (~20× over baseline,
 byte-identical segments). On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v1.0.2 is the current release,
+against a real provider - the event count matching Sentio's own README. v2.4.0 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -263,7 +263,7 @@ promised - order is.
   init, add, prod recipes) and the governed semantic layer + agent-grade MCP (RFC-0016/0017); the
   multi-nest roost (RFC-0012); the nest registry (RFC-0019); N-1 upgrades (RFC-0020); the multichain
   roost (RFC-0021 slice 1); derive-first recipes (RFC-0023 tiers 1-2); adaptive MCP tools (RFC-0025);
-  fault quarantine and partial health (RFC-0026); v1.0.2 the current release with prebuilt binaries;
+  fault quarantine and partial health (RFC-0026); v2.4.0 the current release with prebuilt binaries;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
 - In progress: the live roost (RFC-0027, slices 1-2a - mounting and unmounting nests without
@@ -284,7 +284,7 @@ promised - order is.
 
 ## Install
 
-v1.0.2 is the current release. The installer and `cargo` fetch the latest.
+v2.4.0 is the current release. The installer and `cargo` fetch the latest.
 
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with SHA-256
   checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)

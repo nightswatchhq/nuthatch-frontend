@@ -11,7 +11,7 @@
      slices, RFC-0022 went from design-only to implemented-and-verified-across-machines, RFC-0013's
      benchmark gate was run and DataFusion did not meet it, and `init --from-subgraph` landed as the
      first external contribution.
-     v2.2.0 is the current release.
+     v2.4.0 is the current release.
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -227,7 +227,7 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li><strong>v2.2.0 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). Semantic versioning applies to the <strong>2.x</strong> line: a minor is <code>2.1</code>, <code>2.2</code>, and breaking changes wait for <code>3.0</code>. MSRV is 1.95 - measured, not asserted.</li>
+        <li><strong>v2.4.0 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). Semantic versioning applies to the <strong>2.x</strong> line: a minor is <code>2.1</code>, <code>2.2</code>, and breaking changes wait for <code>3.0</code>. MSRV is 1.95 - measured, not asserted.</li>
         <li><strong>2.2 is about degrading honestly.</strong> A page-corrupt sealed segment used to fail an entire <code>/sql</code> query; now it reduces its own table and the nest reports the damage - <code>degraded</code> and <code>degraded_tables</code> over HTTP, a warning line on the CLI, the same notice through MCP. The caveat states a fact about the nest rather than about the rows you happened to receive, so it cannot be dodged by a query that missed the gap. Blocks-only nests start, derive one row per block, and stop asking endpoints for every log on the chain; and the per-nest memory estimate was refitted against measurement after being roughly <strong>13x</strong> pessimistic, which had been refusing mounts that fit.</li>
         <li><strong>2.0 is the one release that moves data on disk</strong>, and it ships the command that does it. <code>nuthatch migrate</code> moves files and rewrites a config; it never re-indexes. Measured on a real two-nest deployment: <strong>0.259s</strong>. Tenancy moved into the runtime and the roost was retired - not renamed, removed - so there is one <code>nuthatch dev</code> and the directory decides what runs. Nest data is keyed by content address, so two tenants mounting the same nest share one dataset and it is never indexed twice. See the <a href="/docs/operate/upgrades/">upgrade notes</a>.</li>
         <li>Every prior line, for context: 0.6 brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, multichain runtimes, derive-first recipes and adaptive MCP tools; 0.7-0.8 the live mount/unmount surface and fault quarantine; 0.9 scaled mode's writer pool and the backfill work below; 1.0 the stability commitment itself. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> needs <code>+1.95.0</code> exactly - <code>rust-toolchain.toml</code> does not apply to it, and rustc 1.97 hits a dbsp ICE.</li>

@@ -52,7 +52,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nightswatchhq/nuthatch:1.0.2
+  ghcr.io/nightswatchhq/nuthatch:2.4.0
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
