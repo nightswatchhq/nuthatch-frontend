@@ -20,16 +20,16 @@ case "$os" in
   Darwin)
     case "$arch" in
       arm64 | aarch64) target="aarch64-apple-darwin" ;;
-      x86_64) echo "nuthatch: no prebuilt binary for Intel Mac yet - build from source: cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
+      x86_64) echo "nuthatch: no prebuilt binary for Intel Mac yet - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
       *) echo "nuthatch: unsupported macOS architecture '$arch'" >&2; exit 1 ;;
     esac ;;
   Linux)
     case "$arch" in
       x86_64 | amd64) target="x86_64-unknown-linux-gnu" ;;
-      *) echo "nuthatch: no prebuilt binary for Linux '$arch' yet - build from source: cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
+      *) echo "nuthatch: no prebuilt binary for Linux '$arch' yet - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
     esac ;;
   *)
-    echo "nuthatch: unsupported OS '$os' - build from source: cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
+    echo "nuthatch: unsupported OS '$os' - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
 esac
 
 tarball="nuthatch-${target}.tar.gz"

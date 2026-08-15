@@ -187,7 +187,7 @@ registry, and zero-downtime N-1 upgrades.
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with
   SHA-256 checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
   downloads and verifies them.
-- `cargo install --git https://github.com/nightswatchhq/nuthatch nuthatch` (rustc 1.95 or newer).
+- `cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch` (**exactly 1.95.0** - `rust-toolchain.toml` does not apply to `cargo install`, and 1.97 hits a dbsp ICE).
 - A Homebrew tap, an OCI image, and detached release signatures are still on the way.
 
 ## Worked example
