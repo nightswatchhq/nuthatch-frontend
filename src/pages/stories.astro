@@ -2,26 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import CodeCard from '../components/CodeCard.astro';
 
-// Story 1 - a dapp backend. Multi-contract init works today; Arbitrum and
-// non-Transfer decode are design targets (this page is a design preview).
-const initCmd = `nuthatch init --chain arbitrum-one \\
-  0x1F98431c8aD98523631AE4a59f267346ea31F984 \\
-  0xC36442b4a4522E871399CD717aBDD847Ab11FE88`;
+const initCmd = `nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 \\
+  --alias usdc --chain mainnet`;
 
-const positionsView = `create view positions as
-select user_address,
-       sum(case when kind = 'deposit'  then amount else 0 end)
-       - sum(case when kind = 'withdraw' then amount else 0 end) as net_supplied
-from (
-  select user_address, amount, 'deposit'  as kind from deposit
-  union all
-  select user_address, amount, 'withdraw' as kind from withdraw
-)
-group by user_address;`;
-
-const sqlCurl = `curl -s http://127.0.0.1:8288/sql \\
-  -H 'content-type: application/json' \\
-  -d '{"query": "select net_supplied from positions where user_address = $1", "params": ["0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"]}'`;
+const sqlCurl = `curl -G 'http://127.0.0.1:8288/sql' \\
+  --data-urlencode 'q=SELECT "to", value FROM usdc__transfer \\
+ORDER BY block_number DESC, log_index DESC LIMIT 20'`;
 
 // Story 2 - a published nest. init --from is a design target.
 const initFrom = `nuthatch init --from https://github.com/nightswatchhq/horizon-nest`;
@@ -38,7 +24,7 @@ const mcpConfig = `{
 <Layout
   path="/stories"
   title="Who runs Nuthatch - Nuthatch"
-  description="Three workflows through Nuthatch's three front doors: an SQL endpoint for app backends, published nests for analysts, and a built-in MCP server for agents. Illustrative personas, running on v0.6.2; a GraphQL compatibility layer is the main piece still on the roadmap."
+  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v2.5.0; GraphQL compatibility remains on the roadmap."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -48,12 +34,12 @@ const mcpConfig = `{
       <p>
         Nuthatch has three front doors: an SQL endpoint for application backends, published
         nests for people who want data without writing indexing code, and a built-in MCP
-        server for agents. Same binary, same data, one process on your own hardware.
+        server for agents. Same data and the same nest definition, on hardware you control.
       </p>
-      <p class="illus">Illustrative workflows, not customer stories - Nuthatch is early v0.6.2 software.</p>
+      <p class="illus">Illustrative workflows, not customer stories - current for Nuthatch v2.5.0.</p>
 
       <p class="preview-note">
-        <strong>These workflows run on v0.6.2.</strong> Multi-contract nests, every declared event
+        <strong>These workflows run on v2.5.0.</strong> Multi-contract nests, every declared event
         as a queryable table, Arbitrum One and Base, user-authored <code>views/*.sql</code>,
         <code>init --from</code>, read-only <code>/sql</code>, and the MCP server all ship today - as
         do factories, the compliance pack, the admin UI, and webhooks. The main forward-looking piece
@@ -66,7 +52,7 @@ const mcpConfig = `{
         <p>
           Not illustrative - this one is real. <a href="https://www.lodestar-dashboard.com" rel="noopener">Lodestar</a>,
           an analytics dashboard for The Graph Protocol on Arbitrum One, serves two of its panels
-          from a single nuthatch binary on one small box instead of The Graph gateway. The
+          from self-hosted Nuthatch nests instead of The Graph gateway. The
           <strong>Delegation Activity</strong> feed (HorizonStaking delegation events) comes through
           byte-for-byte identical to the subgraph; the <strong>Developer Activity</strong> chart
           (L2GNS subgraph publishes) tracks it within a documented ~0-1%. Both run flag-gated, with
@@ -74,8 +60,8 @@ const mcpConfig = `{
           data API.
         </p>
         <p class="prod-box">
-          The box: two nests, backfilled and serving live, in <strong>86 MB of RAM</strong> on one
-          Hetzner VPS - Caddy for TLS, path-routed to one URL. The footprint budget is 2 GB.
+          The deployment: two nests, backfilled and serving live on one Hetzner VPS, with Caddy
+          providing TLS and path routing. Resource use is monitored against a 2 GB footprint budget.
           <a href="/blog/serving-lodestar-from-one-box">The full write-up is on the blog.</a>
         </p>
       </div>
@@ -83,26 +69,26 @@ const mcpConfig = `{
       <!-- STORY 1 -->
       <h2>A dapp backend</h2>
       <p>
-        Maya's three-person team runs a lending protocol on Arbitrum. The frontend needs user
-        positions, borrow history, and a few protocol-wide stats - the read side of the app,
-        the part a managed indexer usually bills for.
+        Maya's three-person team needs an auditable USDC transfer activity feed in its backend.
+        The read path is ordinary application data, but it is usually where a managed indexer starts
+        charging by query or by entity.
       </p>
       <p>
-        She points one command at the protocol's contracts and runs it on a €15 VPS. Nothing
-        else to provision: no Postgres, no queue, no second box.
+        She points one command at the contract and runs it on a small VPS. Nothing else to provision:
+        no Postgres, no queue, no second box.
       </p>
       <CodeCard code={initCmd} lang="bash" label="one init, every contract" />
       <p>
-        Every event in those ABIs becomes a queryable table as the backfill streams through
-        history, so she can read the raw layer before modelling anything. The positions her
-        frontend needs are one declarative view over deposits and withdrawals:
+        Every declared event becomes a queryable table as the backfill streams through history. The
+        explicit alias makes the table name predictable: <code>usdc__transfer</code>. Her API can
+        read the raw layer directly or put a derived view in front of it when the application needs
+        a stable model:
       </p>
-      <CodeCard code={positionsView} lang="sql" label="views/positions.sql" />
       <p>
-        Her API route calls <code>POST /sql</code> the same way it would call Postgres - one
-        read-only endpoint on localhost, no driver to install, no connection pool to babysit:
+        Her API route calls <code>GET /sql?q=…</code>, a read-only HTTP endpoint on localhost. It is
+        not Postgres and it does not accept JSON POST bodies:
       </p>
-      <CodeCard code={sqlCurl} lang="bash" label="the frontend reads it like a database" />
+      <CodeCard code={sqlCurl} lang="bash" label="the backend reads it over HTTP" />
       <p>
         When Arbitrum reorgs, the affected rows retract and anything derived from them corrects
         itself; the frontend never sees the wobble.

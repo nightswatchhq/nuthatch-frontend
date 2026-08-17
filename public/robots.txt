@@ -6,4 +6,4 @@ Allow: /
 #   /llms.txt       - concise overview
 #   /llms-full.txt  - full description
 
-Sitemap: https://www.nuthatch-indexer.com/sitemap.xml
+Sitemap: https://nuthatch-indexer.com/sitemap.xml

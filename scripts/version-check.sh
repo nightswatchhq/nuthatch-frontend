@@ -35,7 +35,7 @@ while IFS= read -r line; do
   stale=$((stale + 1))
 done < <(grep -rnoE "v?[0-9]+\.[0-9]+\.[0-9]+" src public 2>/dev/null \
          | grep -vE ":v?${WANT//./\\.}$" \
-         | grep -viE "glibc|node|astro|tailwind|typescript|schema_version|rust|1\.95\.0" \
+         | grep -viE "glibc|node|tailwind|typescript|schema_version|rust|1\.95\.0" \
          | grep -vE "127\.0\.0|0\.0\.0|192\.168|10\.[0-9]+\.[0-9]+" )   # IPs, not versions
 
 echo

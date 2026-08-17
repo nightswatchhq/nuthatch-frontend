@@ -44,6 +44,7 @@ const nests = defineCollection({
   schema: z.object({
     name: z.string(),
     category: z.string(),
+    catalogue_section: z.enum(['graph-protocol', 'subgraph-ports', 'other']).optional(),
     tier: z.number().int().min(0).max(3),
     status: z.enum(['available', 'building', 'planned']),
     chains: z.array(z.string()),

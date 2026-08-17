@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 // Static output only. No islands, no adapters, no telemetry, no external scripts.
 // The site's pitch is "nothing phones home" - the build practises it.
 export default defineConfig({
-  site: 'https://www.nuthatch-indexer.com',
+  site: 'https://nuthatch-indexer.com',
   output: 'static',
   compressHTML: true,
   build: {

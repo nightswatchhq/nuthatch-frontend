@@ -3,164 +3,93 @@ import Layout from '../layouts/Layout.astro';
 import CopyBlock from '../components/CopyBlock.astro';
 import CodeCard from '../components/CodeCard.astro';
 
-const initCmd = `nuthatch init --chain arbitrum-one \\
-  0x00669A4CF01450B64E8A2A20E9b1FCB71E61eF03 \\
-  0xb2Bb92d0DE618878E438b55D5846cfecD9301105 \\
-  0x3bE385576d7C282070Ad91BF94366de9f9ba3571`;
+const initCmd = `nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 \\
+  --alias usdc --chain mainnet`;
 
-const rawQuery = `select subgraph_deployment_id,
-       indexer,
-       tokens / 1e18 as grt
-from allocation_created
-where block_number > (select max(block_number) from allocation_created) - 10000
-order by tokens desc
-limit 10;`;
+const rawQuery = `SELECT block_number, tx_hash, log_index, "from", "to", value
+FROM usdc__transfer
+ORDER BY block_number DESC, log_index DESC
+LIMIT 10;`;
 
-const indexersView = `create view indexers as
-select indexer,
-       sum(tokens_indexer_rewards)                as total_rewards_earned,
-       sum(query_fees)                            as total_query_fees,
-       count(*) filter (where status = 'Active')  as active_allocation_count
-from allocations
-left join reward_events using (allocation_id)
-group by indexer;`;
-
-const graphqlQuery = `{
-  indexers(first: 10, orderBy: total_rewards_earned, orderDirection: desc) {
-    indexer
-    total_rewards_earned
-    total_query_fees
-    active_allocation_count
-  }
-}`;
+const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
+  --data-urlencode 'q=SELECT count(*) AS transfers FROM usdc__transfer'`;
 ---
 <Layout
   path="/example"
-  title="From subgraph to nest: indexing Graph Horizon - Nuthatch"
-  description="A worked example: a real Graph Horizon subgraph rebuilt as a Nuthatch nest - multi-contract, Arbitrum One, folded state, user-authored views, parity-checked. Most of this ships in v0.6.2; the GraphQL layer, SSE streams, and AI-assisted generation are marked as planned."
+  title="From contract to nest: indexing USDC - Nuthatch"
+  description="A worked Nuthatch example: index USDC from its contract address, inspect its raw event tables, and query the local read-only SQL API. Runs on Nuthatch v2.5.0."
 >
   <section class="page">
     <article class="wrap narrow prose">
       <p class="section-label">Worked example</p>
-      <h1>From subgraph to nest: indexing Graph Horizon</h1>
+      <h1>From contract to nest: indexing USDC</h1>
 
       <p class="preview-note">
-        <strong>Most of this runs on v0.6.2.</strong> Multi-contract nests, Arbitrum One, per-event
-        tables, user-authored <code>views/*.sql</code>, <code>init --from</code>, and the
-        <code>nuthatch check</code> parity framework all ship today. Still design targets - marked
-        where they appear - are the auto-generated GraphQL layer, SSE streams, and AI-assisted schema
-        and test generation from an ABI or a subgraph manifest. See the <a href="/roadmap">roadmap</a>
-        for the dividing line.
+        <strong>This is the current, executable path on v2.5.0.</strong> It creates a nest from
+        a verified contract, backfills it, follows the chain, and serves decoded event data locally.
+        GraphQL compatibility remains on the <a href="/roadmap">roadmap</a>; the data surface is
+        read-only SQL over HTTP and MCP.
       </p>
 
       <p>
-        This example indexes The Graph's own network activity - operator mappings,
-        allocations, indexing rewards and query fees, delegation balances - without using The
-        Graph to do it. It runs on your hardware, against Arbitrum One, from three contracts.
-      </p>
-      <p>
-        It is a real community subgraph, not a toy. It is based on
-        <a href="https://github.com/PaulieB14/horizon-indexer-subgraph" rel="noopener">Paul Barba's Horizon Indexer Performance subgraph</a>,
-        and it was chosen precisely because it is awkward: three contracts, state derived across
-        their events, delegation balances that fold deposits and withdrawals together, and
-        rewards and fees bucketed by hour and by day. An ERC-20 transfer counter this is not.
+        Nuthatch begins with a contract, not a hosted indexing service. This example indexes USDC
+        on Ethereum mainnet. The same shape works for a contract of your own, or for a published
+        nest checked out with <code>nuthatch init --from &lt;git-url&gt;</code>.
       </p>
 
-      <h2>One command, three contracts</h2>
+      <h2>One command, one nest</h2>
       <CodeCard code={initCmd} lang="bash" label="shell" />
       <p>
-        The ABIs come from Sourcify - all three contracts are verified - and each contract's
-        deployment block is detected automatically, so the backfill knows where to start.
-        What you get back is a <strong>nest</strong>: a scaffolded project with
-        <code>nuthatch.toml</code>, the resolved <code>abis/</code>, and a <code>schema.json</code>,
-        ready for your <code>views/</code> and <code>checks/</code>.
+        <code>init</code> vendors the ABI, records the chain and contract in
+        <code>nuthatch.toml</code>, and writes the schema and authoring files. The explicit
+        <code>--alias usdc</code> gives the event tables stable, readable names.
       </p>
+      <CopyBlock command="nuthatch dev" />
       <p>
-        A nest is the unit of indexing definition - a directory of config and views you can
-        commit, share, and re-run anywhere. A published nest is reusable directly:
-        <code>nuthatch init --from &lt;git-url&gt;</code> pulls someone else's and runs it
-        against your own node.
+        The process backfills from the deployment block, follows the tip, and serves a local API at
+        <code>http://127.0.0.1:8288</code>. For production, use an RPC endpoint you control rather
+        than relying on the free public defaults for a deep historical backfill.
       </p>
 
       <h2>Queryable before you model anything</h2>
       <p>
-        Every event in those ABIs is a table the moment the nest exists -
-        <code>allocation_created</code>, <code>stake_delegated</code>,
-        <code>query_fees_collected</code>, and the rest - filling in as the backfill streams
-        through history. Before you write a single line of modelling, you can ask real
-        questions of the raw layer:
+        Every declared event becomes a table named <code>{'{'}alias{'}'}__{'{'}event{'}'}</code>.
+        For this nest, Transfers are <code>usdc__transfer</code>. The raw layer includes provenance
+        such as block number, transaction hash, and log index alongside the decoded event fields.
       </p>
-      <CodeCard code={rawQuery} lang="sql" label="the ten biggest allocations opened in the last 10,000 blocks" />
+      <CodeCard code={rawQuery} lang="sql" label="the ten latest USDC transfers" />
       <p>
-        In a subgraph you get nothing until the handlers are written and the thing has synced.
-        Here the raw event layer is free, and it is queryable while you are still deciding what
-        the entities should be.
+        Start with <code>GET /schema</code> or <code>GET /tables</code> when you do not know a
+        nest’s shape. Solidity’s <code>from</code> and <code>to</code> are SQL reserved words, so
+        they need double quotes in a query.
       </p>
 
-      <h2>Entities are views, not handlers</h2>
+      <h2>Serve the data</h2>
       <p>
-        The subgraph expresses its entities as AssemblyScript handlers: imperative
-        read-modify-write against an entity store, one function per event, mutating rows by
-        hand. In the nest those become declarative incremental views. The engine maintains them
-        as events arrive, and on a reorg it retracts the affected rows and lets every view that
-        depends on them correct itself. There is no rollback code, because there is nothing to
-        roll back by hand.
+        The SQL endpoint is deliberately small: it accepts read-only <code>SELECT</code> or
+        <code>WITH</code> queries as the <code>q</code> query parameter. It is a GET endpoint, not a
+        Postgres wire protocol and not GraphQL.
       </p>
-      <CodeCard code={indexersView} lang="sql" label="views/indexers.sql" />
-      <p>The rest of the subgraph maps across the same way:</p>
-      <ul class="maplist">
-        <li><span class="mk">operators</span> - the latest <code>OperatorSet</code> per indexer.</li>
-        <li><span class="mk">allocations</span> - <code>Created</code>, <code>Resized</code>, and <code>Closed</code> folded into current state and status.</li>
-        <li><span class="mk">delegations</span> - <code>Delegated</code>, <code>Locked</code>, and <code>Withdrawn</code> folded per delegator into a running balance.</li>
-        <li><span class="mk">daily and hourly aggregations</span> - ordinary time-bucketed views of rewards, fees, and delegation events, maintained incrementally.</li>
-        <li><span class="mk">global stats</span> - a view over the views above.</li>
-      </ul>
-      <p class="aside">
-        The global-singleton entity is a well-known subgraph anti-pattern: every event contends
-        on one hot row, and it serialises writes across the whole indexer. As an incremental
-        aggregate it costs nothing - a running total the engine already keeps.
+      <CodeCard code={httpQuery} lang="bash" label="query over HTTP" />
+      <p>
+        The response covers both sealed historical segments and the live hot tip. Query limits,
+        timeouts, and read-only enforcement are part of the endpoint, not an optional client habit.
+        A reverse proxy should still provide authentication and per-client rate limits before exposing
+        it publicly.
       </p>
 
-      <h2>Parity you can check, not just claim</h2>
+      <h2>Turn facts into your application model</h2>
       <p>
-        A nest ships <code>checks/*.sql</code> - read-only queries over its sealed data - and
-        <code>nuthatch check</code> compares each result to a recorded fixture, printing a row-level
-        diff and exiting non-zero on a mismatch. For this nest the fixtures are the deployed
-        subgraph's own answers at a pinned block, so <code>nuthatch check</code> <em>is</em> the
-        parity test. It is hermetic - committed fixtures, no live endpoint - so it runs in CI with no
-        network.
-      </p>
-      <CopyBlock command="nuthatch check" />
-      <p class="note">
-        <em>Planned:</em> generating a schema, views, and a golden test suite from an ABI, or
-        translating a subgraph manifest with <code>init --from-subgraph</code>, with every proposed
-        view flagged for human review. Today you author the views; <code>nuthatch check</code> is
-        what proves them.
-      </p>
-
-      <h2>Serve it</h2>
-      <p>
-        <code>nuthatch dev</code> serves one local endpoint: <code>/tables</code> and
-        <code>/table/{'{'}name{'}'}</code>, read-only <code>/sql</code>, balances,
-        <code>/metrics</code>, and the built-in MCP server. An auto-generated GraphQL layer and SSE
-        streams - shaped so queries written against the original subgraph carry over with little
-        change - are <em>planned</em>:
-      </p>
-      <CodeCard code={graphqlQuery} lang="graphql" label="planned - top indexers by rewards" />
-      <p>
-        The MCP server is the same endpoint from an agent's side. Point Claude, or any client,
-        at your own instance and ask which indexers earned the most this week - schema
-        discovery is built in, so it knows the shape without being told, and nothing leaves
-        your machine.
+        Raw events are available immediately. Add authored views or recipes when your application
+        needs a stable derived shape, and commit checks with recorded fixtures when the result matters.
+        That keeps the decoding boundary reusable while making the application-specific logic explicit.
       </p>
 
       <hr class="divider close-div" />
       <p class="signoff">
-        So this page described indexing The Graph's network without The Graph - on your own
-        hardware, with no deploy key, no gateway, and no query fees. The finished nest is published
-        as <a href="https://github.com/nightswatchhq/horizon-nest" rel="noopener">horizon-nest</a>,
-        and the subgraph it is based on is worth reading. <a href="/manifesto">Read the manifesto</a>,
-        or <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">star the repo</a>.
+        The result is a self-hosted, replayable event index you can query without a deploy key or a
+        gateway. For the full command and HTTP reference, continue to the
+        <a href="/docs/start/quickstart/">quickstart</a> or the <a href="/docs/reference/http-api/">HTTP API</a>.
       </p>
     </article>
   </section>
@@ -172,22 +101,9 @@ const graphqlQuery = `{
   .prose h2 { margin-top: 2.8rem; margin-bottom: 1rem; font-size: 1.5rem; }
   .prose p { color: var(--text-muted); font-size: 1.05rem; line-height: 1.72; margin-bottom: 1.3rem; }
   .prose p:first-of-type { color: var(--text); }
-  .preview-note {
-    background: var(--pale-rust-bg); border: 1px solid var(--border);
-    border-left: 3px solid var(--rust); border-radius: var(--radius);
-    padding: 1rem 1.2rem; font-size: 0.95rem !important; color: var(--text-muted) !important;
-  }
+  .preview-note { background: var(--pale-rust-bg); border: 1px solid var(--border); border-left: 3px solid var(--rust); border-radius: var(--radius); padding: 1rem 1.2rem; font-size: 0.95rem !important; color: var(--text-muted) !important; }
   .preview-note strong { color: var(--text); }
-  .prose :global(.copyblock) { margin-bottom: 1.3rem; }
-  .maplist { margin: 0 0 1.3rem; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
-  .maplist li { color: var(--text-muted); font-size: 0.98rem; padding-left: 1.3rem; position: relative; }
-  .maplist li::before { content: '·'; position: absolute; left: 0.3rem; color: var(--accent); font-weight: 700; }
-  .mk { color: var(--text); font-weight: 500; }
-  .aside {
-    border-left: 2px solid var(--border-hi);
-    padding-left: 1.1rem; font-size: 0.98rem; color: var(--text-faint);
-  }
-  .note { font-size: 0.92rem; color: var(--text-faint); }
+  .prose :global(.copyblock), .prose :global(.codecard) { margin-bottom: 1.3rem; }
   .close-div { margin-block: 2.4rem 1.8rem; }
   .signoff { color: var(--text) !important; }
 </style>

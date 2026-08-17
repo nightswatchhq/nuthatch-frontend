@@ -5,28 +5,30 @@ import { getCollection } from 'astro:content';
 
 const all = await getCollection('nests');
 
-// Group by honest status - lead with what works, never dress up vaporware.
+// The catalogue distinguishes original Graph Protocol nests from ports made when a
+// network subgraph needs a durable fallback. Status remains visible on every card.
 const order = { available: 0, building: 1, planned: 2 } as const;
-const byTier = (a: { data: { tier: number } }, b: { data: { tier: number } }) => a.data.tier - b.data.tier;
+const byTier = (a: { data: { tier: number; status: keyof typeof order } }, b: { data: { tier: number; status: keyof typeof order } }) =>
+  order[a.data.status] - order[b.data.status] || a.data.tier - b.data.tier;
 
 const groups = [
   {
-    key: 'available',
-    title: 'Available now',
-    blurb: 'Installable today - from a published nest repo, or generated straight from a contract address.',
-    items: all.filter((n) => n.data.status === 'available').sort(byTier),
+    key: 'graph-protocol',
+    title: 'Graph Protocol nests',
+    blurb: 'Indexing definitions for The Graph’s own protocol surface.',
+    items: all.filter((n) => n.data.catalogue_section === 'graph-protocol' || (!n.data.catalogue_section && n.data.category === 'Graph Protocol')).sort(byTier),
   },
   {
-    key: 'building',
-    title: 'Building',
-    blurb: 'Running in the wild, being packaged into a published nest on the org.',
-    items: all.filter((n) => n.data.status === 'building').sort(byTier),
+    key: 'subgraph-ports',
+    title: 'Ports of subgraphs',
+    blurb: 'Nests ported from subgraphs when an independent, self-hosted fallback was needed.',
+    items: all.filter((n) => n.data.catalogue_section === 'subgraph-ports').sort(byTier),
   },
   {
-    key: 'planned',
-    title: 'Planned',
-    blurb: 'On the catalogue, demand-ranked. Not built yet - no fake install commands.',
-    items: all.filter((n) => n.data.status === 'planned').sort(byTier),
+    key: 'other',
+    title: 'Other nests',
+    blurb: 'Reusable indexing definitions, ordered by availability and catalogue tier.',
+    items: all.filter((n) => n.data.catalogue_section === 'other' || (!n.data.catalogue_section && n.data.category !== 'Graph Protocol')).sort(byTier),
   },
 ];
 
@@ -77,7 +79,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
         <section class="group">
           <div class="group-head">
             <h2>{g.title}</h2>
-            <span class={`count status--${g.key}`}>{g.items.length}</span>
+            <span class="count">{g.items.length}</span>
           </div>
           <p class="group-blurb">{g.blurb}</p>
 

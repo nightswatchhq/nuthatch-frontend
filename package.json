@@ -6,11 +6,15 @@
   "description": "Website for Nuthatch - the self-hosted, AI-native blockchain indexer.",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/generate-sitemap.mjs && astro build",
     "preview": "astro preview",
     "check": "astro check"
   },
   "dependencies": {
     "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^5.9.3"
   }
 }
