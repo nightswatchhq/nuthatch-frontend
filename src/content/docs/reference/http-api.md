@@ -4,9 +4,10 @@ description: "Every endpoint the served nest exposes."
 order: 3
 ---
 
-Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). All endpoints are
-read-only GETs; the ingest thread is the only writer. In a [runtime](/docs/operate/many-nests/), each
-nest's full surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
+Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
+the ingest thread is the only data writer. A runtime additionally has two authenticated admin mutation
+routes for mounting and unmounting nests. In a [runtime](/docs/operate/many-nests/), each nest's full
+surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 ## Status & introspection
 
@@ -56,9 +57,12 @@ nest's full surface appears under its `/<name>/…` prefix, byte-identical to a 
 
 ## Admin & runtime
 
-- `GET /_admin/` - the built-in read-only dashboard; `GET /_admin/events` streams live activity
-  (SSE). Off-localhost both require the admin token; `--no-admin` removes them. See
+- `GET /_admin/` - the built-in dashboard; `GET /_admin/events` streams live activity (SSE).
+  Off-localhost both require the admin token; `--no-admin` removes them. See
   [Serving & the admin UI](/docs/operate/serving/).
+- `POST /_admin/nests` *(runtime only)* - mount a nest into a running runtime. `DELETE
+  /_admin/nests/{name}` unmounts it. These mutate runtime state, require the admin token when
+  remote, and disappear with `--no-admin`.
 - `GET /nests` *(runtime only)* - the roster of mounted nests: name, chain, registry hash, table
   count, footprint, plus each nest's **live health** (`indexing` or `quarantined`, with the reason
   and the next re-admission attempt). The health half is merged per request, not cached at boot, so
@@ -66,6 +70,6 @@ nest's full surface appears under its `/<name>/…` prefix, byte-identical to a 
 - `GET /ready` *(runtime root)* - runtime-wide readiness, for a supervisor to poll. Each nest also
   answers its own `GET /<name>/ready`, so one sick nest is diagnosable without guessing.
 
-During a breaking [upgrade](/docs/operate/upgrades/), the old version's responses additionally
-carry `Deprecation: true` and a `Link: …; rel="successor-version"` header (RFC 8594) pointing at
-its replacement.
+The normal operator upgrade path is [staging a successor and running `nuthatch migrate`](/docs/operate/upgrades/).
+It classifies schema compatibility before changing a mount; it does not silently put a second public
+version behind an undocumented route.

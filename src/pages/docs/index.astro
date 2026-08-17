@@ -6,7 +6,6 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   description="Everything about nuthatch - the golden path, every component, and guides for building nests and operating them."
   slug=""
 >
-  <h1>Documentation</h1>
   <p>
     Everything about nuthatch - the two-minute golden path, the concepts underneath, and full guides for
     building nests and operating them. New here? Start with the
@@ -17,6 +16,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <ul>
     <li><a href="/docs/start/quickstart/">Quickstart</a> - from a contract address to a live, queryable API in under two minutes.</li>
     <li><a href="/docs/concepts/nests/">What is a nest?</a> - the core mental model.</li>
+    <li><a href="/docs/concepts/nest-identity/">Nest identity &amp; reuse</a> - immutable packages without needless re-indexing.</li>
   </ul>
 
   <h2>Build a nest</h2>
@@ -24,6 +24,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <li><a href="/docs/build/config/">nuthatch.toml</a> - the one config file a nest has.</li>
     <li><a href="/docs/build/views/">Authored SQL views</a> - first-class derived logic.</li>
     <li><a href="/docs/build/recipes/">Recipes</a> - the <code>eth_call</code> you don't need.</li>
+    <li><a href="/docs/build/subgraph-fallback/">Build a subgraph fallback</a> - protect the event-derived reads that cannot disappear.</li>
   </ul>
 
   <h2>Operate</h2>

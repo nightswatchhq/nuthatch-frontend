@@ -61,4 +61,5 @@ never phones home for them at runtime. Every declared event of every contract be
 
 - [Runtimes &amp; cursors](/docs/concepts/runtimes/) - hosting many nests in one runtime
 - [Storage &amp; sealing](/docs/concepts/storage/) - where a nest's data lives
+- [Nest identity &amp; reuse](/docs/concepts/nest-identity/) - immutable packages, dataset adoption, and shared segments
 - [Build a nest](/docs/build/config/) - the config, tables, views, and recipes

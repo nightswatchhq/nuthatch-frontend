@@ -128,7 +128,6 @@ To span more than one chain, drop the top-level `chain`/`chain_id`/`rpc_urls` an
 ```toml
 [runtime]
 name = "my-runtime"
-nests = ["usdc", "base-app"]   # usdc → mainnet, base-app → base
 max_rss_mb = 2048              # per-cursor; a runtime's total budget is Σ cursors
 
 [[chains]]
@@ -140,15 +139,27 @@ rpc_urls = ["https://…"]
 chain = "base"
 chain_id = 8453
 rpc_urls = ["https://…"]
+
+[[mounts]]
+tenant = "default"
+alias = "usdc"
+nid = "<64-hex-mainnet-nest-identity>"
+
+[[mounts]]
+tenant = "default"
+alias = "base-app"
+nid = "<64-hex-base-nest-identity>"
 ```
 
-Exactly one form: top-level `chain` **or** `[[chains]]`, never both or neither.
+Current runtimes declare chains under `[[chains]]` and datasets under `[[mounts]]`. The old flat
+`runtime.nests` list survives only so a partly migrated directory can still be recovered; do not use it
+for a new runtime.
 
 ## Isolation
 
-Chain identity is shared per cursor; **stores are per-nest and isolated** - each nest keeps its own
-redb hot store and its own sealed segments. A reorg rolls back every nest on that cursor's hot
-store together (same chain, same boundary); sealed history is immutable everywhere. The roster and
+Chain identity is shared per cursor; **hot stores are per-nest and isolated**, while sealed Parquet
+segments are content-addressed in the runtime-wide shared store. A reorg rolls back every affected
+nest's hot store on that cursor; sealed history is immutable everywhere. The roster and
 [per-nest metrics](/docs/operate/metrics/) let you see each nest's own progress and footprint
 rather than one blended number.
 

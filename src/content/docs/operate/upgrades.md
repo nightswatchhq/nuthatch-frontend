@@ -46,30 +46,27 @@ not bytes.
 A nest's identity is a hash of its authored inputs, so *any* edit changes it. Without more, that would
 mean every edit re-indexes the chain. Two things stop it:
 
-**Early cutoff.** A **cosmetic** edit - a comment, a renamed view, a doc change, a tweak to the query
-surface - changes what the nest *is* but not what it *stores*. The new identity **adopts the existing
-dataset** instead of backfilling. On a real 428 MB nest this takes about a tenth of a second, because
-it moves nothing.
+**Dataset adoption.** A **cosmetic** edit - a comment, a renamed view, a doc change, a tweak to the
+query surface - changes what the nest *is* but not what it *stores*. The new identity adopts the
+existing derived state instead of backfilling. The copy is staged and committed atomically; the source
+is retained because another mount may still be using it. On a real 428 MB nest this took about 0.14 s.
 
 **Shared segments.** Sealed segments are content-addressed, so two nests that decode the same contract
 produce byte-identical files and hold **one copy** between them. A second nest indexing a contract you
 already index costs no new bytes.
 
-## What will never be reused, and why
+## What is not being claimed
 
-Some derivations cannot be cached at all, and the runtime tells you at load rather than leaving you to
-wonder why edits stay slow:
+Authored SQL views are currently defined at query time over the hot and sealed data. They are not
+materialised, so a view edit does not have stored view data to recompute. The reuse above is therefore
+whole-dataset adoption: it avoids re-fetching raw chain history when the stored-data inputs are
+unchanged.
 
-```text
-! view stamped can never be reused across an edit: it calls the volatile function `now()`,
-  whose value changes between runs
-```
-
-A view whose result depends on the clock, on randomness, or on row order the engine does not guarantee
-is legal to author - it simply cannot be reused, because two runs may honestly disagree. Run
-`nuthatch check` to see the list before you deploy.
-
-A **cycle** among views is different: it is refused at load, with the cycle named.
+Nuthatch does inspect views for cycles and for constructs that would be unsafe to cache if they become
+materialised. A volatile view such as one calling `now()` is legal today, but it is not evidence that a
+future per-derivation cache could reuse that view's output. The current data-adoption decision does not
+depend on views because views do not write stored bytes. See [Nest identity & reuse](/docs/concepts/nest-identity/)
+for the two boundaries.
 
 ## Coming from 1.x
 
@@ -79,8 +76,8 @@ is nothing to migrate.** Stop the service, swap the binary, start it. 2.0's layo
 upgraded 1.0.2 → 2.0.0 by binary swap, row counts byte-identical before and after, back at tip in
 seconds.
 
-`nuthatch migrate` is for a directory that has a **`roost.toml`** in it. If you do not have that file,
-skip the rest of this section.
+`nuthatch migrate` is for a pre-2.0 directory with a **`roost.toml`**, and also for a current runtime
+when an updated nest has been staged under an existing alias. A solo nest has neither use for it.
 
 Measured on a real two-nest runtime rather than a fixture:
 

@@ -1,0 +1,73 @@
+---
+// The search index is generated from local Markdown at build time and served from this site. There is
+// no third-party search service, no telemetry, and no client framework just to find a heading.
+---
+<div class="docs-search" data-docs-search>
+  <label class="sr-only" for="docs-search-input">Search documentation</label>
+  <input id="docs-search-input" type="search" placeholder="Search docs" autocomplete="off" data-docs-search-input />
+  <div class="docs-search-results" data-docs-search-results hidden aria-live="polite"></div>
+</div>
+
+<script>
+  type Entry = { title: string; description: string; href: string; text: string };
+  const root = document.querySelector<HTMLElement>('[data-docs-search]');
+  const input = root?.querySelector<HTMLInputElement>('[data-docs-search-input]');
+  const results = root?.querySelector<HTMLElement>('[data-docs-search-results]');
+  let index: Entry[] | undefined;
+
+  const plain = (value: string) => value.trim().toLowerCase();
+  const render = (matches: Entry[]) => {
+    if (!results) return;
+    if (matches.length === 0) {
+      results.innerHTML = '<p>No documentation matches that search.</p>';
+    } else {
+      results.innerHTML = matches.map((entry) =>
+        `<a href="${entry.href}"><strong>${entry.title}</strong><span>${entry.description}</span></a>`
+      ).join('');
+    }
+    results.hidden = false;
+  };
+
+  input?.addEventListener('input', async () => {
+    const query = plain(input.value);
+    if (!query) {
+      if (results) results.hidden = true;
+      return;
+    }
+    if (!index) {
+      try {
+        const response = await fetch('/docs-search.json');
+        index = await response.json() as Entry[];
+      } catch {
+        if (results) {
+          results.textContent = 'Documentation search is unavailable. Try the sidebar.';
+          results.hidden = false;
+        }
+        return;
+      }
+    }
+    const words = query.split(/\s+/).filter(Boolean);
+    const matches = index.filter((entry) => {
+      const haystack = plain(`${entry.title} ${entry.description} ${entry.text}`);
+      return words.every((word) => haystack.includes(word));
+    }).slice(0, 8);
+    render(matches);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (root && !root.contains(event.target as Node) && results) results.hidden = true;
+  });
+</script>
+
+<style>
+  .docs-search { position: relative; margin: 0 0 1.25rem; }
+  input { width: 100%; padding: 0.55rem 0.65rem; border: 1px solid var(--border-hi); border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text); font: inherit; font-size: 0.86rem; }
+  input::placeholder { color: var(--text-faint); }
+  .docs-search-results { position: absolute; z-index: 5; width: min(26rem, calc(100vw - 3rem)); max-height: 24rem; overflow: auto; margin-top: 0.45rem; padding: 0.35rem; border: 1px solid var(--border-hi); border-radius: var(--radius-sm); background: var(--bg-elev); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2); }
+  .docs-search-results a { display: block; padding: 0.55rem 0.65rem; border-radius: 4px; color: var(--text-muted); text-decoration: none; }
+  .docs-search-results a:hover { background: var(--pale-blue-bg); }
+  .docs-search-results strong, .docs-search-results span { display: block; }
+  .docs-search-results strong { color: var(--text); font-size: 0.88rem; }
+  .docs-search-results span, .docs-search-results p { font-size: 0.78rem; line-height: 1.4; margin: 0.15rem 0 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>

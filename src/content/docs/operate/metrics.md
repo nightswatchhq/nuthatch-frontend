@@ -58,6 +58,47 @@ Inside the budget, the analytical path is separately bounded - each DuckDB query
 memory cap and thread limit, and the concurrency gate bounds the aggregate. If you're tight, lower
 concurrency rather than raising the per-query cap.
 
-Alert if you must on `nuthatch_tip_lag_blocks` (sustained growth = RPC throughput problem) and
-`nuthatch_rss_bytes` (approaching the ceiling). Everything else is diagnosis material - see
-[Troubleshooting](/docs/operate/troubleshooting/).
+## A small, useful alert set
+
+These are deliberately symptoms rather than a pager for every counter. Pick the lag threshold for
+the chain and the service promise you make to readers. The examples assume Prometheus has a
+`job="nuthatch"` label.
+
+```yaml
+groups:
+  - name: nuthatch
+    rules:
+      - alert: NuthatchCursorStalled
+        expr: time() - nuthatch_last_poll_unixtime{job="nuthatch"} > 180
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "Nuthatch has not polled its chain for five minutes"
+
+      - alert: NuthatchFallingBehind
+        expr: nuthatch_tip_lag_blocks{job="nuthatch"} > 50
+        for: 15m
+        labels: { severity: ticket }
+        annotations:
+          summary: "Nuthatch remains more than 50 blocks behind the tip"
+
+      - alert: NuthatchNestQuarantined
+        expr: nuthatch_nest_health{job="nuthatch"} == 0
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "A mounted nest is quarantined"
+
+      - alert: NuthatchNearMemoryBudget
+        expr: nuthatch_rss_bytes{job="nuthatch"} > 1800 * 1024 * 1024
+        for: 10m
+        labels: { severity: ticket }
+        annotations:
+          summary: "Nuthatch is within 248 MB of its default cursor budget"
+```
+
+The memory number is intentionally below the default 2 GB ceiling. It gives you time to reduce
+query concurrency or investigate a mount before the runtime has to refuse more work. In a
+multichain runtime, alert per `nuthatch_cursor_live{chain}` and per-nest health too; the aggregate
+RSS cannot identify which chain has become expensive. See
+[Troubleshooting](/docs/operate/troubleshooting/) for the corresponding diagnosis paths.

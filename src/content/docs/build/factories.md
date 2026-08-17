@@ -55,8 +55,10 @@ that child and its rows along with everything else - factories inherit the same 
 
 A factory that discovers a vast number of children is exactly the kind of thing that could blow the
 [≤2 GB per-cursor budget](/docs/concepts/runtimes/). Discovery is bounded and observable per nest, and in a
-[runtime](/docs/operate/many-nests/) one nest's runaway factory is isolated to its own cursor - it can't starve
-a co-tenant.
+[runtime](/docs/operate/many-nests/) its tables and failure state remain isolated. Same-chain nests do
+share a cursor, however, so a runaway factory is still a capacity concern for that cursor. The bound
+is there to turn that into an observable admission or quarantine decision rather than allowing one
+nest to consume the machine by optimism.
 
 ## Next
 

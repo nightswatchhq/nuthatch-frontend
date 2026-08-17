@@ -15,9 +15,36 @@ async function markdownFiles(dir) {
 }
 
 const docsRoot = join(root, 'src/content/docs');
-for (const file of await markdownFiles(docsRoot)) {
+const docs = await markdownFiles(docsRoot);
+for (const file of docs) {
   routes.push(`/docs/${relative(docsRoot, file).split(sep).join('/').replace(/\.md$/, '')}`);
 }
+
+// Local, static documentation search. The client fetches this only when a reader searches, so the
+// feature adds neither a third-party service nor a client-side framework.
+const readField = (frontmatter, field) => {
+  const match = frontmatter.match(new RegExp(`^${field}:\\s*["']?(.+?)["']?\\s*$`, 'm'));
+  return match?.[1] ?? '';
+};
+const searchIndex = await Promise.all(docs.map(async (file) => {
+  const source = await readFile(file, 'utf8');
+  const frontmatter = source.match(/^---\n([\s\S]*?)\n---\n/)?.[1] ?? '';
+  const body = source.replace(/^---\n[\s\S]*?\n---\n/, '');
+  const text = body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!?\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return {
+    title: readField(frontmatter, 'title'),
+    description: readField(frontmatter, 'description'),
+    href: `/docs/${relative(docsRoot, file).split(sep).join('/').replace(/\.md$/, '')}/`,
+    text,
+  };
+}));
+await writeFile(join(root, 'public/docs-search.json'), `${JSON.stringify(searchIndex)}\n`);
 
 const blogRoot = join(root, 'src/content/blog');
 for (const file of await markdownFiles(blogRoot)) {

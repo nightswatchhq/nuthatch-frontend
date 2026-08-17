@@ -19,7 +19,19 @@ chain_id = 1
 rpc_urls = ["https://…"]      # tried in order, with failover
 schema_version = 1            # managed by nuthatch
 block_timestamps = true       # default; set at init, not editable afterwards - see below
+```
 
+The top-level `[nest]` table identifies this authored nest. Contracts follow in one or more
+`[[contracts]]` entries:
+
+```toml
+[[contracts]]
+alias = "usdc"                # table prefix → usdc__transfer, usdc__approval, …
+address = "0xA0b8…eB48"
+start_block = 6082465          # optional; deployment block (init detects it)
+abi = "abis/usdc.json"        # vendored ABI path, relative to the nest dir
+events = ["Transfer"]         # optional allowlist; omit to decode every ABI event
+```
 
 ### `block_timestamps`
 
@@ -40,14 +52,6 @@ the default is on for a reason.
 
 Flipping the value in `nuthatch.toml` by hand is refused at startup rather than honoured silently,
 because a store written one way cannot be read the other.
-
-[[contracts]]                 # one or more
-alias = "usdc"                # table prefix → usdc__transfer, usdc__approval, …
-address = "0xA0b8…eB48"
-start_block = 6082465         # optional; deployment block (init detects it)
-abi = "abis/usdc.json"        # vendored ABI path, relative to the nest dir
-events = ["Transfer"]         # optional allowlist; omit to decode every ABI event
-```
 
 The per-contract `events` allowlist is how a nest indexing e.g. GraphToken keeps only `Transfer`
 instead of millions of irrelevant rows. A name the ABI doesn't define is a config error, caught at
@@ -166,14 +170,23 @@ secret = "…"                      # optional; adds X-Nuthatch-Signature: sha25
 ```toml
 [runtime]
 name = "my-runtime"
+max_rss_mb = 2048             # optional per-cursor RAM ceiling (default 2048)
+
+[[chains]]
 chain = "mainnet"
 chain_id = 1
 rpc_urls = ["https://…"]
-nests = ["usdc", "weth"]      # subdirectories under nests/ to mount
-max_rss_mb = 2048             # optional per-cursor RAM ceiling (default 2048)
+
+[[mounts]]
+tenant = "default"            # optional; defaults to "default"
+alias = "usdc"                # served at /usdc/ in a single-tenant runtime
+nid = "<64-hex-nest-identity>"
+sql = "allowlist"              # open | deny | allowlist
 ```
 
-See [Run a runtime](/docs/operate/many-nests/) for the multichain `[[chains]]` shape (RFC-0021).
+`mounts.toml` is runtime state. `nuthatch migrate` writes it from a pre-2.0 directory and a live
+runtime keeps it current after an admin mount or unmount. See [Run a runtime](/docs/operate/many-nests/)
+for the full multichain shape and the named-query allowlist.
 
 ## A note on `nest.star`
 

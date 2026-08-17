@@ -1,13 +1,17 @@
 ---
 import Layout from './Layout.astro';
 import { getCollection } from 'astro:content';
+import DocsSearch from '../components/DocsSearch.astro';
+import DocsToc from '../components/DocsToc.astro';
 
 interface Props {
   title: string;
   description?: string;
   slug: string;
+  headings?: Array<{ depth: number; slug: string; text: string }>;
 }
-const { title, description, slug } = Astro.props;
+const { title, description, slug, headings = [] } = Astro.props;
+const showVerification = slug.startsWith('operate/') || slug.startsWith('reference/');
 
 // The docs IA: sidebar groups, in order. Each group's pages come from `src/content/docs/<dir>/`,
 // ordered by the page's `order` frontmatter. Single source of truth - add a page, it appears.
@@ -40,6 +44,7 @@ const groups = GROUPS.map((g) => ({
           <span class="docs-nav-current">{title}</span>
         </summary>
         <nav aria-label="Documentation">
+          <DocsSearch />
           {groups.map((g) => (
             <div class="docs-group">
               <p class="docs-group-label">{g.label}</p>
@@ -57,15 +62,18 @@ const groups = GROUPS.map((g) => ({
       </details>
 
       <article class="prose docs-content">
+        <h1>{title}</h1>
         <slot />
+        {showVerification && <p class="docs-verified">Checked against Nuthatch 2.5.0. Verify a release-specific command with the <a href="/docs/reference/cli/">CLI reference</a> before running it in production.</p>}
       </article>
+      <DocsToc headings={headings} />
     </div>
   </section>
 </Layout>
 
 <style>
   .docs { padding-block: clamp(1.6rem, 4vw, 2.6rem) clamp(4rem, 9vw, 6.5rem); }
-  .docs-grid { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: clamp(2rem, 5vw, 4rem); }
+  .docs-grid { display: grid; grid-template-columns: 15rem minmax(0, 1fr) 12rem; gap: clamp(2rem, 4vw, 3.5rem); }
 
   /* Sidebar (desktop: sticky column; the <details> chrome is neutralised). */
   .docs-nav { position: sticky; top: 74px; align-self: start; max-height: calc(100vh - 90px); overflow-y: auto; }
@@ -96,6 +104,7 @@ const groups = GROUPS.map((g) => ({
   }
 
   .docs-content { min-width: 0; }
+  .docs-verified { margin-top: 3rem !important; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-faint) !important; font-size: 0.85rem !important; }
   .docs-content :global(h1) { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.12; letter-spacing: -0.025em; margin-bottom: 1.4rem; }
 
   /* Prose - shared with the blog. */
@@ -129,6 +138,7 @@ const groups = GROUPS.map((g) => ({
   }
   .prose :global(pre code) { background: none; padding: 0; border-radius: 0; font-size: inherit; }
 
+  @media (max-width: 72rem) { .docs-grid { grid-template-columns: 15rem minmax(0, 1fr); } }
   @media (max-width: 52rem) {
     .docs-grid { grid-template-columns: 1fr; gap: 1.5rem; }
     .docs-nav {

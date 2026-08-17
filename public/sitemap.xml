@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://nuthatch-indexer.com/</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/content-addressed-nests-and-data-reuse</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/index-uniswap-v3-with-nuthatch</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/no-subgraph-no-problem</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/nuthatch-data-service-on-graph-horizon</loc></url>
@@ -18,11 +19,13 @@
   <url><loc>https://nuthatch-indexer.com/docs/build/factories</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/recipes</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/semantic</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/build/subgraph-fallback</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/tables</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/views</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/webhooks</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/concepts/authoring</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/concepts/determinism</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/concepts/nest-identity</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/concepts/nests</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/concepts/reorgs</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/concepts/runtimes</loc></url>
