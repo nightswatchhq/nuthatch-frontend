@@ -37,9 +37,9 @@ const groups = GROUPS.map((g) => ({
 <Layout path={`/docs/${slug}`} title={`${title} - Nuthatch docs`} description={description}>
   <section class="docs">
     <div class="wrap docs-grid">
-      <!-- Open by default; on desktop it's a fixed always-open column (not collapsible), on mobile a
-           native <details> disclosure the reader can fold away. -->
-      <details class="docs-nav" open>
+      <!-- Closed in the HTML for mobile. Desktop CSS presents the contents as a fixed sidebar;
+           narrow screens get the native disclosure. -->
+      <details class="docs-nav">
         <summary>
           <span class="docs-nav-label">Documentation</span>
           <span class="docs-nav-current">{title}</span>
@@ -76,10 +76,13 @@ const groups = GROUPS.map((g) => ({
   .docs { padding-block: clamp(1.6rem, 4vw, 2.6rem) clamp(4rem, 9vw, 6.5rem); }
   .docs-grid { display: grid; grid-template-columns: 15rem minmax(0, 1fr) 12rem; gap: clamp(2rem, 4vw, 3.5rem); }
 
-  /* Sidebar (desktop: sticky column; the <details> chrome is neutralised). */
+  /* Sidebar (desktop: sticky column; the <details> chrome is neutralised). The element is
+     intentionally closed in the HTML so a phone does not land on a full page of navigation. */
   .docs-nav { position: sticky; top: 74px; align-self: start; max-height: calc(100vh - 90px); overflow-y: auto; }
-  /* Desktop: the summary is inert - the nav can't be collapsed, and stays open. */
-  .docs-nav > summary { list-style: none; cursor: default; pointer-events: none; }
+  /* Desktop: show the closed details' contents as the fixed sidebar. Native closed-details rules
+     would otherwise hide the nav, so this deliberately outranks them. */
+  .docs-nav:not([open]) > nav { display: block; }
+  .docs-nav > summary { display: none; }
   .docs-nav > summary::-webkit-details-marker { display: none; }
   .docs-nav-label {
     display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
@@ -146,6 +149,7 @@ const groups = GROUPS.map((g) => ({
       position: static; max-height: none; overflow: visible;
       border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
     }
+    .docs-nav:not([open]) > nav { display: none; }
     .docs-nav > summary {
       cursor: pointer; pointer-events: auto; padding: 0.8rem 1rem;
       display: flex; flex-direction: column; gap: 0.15rem;
