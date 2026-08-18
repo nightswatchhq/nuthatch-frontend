@@ -31,7 +31,7 @@ const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 10
 
     <div class="book-grid wrap">
       <aside class="book-aside">
-        <details class="book-contents">
+        <details class="book-contents" data-book-contents open>
           <summary>Contents</summary>
           <ol>
             <li><a href="/docs/book/" class={isCover ? 'active' : ''}>Cover &amp; contents</a></li>
@@ -40,6 +40,11 @@ const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 10
             ))}
           </ol>
         </details>
+        <script is:inline>
+          if (window.matchMedia('(max-width: 64rem)').matches) {
+            document.querySelector('[data-book-contents]')?.removeAttribute('open');
+          }
+        </script>
       </aside>
 
       <article class:list={['book-prose', { 'book-cover': isCover }]}>
@@ -84,7 +89,6 @@ const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 10
   .book-progress span { display: block; height: 100%; width: var(--book-progress); background: var(--rust); transition: width 160ms ease; }
   .book-grid { display: grid; grid-template-columns: 10rem minmax(0, 58rem) 8rem; gap: clamp(1.5rem, 3.5vw, 3.5rem); align-items: start; padding-top: clamp(2.5rem, 7vw, 5rem); }
   .book-aside { position: sticky; top: 84px; }
-  .book-contents:not([open]) > ol { display: block; }
   .book-contents summary { cursor: default; list-style: none; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.85rem; }
   .book-contents summary::-webkit-details-marker { display: none; }
   .book-contents ol { list-style: none; padding: 0; margin: 0; border-left: 1px solid var(--border); }
@@ -126,7 +130,6 @@ const progress = chapterIndex >= 0 ? ((chapterIndex + 1) / chapters.length) * 10
     .book-top { min-height: 3.7rem; } .book-kicker { display: none; }
     .book-grid { display: block; padding-top: 1.5rem; } .book-aside { position: static; margin-bottom: 2.4rem; }
     .book-contents { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); }
-    .book-contents:not([open]) > ol { display: none; }
     .book-contents summary { cursor: pointer; padding: 0.85rem 1rem; margin: 0; }
     .book-contents[open] summary { border-bottom: 1px solid var(--border); }
     .book-contents ol { border: 0; padding: 0.6rem 1rem 0.85rem; }
