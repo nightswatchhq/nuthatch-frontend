@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import BookLayout from '../../layouts/BookLayout.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -9,7 +10,14 @@ export async function getStaticPaths() {
 
 const { doc } = Astro.props;
 const { Content, headings } = await render(doc);
+const isBook = doc.id === 'book' || doc.id.startsWith('book/');
 ---
-<DocsLayout title={doc.data.title} description={doc.data.description} slug={doc.id} headings={headings}>
-  <Content />
-</DocsLayout>
+{isBook ? (
+  <BookLayout title={doc.data.title} description={doc.data.description} slug={doc.id} headings={headings}>
+    <Content />
+  </BookLayout>
+) : (
+  <DocsLayout title={doc.data.title} description={doc.data.description} slug={doc.id} headings={headings}>
+    <Content />
+  </DocsLayout>
+)}
