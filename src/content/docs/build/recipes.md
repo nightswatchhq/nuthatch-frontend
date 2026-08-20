@@ -1,6 +1,6 @@
 ---
-title: Recipes - the eth_call you don't need
-description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node.
+title: Recipes - the eth_call you usually do not need
+description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node. When a read is not derivable, pinned calls are there.
 order: 6
 ---
 
@@ -11,6 +11,14 @@ they have no incremental-view engine. **Nuthatch does.**
 A **recipe** is an authored SQL view (see [Authored SQL views](/docs/build/views/)) that computes a read
 from indexed events instead of fetching it. Deterministic, free, no archive node - and a capability
 subgraphs structurally lack, because their storage isn't content-addressed.
+
+:::note
+Derive-first is the **default**, not the only option. Since v2.6.0 a nest can also make the call: a
+[`[[calls]]` block](/docs/build/contract-calls/) pins a contract read to a fixed block and stores the
+result as a table. Reach for a recipe when the value is derivable, because it costs nothing and needs
+no archive node. Reach for a pinned call when it is not - an immutable `decimals()`, or a view function
+whose inputs were never emitted.
+:::
 
 ## Use one
 
