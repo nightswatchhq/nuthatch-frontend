@@ -4,6 +4,14 @@ description: "Over 70% of subgraphs call eth_call to read contract state. nuthat
 date: 2026-07-22
 ---
 
+> **Superseded, 2026-08-20.** nuthatch 2.6.0 ships pinned `eth_call` and verified IPFS resolution, so
+> the central claim of this post is no longer true of the product. The determinism argument below still
+> holds and is why the calls are *pinned* and content-addressed rather than ad hoc, and derive-first is
+> still the default. See [We said nuthatch would never call a contract. It does
+> now.](/blog/closing-the-subgraph-parity-gap) for what changed and why. Kept as written, because a
+> project that quietly edits its old positions is harder to trust than one that dates them.
+
+
 
 The Foundation's own number: **over 70% of subgraphs call `eth_call`**. They reach out to an archive
 node, mid-index, to read contract *state* the event alone doesn't carry, `getReserves`, `totalSupply`,
