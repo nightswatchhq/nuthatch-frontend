@@ -73,8 +73,8 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   `nuthatch doctor --rpc` makes that bar self-service, and Gnosis clears it comfortably.
 - **0031 Optimism and Polygon** *(Optimism implemented; Polygon shipped but not yet reliable)* -
   Optimism has two qualifying endpoints and its tracking issue closed clean. Polygon is registered as
-  a built-in chain, but the endpoint it ships fails the `getLogs` bar outright - not archive, and a
-  from-deployment backfill can't use it yet.
+  a built-in chain. As first shipped its default endpoint was not archive and failed the `getLogs`
+  bar outright; #688 reordered the list to put the archive endpoint first and narrowed the window.
 - **0032 The tenant runtime** *(Implemented; all 5 slices, v2.0.0)* - retires the roost: data keyed by
   content-addressed nest identity, mounts become `(tenant, NID)` records, a shared nest indexed once.
 - **0033 Nest identity and derivation grafting** *(Implemented; slices 1-3, 5-6)* - edit a nest
