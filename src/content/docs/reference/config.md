@@ -14,7 +14,7 @@ makes `init --from` and `nest load` safe.
 ```toml
 [nest]
 name = "usdc"                 # nest name (also the runtime mount name)
-chain = "mainnet"             # mainnet | arbitrum-one | base
+chain = "mainnet"             # mainnet | arbitrum-one | base | bsc | polygon | gnosis | optimism
 chain_id = 1
 rpc_urls = ["https://…"]      # tried in order, with failover
 schema_version = 1            # managed by nuthatch
@@ -59,9 +59,12 @@ registry build.
 
 ### Any other EVM chain
 
-Ethereum mainnet, Arbitrum One and Base are **built in** - keyless public endpoints, a tuned
-`eth_getLogs` window, chain-appropriate finality, and bytecode probing so `init` can detect which of
-them a contract lives on.
+Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis and Optimism are **built in** - keyless
+public endpoints, a tuned `eth_getLogs` window and chain-appropriate finality. `init` probes
+Ethereum, Arbitrum One and Base by bytecode when you omit `--chain`; name the others explicitly
+with `--chain polygon`. Public endpoints are measured, not assumed - and a measurement is a
+snapshot, not a property, so run `nuthatch doctor --rpc <url>` before trusting a long backfill to
+any of them.
 
 **Any other EVM chain works too** - World Chain, Base Sepolia, your own devnet - it just has to be
 configured by hand. `dev`, `sql`, `bench`, and `dev` are chain-agnostic; `init` and `add` are
