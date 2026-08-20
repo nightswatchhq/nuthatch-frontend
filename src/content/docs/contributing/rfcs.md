@@ -50,9 +50,10 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   90-second control-plane outage**. Until v0.9.3 the writer pool took leases and ran no indexing at
   all (#250); ten level-5 checks passed throughout because every one tested the control plane and
   none asserted a row appears.
-- **0023 Contract state, derive-first** *(Accepted; tiers 1-2 shipped)* - the `eth_call` you don't
-  need: derived-view recipes and the immutable-metadata cache. Tier 3 is a foundation rather than a
-  feature - `[[calls]]` parses and validates, and nothing executes it yet (#262).
+- **0023 Contract state, derive-first** *(Implemented)* - the `eth_call` you don't need for most
+  reads: derived-view recipes and the immutable-metadata cache (tiers 1-2), plus a pinned `[[calls]]`
+  executor (tier 3, v2.6.0) for the reads that aren't derivable - `resolve_at` now has a caller,
+  verified value-for-value against an archive node.
 - **0024 The eth_call execution engine** *(Draft)* - a demand-driven state cache, if the residue
   demands it.
 - **0025 Adaptive MCP tool advertisement** *(Implemented)* - advertise only the tools a nest can
@@ -68,6 +69,29 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   its oversized-range refusal as HTTP 400, which the classifier did not enumerate, so a window that
   needed splitting was retried unchanged forever. It now completes in **74.8 s for 294,278 events in
   321 RPC requests** - the record count matching Sentio's own README.
+- **0030 Adding EVM chains** *(Implemented)* - the registry, the endpoint bar, and Gnosis first;
+  `nuthatch doctor --rpc` makes that bar self-service, and Gnosis clears it comfortably.
+- **0031 Optimism and Polygon** *(Optimism implemented; Polygon shipped but not yet reliable)* -
+  Optimism has two qualifying endpoints and its tracking issue closed clean. Polygon is registered as
+  a built-in chain, but the endpoint it ships fails the `getLogs` bar outright - not archive, and a
+  from-deployment backfill can't use it yet.
+- **0032 The tenant runtime** *(Implemented; all 5 slices, v2.0.0)* - retires the roost: data keyed by
+  content-addressed nest identity, mounts become `(tenant, NID)` records, a shared nest indexed once.
+- **0033 Nest identity and derivation grafting** *(Implemented; slices 1-3, 5-6)* - edit a nest
+  without re-indexing the chain behind it, via a per-derivation reuse key that sits below the NID.
+- **0034 The query allowlist** *(Phases 1-2 implemented)* - a bounded public SQL surface without a
+  resync: named parameterised queries only, never raw SQL text.
+- **0035 The 2.0 breaking surface** *(Implemented, v2.0.0)* - the roost retired, one coordinated
+  migration, proven on the Lodestar production box rather than a fixture.
+- **0036 Block and transaction tables** *(Draft; slices 1-2 done and verified)* - OBIB cases 3 and 4
+  turn out not to be node-gated after all. Blocks ship as their own table; top-level calls (the
+  transactions slice) shipped separately under RFC-0038.
+- **0037 IPFS content resolution** *(Implemented; slices 1-4, v2.6.0)* - `[[ipfs]]`, a verified,
+  content-addressed side table. CID → bytes is checked against the gateway's own answer before
+  anything is trusted, not annotations-only.
+- **0038 Subgraph parity** *(Implemented; all 5 slices, v2.6.0)* - parameterised calls (arguments
+  drawn from the triggering row) and top-level calls decoded with no node required, measured against
+  a live Uniswap V3 port: 343 swaps row-for-row identical to the gateway, 219 pools with no misses.
 
 ## Conventions
 
