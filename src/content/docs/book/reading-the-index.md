@@ -31,8 +31,14 @@ They are reviewable SQL over a known, pinned input.
 This is a strong capability, but it has limits. A view is only as sound as the event model beneath
 it. A historical event stream cannot reproduce a state variable that was changed without an event,
 or content that a subgraph fetched from IPFS. An `eth_call` at a particular block may be necessary
-for some questions. Nuthatch makes the event-derived part dependable; it does not quietly perform
-other forms of data acquisition behind the reader's back.
+for some questions.
+
+Where such a read is necessary, it is **declared** rather than performed quietly: a `[[calls]]` or
+`[[ipfs]]` block in the nest's configuration, pinned to a block or checked against a content address,
+and stored in a table of its own that a reader can see and interrogate like any other. The
+distinction this section is drawing survives intact. Nuthatch makes the event-derived part
+dependable, and it does not perform other forms of data acquisition behind the reader's back - it
+performs them in front of the reader, or not at all.
 
 ## Serving safely
 

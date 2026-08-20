@@ -34,6 +34,19 @@ not mistakes. They are simply dependencies that lie outside the event stream. Pr
 log index automatically offers parity with every such mapping is the beginning of a fairly tedious
 outage.
 
+Two of those dependencies Nuthatch now handles, and it is worth being precise about how, because the
+manner matters more than the fact. A `[[calls]]` declaration reads a contract at a **fixed block**,
+and the result is addressed by the question that produced it: chain, block, contract, calldata. An
+`[[ipfs]]` declaration resolves a document and **verifies the bytes against the address that names
+them**. Neither is the ambient, unrecorded fetch that makes a mapping hard to re-execute. The
+property this chapter cares about - that two honest implementations agree, and that you may check
+rather than trust - is preserved in both cases, because a pinned question has one answer and a
+content address describes exactly one document.
+
+What remains outside is what always was: an external service, a value that depends on when you asked,
+bespoke off-chain state. Those are still dependencies rather than data, and naming them is still the
+first honest step in a port.
+
 The first question in a port is therefore not “can Nuthatch replace this subgraph?” It is “which
 reads are event-derived, and what does each remaining read depend on?” Many useful reads turn out
 to be straightforward: transfers, swaps, delegation changes, registration records and cumulative
