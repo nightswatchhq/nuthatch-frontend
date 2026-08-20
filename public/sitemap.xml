@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://nuthatch-indexer.com/</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/closing-the-subgraph-parity-gap</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/content-addressed-nests-and-data-reuse</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/index-uniswap-v3-with-nuthatch</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/no-subgraph-no-problem</loc></url>
@@ -28,6 +29,7 @@
   <url><loc>https://nuthatch-indexer.com/docs/book/the-runtime</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/compliance</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/config</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/build/contract-calls</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/factories</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/recipes</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/semantic</loc></url>
