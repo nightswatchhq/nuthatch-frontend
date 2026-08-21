@@ -1,0 +1,50 @@
+# yatr - https://github.com/cargopete/yatr
+#
+# Task names are the same across every nightswatchhq repo, so `yatr ci` means
+# the same thing wherever you are. Note that `ci` is deliberately not called
+# `check`: `yatr check` is a builtin that validates this file, and it shadows
+# any task of that name without warning.
+
+# Astro static site. npm scripts stay the source of truth for what the commands
+# are; these give them the same names as the rest of the org.
+
+[settings]
+cache = true
+
+[tasks.install]
+desc = "Install dependencies from the lockfile"
+run = ["npm ci"]
+sources = ["package.json", "package-lock.json"]
+
+[tasks.dev]
+desc = "Run the Astro dev server"
+run = ["npm run dev"]
+foreground = true
+no_cache = true
+
+[tasks.lint]
+desc = "Lint the docs content"
+run = ["npm run lint:docs"]
+sources = ["src/**/*", "scripts/lint-docs.mjs"]
+
+[tasks.types]
+desc = "astro check (types and content collections)"
+run = ["npm run check"]
+sources = ["src/**/*", "tsconfig.json", "astro.config.mjs"]
+
+[tasks.build]
+desc = "Build the static site into dist/"
+run = ["npm run build"]
+sources = ["src/**/*", "public/**/*", "astro.config.mjs", "package-lock.json"]
+outputs = ["dist"]
+
+[tasks.preview]
+desc = "Serve the built site locally"
+run = ["npm run preview"]
+foreground = true
+no_cache = true
+
+[tasks.ci]
+desc = "What a deploy needs to be true: lint, types, build"
+depends = ["lint", "types", "build"]
+run = []
