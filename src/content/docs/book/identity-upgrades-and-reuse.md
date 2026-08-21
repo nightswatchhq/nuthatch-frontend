@@ -33,6 +33,31 @@ rule changes, the decoded dataset may differ. That is a real data change. The ru
 the difference and requires an operator to acknowledge breaking changes rather than presenting an
 old table with a new label and hoping no one notices.
 
+### The guarantee has to hold on the ordinary path too
+
+That last sentence describes an intention, and for a while it was only true where somebody had gone
+looking for it. A **packaged** nest records its expected registry hash, and mounting one regenerates
+the registry and verifies it. A nest run the ordinary way, from a directory on your own machine, did
+not compare anything.
+
+So adding an event to a running nest's configuration and restarting produced this: the process
+started, observed it was already at the chain tip, indexed nothing, and served - stamping the **new**
+registry hash onto rows the **old** configuration had produced. Every query then reported provenance
+under a decode registry that had never run. The only visible symptom was an unrelated view failing to
+load, and only because that view happened to reference one of the new tables; a change touching
+tables no view mentioned said nothing at all.
+
+It is worth being precise about why that is worse than missing rows. A content address is a claim
+about *what produced this data*. A wrong one is not an inconvenience, it is a lie in the one field
+whose entire job is to be checkable. And it was a lie the system told about itself, in the direction
+that looks healthy.
+
+A nest now compares the registry recorded in its store against the registry its configuration
+produces, and refuses to start when they differ, naming both hashes and the remedy. A store written
+before the check existed has no recorded hash; refusing those would break every running deployment
+for a fault it may not have, so it adopts the hash and logs that it was **recorded rather than
+verified** - which is a different claim, and says so.
+
 ## Reuse at two levels
 
 There are two distinct wins:

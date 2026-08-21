@@ -27,6 +27,28 @@ fallback, exercise the exact named query and response shape the application will
 only proves that an endpoint returned 200 has the emotional comfort of a fire alarm with its
 batteries removed.
 
+### Verify the endpoint, and then verify it again later
+
+The package is not the only input. The RPC endpoint is one too, and it is the one that changes
+without telling you.
+
+`nuthatch doctor --rpc <url>` asks an endpoint three questions before a backfill trusts it: the
+widest `eth_getLogs` range it will serve, the largest JSON-RPC batch it accepts, and whether it has
+archive depth. Each of those limits otherwise surfaces mid-backfill as a retry loop that looks
+exactly like slowness, which is the worst way to learn it. Point it at the nest with `--dir` and it
+probes with the contract filter the nest will actually issue, rather than an empty one.
+
+Read its window figure as a **floor**, not a ceiling. A probe with no address filter measures the
+provider's raw block-range capacity; every measurement on record has address-filtered limits coming
+in *under* that, so the number is a conservative lower bound on what a real nest sustains.
+
+The part worth building a habit around is the second probe. Nuthatch ships measured endpoints for
+its built-in chains, and one of them was measured on a Tuesday and had silently lost archive depth by
+the Wednesday - a from-deployment backfill could no longer use it at all, while the recorded figure
+in the source still said otherwise. **A recorded measurement is a snapshot presented as a property.**
+Nothing about an endpoint's past behaviour is a promise, including ours, so probe before a long
+backfill rather than trusting a number somebody wrote down once.
+
 ## Observe the pipeline, not just the server
 
 Metrics make the stages visible. `nuthatch_tip_lag_blocks` tells you whether the cursor keeps up.
