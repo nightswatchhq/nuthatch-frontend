@@ -75,6 +75,19 @@ That is the whole procedure: `nuthatch-frontend` under the `nbgn` team, promoted
 production. Check what is live with `vercel ls --prod`, and confirm against
 https://nuthatch-indexer.com rather than the deployment URL.
 
+**Merging is not publishing.** Nothing deploys this repo automatically, so a merged correction stays
+invisible until someone runs the command above. To check whether that has happened:
+
+```sh
+npm run check:deployed          # compares https://nuthatch-indexer.com with this checkout
+```
+
+It fails if the published site was built from different source, if a page in the repo is missing
+from the site, or if a page has stopped making a claim the repo makes. `npm run build` stamps
+`dist/build-info.json` with a content hash of `src/`, which is what makes the first of those exact.
+The same check runs in CI after every merge to `main` and once a day; it is not a pull-request gate,
+because on a PR the deployed site is meant to be behind.
+
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Framework preset: Astro (or "None")

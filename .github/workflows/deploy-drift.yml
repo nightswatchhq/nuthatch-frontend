@@ -1,0 +1,40 @@
+# Report when the published website is behind this repo.
+#
+# This project has no deploy automation and the Vercel project is not git-integrated: publishing is
+# a human running `vercel --prod`. On 2026-08-20 a merge that corrected the config reference from
+# three supported chains to seven sat unpublished, and nothing anywhere reported it. This workflow
+# is that report.
+#
+# It is deliberately NOT a pull-request check. On a PR the deployed site is *supposed* to be behind
+# the branch, so gating merges on it would be noise that gets switched off within a week. It runs
+# after a merge lands - the moment the gap opens - and once a day, so a gap nobody closed keeps
+# saying so.
+#
+# `scripts/deploy-drift.mjs` uses only Node builtins, so there is no install step and nothing to
+# cache; a dependency change cannot wedge this workflow.
+
+name: deployed-site drift
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-drift
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    name: is the website current
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: compare the deployed site with this commit
+        run: node scripts/deploy-drift.mjs
