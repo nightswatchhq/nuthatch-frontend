@@ -2,8 +2,8 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v2.5.0** - a promise about stability (no CLI flag, HTTP route, config key or
-generated column renamed or removed within 1.x without a major bump; upgrades stay a binary swap with
+own indexer." Status: **v2.6.3** - a promise about stability (no CLI flag, HTTP route, config key or
+generated column renamed or removed within 2.x without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the binary does
@@ -30,7 +30,8 @@ obstacle has been the operational weight of the tooling, which is an engineering
 
 ## What it does today
 
-1. `nuthatch init 0xAddr [0xAddr…] --chain <mainnet|arbitrum-one|base>` - resolves each contract's
+1. `nuthatch init 0xAddr [0xAddr…] --chain <mainnet|arbitrum-one|base|bsc|polygon|gnosis|optimism>`
+   - resolves each contract's
    ABI (Sourcify first, then an Etherscan-class API, cached; EIP-1967/legacy-OZ proxies resolved)
    and scaffolds a multi-contract nest: `nuthatch.toml`, `abis/`, a `schema.json`, a `semantic.toml`
    (per-nest meaning, seeded from the ABI), a commented `views/` starter, an `llms.txt`, and a Claude
@@ -52,9 +53,14 @@ obstacle has been the operational weight of the tooling, which is an engineering
    layer (each binds against the schema at load, so a moved column is a loud `nuthatch check` failure,
    described in `semantic.toml`, surfaced in `/schema`); `nuthatch check` also runs `checks/*.sql`
    against recorded fixtures. `nuthatch nest bundle`/`load` build and verify a content-addressed,
-   portable nest `.bundle` (loadable from a file or a URL), and `nuthatch roost` runs several nests in a single process under one shared
-   cursor per chain, hot store, and finality view, with per-nest isolation and a per-cursor RSS budget
-   (RFC-0012, verified live on Arbitrum).
+   portable nest `.bundle` (loadable from a file or a URL). **There is no `roost` subcommand - it was
+   removed in 2.0, not renamed.** One `nuthatch dev --dir <dir>` runs one nest or many depending on
+   whether the directory holds a `nuthatch.toml` or a `mounts.toml`, with per-nest isolation and a
+   per-cursor RSS budget (RFC-0012 + RFC-0032, verified live on Arbitrum). Nest data is keyed by
+   content address at `data/<nid>/` and a mount by `(tenant, nid)`, so two mounts share one dataset
+   and it is never indexed twice; unmounting one of two decrements a reference, and `nuthatch prune`
+   reclaims what nothing mounts. `nuthatch migrate` moves a pre-2.0 directory across. A tenant is an
+   opaque ownership label - no identity, no authentication, no quotas, no metering.
 4. `nuthatch transform <component.wasm>` - runs a pure, zero-capability WASM transform over an Arrow
    batch; effectful stages take per-component capability grants (`kv` today). `nuthatch mcp` -
    serves the Model Context Protocol over stdio (12 tools: status, schema, tables, table, sql,
@@ -80,28 +86,33 @@ obstacle has been the operational weight of the tooling, which is an engineering
    catches up - reusing the old sealed segments when decode is unchanged, so it costs seconds rather
    than days - and serves a breaking one at a new endpoint while the old carries RFC-8594
    `Deprecation`/`Link` headers.
-10. The multichain roost (RFC-0021, slice 1): `[[chains]]` in `roost.toml` hosts nests across more
+10. Multichain runtimes (RFC-0021): `[[chains]]` in `mounts.toml` hosts nests across more
     than one chain in one runtime, with one isolated cursor per chain (own tip, finality, reorg
-    boundary) and a per-cursor footprint budget.
-11. Derive-first contract reads (RFC-0023, tiers 1-2): `nuthatch recipe add total_supply|balances|
+    boundary) and a per-cursor footprint budget. It is a capability, not a mandate - one chain per
+    runtime is the default, and a cursor is never multiplexed across two chains.
+11. Derive-first contract reads (RFC-0023, tiers 1-3): `nuthatch recipe add total_supply|balances|
     holder_count|reserves` derives from indexed events what a subgraph pays an archive node to
     `eth_call` for - no archive node, no eth_call. `nuthatch metadata fetch` calls once and caches
-    the immutable reads (`decimals`/`symbol`/`name`). Tiers 3-4 (a verifiable eth_call fallback and
-    its local execution engine, RFC-0024) are designed and deferred.
+    the immutable reads (`decimals`/`symbol`/`name`). Tier 3 shipped in 2.6.0: a `[[calls]]` block
+    reads contract state via `eth_call` **pinned to a fixed block**, so a value that genuinely cannot
+    be derived is still reproducible rather than whatever the chain says today. Tier 4 (a local
+    execution engine, RFC-0024) is designed and deferred.
 12. Adaptive MCP tool advertisement (RFC-0025): `GET /shape` reports what a nest can actually answer
     and the MCP bridge filters `tools/list`/`prompts/list` to match, so an agent is never handed an
     inert tool. Fails open if the probe fails.
 13. Fault quarantine and partial health (RFC-0026): a faulting nest is quarantined, not fatal -
     healthy siblings keep indexing and serving, and a retryable fault is re-admitted on a backoff. A
-    nest's error no longer kills its cursor and a cursor's death no longer kills the roost. Surfaced
-    at `GET /nests` (live per-nest health merged per request), roost-root and per-nest `/ready`, and
+    nest's error no longer kills its cursor and a cursor's death no longer kills the runtime. Surfaced
+    at `GET /nests` (live per-nest health merged per request), runtime-root and per-nest `/ready`, and
     the `nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` metrics.
     `--fail-fast` restores exit-on-first-fault for CI and deterministic tests.
 
-Chains: Ethereum mainnet, Arbitrum One (42161), and Base (8453) are built in - keyless public
+Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100)
+and Optimism (10) are built in - keyless public
 endpoints, a tuned `eth_getLogs` window, per-chain finality policy, and bytecode probing so `init`
-can detect which of them a contract lives on. Any other EVM chain also works, configured by hand:
-`dev`, `sql`, `bench`, and `roost dev` are chain-agnostic, while `init`/`add` are not (ABI resolution
+can detect which of them a contract lives on (it probes all seven when you omit `--chain`). Any
+other EVM chain also works, configured by hand:
+`dev`, `sql`, `bench`, and `serve` are chain-agnostic, while `init`/`add` are not (ABI resolution
 is chain-gated), so an unlisted chain means writing `nuthatch.toml` yourself with `chain_id` +
 `rpc_urls` and vendoring the ABI. An unlisted chain inherits depth-64 finality and a 20-block
 `getLogs` window (raise it with `--window`), and its `chain_id` is verified against every endpoint at
@@ -114,7 +125,7 @@ Measured footprint (not a target): ~37 MB single contract, ~58 MB three-contract
 throughput progression is ~289 → 2,521 → 5,837 ev/s on public RPC (~20× over baseline,
 byte-identical segments). On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v2.5.0 is the current release,
+against a real provider - the event count matching Sentio's own README. v2.6.3 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -209,7 +220,7 @@ PaulieB14/horizon-indexer-subgraph, credited to Paul Barba's "Horizon Indexer Pe
 subgraph - as a Nuthatch nest: Graph Horizon staking on Arbitrum One across three contracts, one
 `init` over several addresses, per-event tables queryable during backfill, AssemblyScript handlers
 rebuilt as declarative `views/*.sql` (reorgs retract; no hand-written rollback), a shareable nest
-consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v2.5.0.
+consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v2.6.3.
 Still design targets, marked as such on the page: an auto-generated GraphQL layer, SSE streams, and
 AI-assisted schema/test generation from an ABI. Scaffolding from a **subgraph manifest** ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
@@ -224,7 +235,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`POST /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v2.5.0: multi-contract nests, every declared event as a table, Arbitrum One and Base, user-authored
+v2.6.3: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
 views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance pack, the admin UI,
 and webhooks. The main forward-looking piece for these stories is a GraphQL layer for subgraph-shaped
 clients. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
@@ -261,30 +272,42 @@ promised - order is.
   shutdown, a 0.x config-stability contract); pure zero-capability WASM
   transforms plus effectful `kv`-capability stages; the delightful core (RFC-0015: sql/REPL, magical
   init, add, prod recipes) and the governed semantic layer + agent-grade MCP (RFC-0016/0017); the
-  multi-nest roost (RFC-0012); the nest registry (RFC-0019); N-1 upgrades (RFC-0020); the multichain
-  roost (RFC-0021 slice 1); derive-first recipes (RFC-0023 tiers 1-2); adaptive MCP tools (RFC-0025);
-  fault quarantine and partial health (RFC-0026); v2.5.0 the current release with prebuilt binaries;
+  nest registry (RFC-0019); N-1 upgrades (RFC-0020); multichain runtimes
+  (RFC-0021); derive-first recipes and pinned `eth_call` (RFC-0023 tiers 1-3); adaptive MCP tools
+  (RFC-0025); fault quarantine and partial health (RFC-0026); live mount and unmount with no
+  co-tenant restart (RFC-0027); `eth_getLogs` range-control hardening (RFC-0028); the tenant runtime
+  that retired the roost and keyed nest data by content address (RFC-0032); identity and grafting
+  (RFC-0033); the query allowlist (RFC-0034); verified IPFS resolution (RFC-0037); subgraph-manifest
+  scaffolding (RFC-0038); distributed scaled mode (RFC-0022); v2.6.3 the current release with
+  prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
-- In progress: the live roost (RFC-0027, slices 1-2a - mounting and unmounting nests without
-  restarting co-tenants; a roost is now served through a swappable composition, with a lifecycle
-  channel and operator-initiated retirement that is not counted as a fault); adaptive log-range
-  control (RFC-0028, slices 1-3 - a fix pack, not a new capability: `eth_getLogs` failures are now
-  classified, so an auth rejection stops being retried forever, unclassifiable wide-range failures
-  split speculatively, and a 429 escalates pool-wide); the Lodestar migration (RFC-0011 - pilot live
-  in production, two panels serving from one nuthatch binary via horizon-nest; remaining panels
-  outstanding); reth ExEx wiring (RFC-0003 - Source trait, library split, and bridge in and tested;
-  needs a synced node).
-- Planned: the remaining release engineering (RFC-0005 - signed artifacts, a Homebrew tap);
-  firehose-class extraction of traces and state diffs (RFC-0014, gated on ExEx); subgraph migration
-  a GraphQL compatibility layer; IVM
-  generalisation; effectful HTTP egress for transform worlds; wildcard indexing.
+- **A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`). The core deliverables are
+  delivered; no new capability ships this year. The work is bug fixes, security, performance,
+  maintenance, marketing, and making the delightful core best in class. Treat a proposal for new
+  capability as out of scope rather than as a roadmap item.
+- Deferred, not cancelled: the Lodestar migration (RFC-0011 - pilot live in production, two panels
+  serving from one nuthatch binary; remaining panels outstanding); reth ExEx wiring (RFC-0003 -
+  Source trait, library split, and bridge in and tested; needs a synced node); the remaining release
+  engineering (RFC-0005 - signed artifacts, a Homebrew tap); firehose-class extraction of traces and
+  state diffs (RFC-0014, gated on ExEx); a GraphQL compatibility layer; IVM generalisation;
+  effectful HTTP egress for transform worlds; wildcard indexing.
 - Not planned: a token or decentralized-network features, telemetry of any kind, a Kubernetes-first
   deployment, and any gateway/auth/metering layer in the core.
 
 ## Install
 
-v2.5.0 is the current release. The installer and `cargo` fetch the latest.
+v2.6.3 is the current release. The installer and `cargo` fetch the latest.
+
+**2.6.3 is the release that makes a first run on Ethereum mainnet work.** The adaptive `eth_getLogs`
+window grew fourfold on an empty range - and an empty range says nothing about capacity - so from a
+1,000-block start it reached a 100,000-block request in four steps having never been served anything
+near that width, and every mainnet provider refuses a range that wide. Worse, the splitter that
+recovered by halving returned a merged success, so the controller grew again on the strength of a
+success that never happened at that width. Growth is bounded by what a provider has actually served
+*whole* now: across a 200,000-block prefix behind a 10,000-block cap, refused requests fall from 24
+to 4, the widest attempt from 100,000 blocks to 16,000, and the run terminates. If you are advising
+anyone who tried nuthatch on mainnet before 2.6.3 and concluded it was broken - it was.
 
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with SHA-256
   checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
