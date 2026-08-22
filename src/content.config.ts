@@ -46,7 +46,7 @@ const nests = defineCollection({
     category: z.string(),
     catalogue_section: z.enum(['graph-protocol', 'subgraph-ports', 'other']).optional(),
     tier: z.number().int().min(0).max(3),
-    status: z.enum(['available', 'building', 'planned']),
+    status: z.enum(['available', 'building', 'planned', 'blocked']),
     chains: z.array(z.string()),
     factory: z.boolean().default(false),
     complexity: z.enum(['trivial', 'low', 'medium', 'high']),
