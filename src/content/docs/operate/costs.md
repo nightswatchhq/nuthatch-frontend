@@ -36,10 +36,12 @@ requests per HTTP request answered**, and if anything an understatement, since t
 only one nest's own audit-probe traffic and not the others'.
 
 One of those four was explicitly labelled *temporary* and was stopped once the audit surfaced it: 2.8M
-RPC requests over five days to hold three entities nobody was reading. What remains running is **~9M
-RPC requests a week** across the other three nests, and none of that remainder is waste - each of
-those nests' own queries filter or select on `block_timestamp`, confirmed by reading the SQL rather
-than assumed. The full per-nest table is in the
+RPC requests over five days to hold three entities and 98 MB on disk. What remains running is **~9M
+RPC requests a week** across the other three nests, and the audit's own conclusion about that
+remainder is that none of it is waste - it is load established, not assumed, to be necessary. Both
+Lodestar panels turned out to need the column, confirmed by reading the consuming app's own SQL
+rather than assumed: one filters on `block_timestamp` for a "last seven days" view, the other uses it
+as an entity's `createdAt`. The full per-nest table is in the
 [operator docs](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#what-a-nest-costs-at-tip).
 
 The busiest of the three averaged **~549,000 requests a day** over the audit window, on a chain
@@ -49,8 +51,9 @@ its log polling on top.
 ## What that costs against a priced endpoint
 
 None of the volume above was billed - most of those nests run against a free public endpoint. Pricing
-the header-fetch load alone against a metered one, the same way the [benchmarks](/docs/operate/performance/)
-page prices a backfill:
+the header-fetch load alone against a metered one, the same way
+[`benchmarks.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/benchmarks.md#what-a-backfill-costs-against-a-metered-endpoint-2026-08-19)
+prices a backfill:
 
 ```
 cost/month ≈ blocks/day × CU(eth_getBlockByNumber) × days/month × $/CU
