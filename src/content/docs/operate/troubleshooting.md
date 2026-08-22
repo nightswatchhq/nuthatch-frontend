@@ -1,7 +1,7 @@
 ---
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
-order: 12
+order: 13
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
