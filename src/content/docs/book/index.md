@@ -9,7 +9,7 @@ which command and setting to use. This book explains why the machine is shaped a
 invariants it protects, and what each boundary buys you when something goes wrong at three in the
 morning.
 
-It describes Nuthatch 2.5.0. It is deliberately grounded in the running implementation, not a
+It describes Nuthatch 2.6.3. It is deliberately grounded in the running implementation, not a
 design sketch for a future product. Where the system has a limitation, it is named. A system that
 is honest about its edge is more useful than one that claims to be a universal solvent.
 

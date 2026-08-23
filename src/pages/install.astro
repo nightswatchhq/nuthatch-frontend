@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v2.5.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
+  description="Install Nuthatch v2.6.3: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,31 +19,22 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-        <strong>v2.5.0 is out.</strong> <code>/ready</code> stops reporting a wedged cursor as
-        healthy: it used to ask only whether the chain was still answering, so a cursor with a
-        perfectly live endpoint that had stopped advancing returned <code>200</code> for as long as
-        you cared to watch it. It now returns <code>503</code> with <code>"wedged": true</code>, and
-        a cursor that has caught up to the tip is <em>not</em> wedged - the two look identical from
-        the outside and telling them apart is the whole of the fix. Logs got a second reader:
-        <code>--log-format json</code> emits one object per line so you can point an aggregator at
-        stdout instead of scraping a human-readable format nobody promised to keep stable, and a
-        <code>TipHeartbeat</code> answers "is it alive" from the log stream alone.
-        Two silent wrong answers are gone. A malformed row in the hot store used to be
-        <em>skipped</em>, so a query came back short and looked healthy; it now errors. And an
-        adopted nest kept only the files <code>migrate</code> had been taught about, quietly leaving
-        behind <code>views/</code>, <code>semantic.toml</code> and anything else its author had put
-        there. <code>nuthatch doctor</code> also runs on a nest that <code>serve</code> would refuse,
-        which is the state you actually reach for it in.
-        <strong>2.0 is still the one release that moves data on disk</strong>, and it ships the command
-        that does it: <code>nuthatch migrate</code> moves files and rewrites a config, and never
-        re-indexes - 0.259s on a real two-nest deployment. Read the
-        <a href="/docs/operate/upgrades/">upgrade notes</a> first.
-        Prebuilt binaries ship for macOS (Apple Silicon) and Linux x86_64.
-        Nuthatch follows semantic versioning on the <code>2.x</code> line under a published
-        <a href="https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract">stability contract</a> - see also the
-        <a href="/roadmap">roadmap</a>. A Homebrew tap and detached release signatures are still on
-        the way; other platforms build from source with <code>cargo</code> for now.
-      </p>
+          <strong>v2.6.3 is out.</strong> The first run stops stalling. Point <code>init</code> at a
+          contract on Ethereum mainnet, run <code>dev</code>, and on 2.6.3 you would get fifteen
+          events in ninety seconds - or, behind a provider that refuses without explaining itself, no
+          progress at all, ever. The window controller grew fourfold on an empty range, and an empty
+          range says nothing about capacity, so from a 1,000-block start it reached 100,000 blocks in
+          four steps having never been served anything near that. Every mainnet provider refuses a
+          range that wide. Growth is now bounded by what a provider has actually served
+          <em>whole</em>. Crossing a 200,000-block prefix behind a 10,000-block cap, refused requests
+          go from 24 to 4, the widest attempt from 100,000 blocks to 16,000, and it terminates.
+          Also: a bare <code>nuthatch</code> prints the same grouped listing <code>--help</code>
+          does, having been gated on argument count and so missing from the shortest way to ask for
+          it - still exiting 2 on stderr, because a missing subcommand is a usage error.
+          <code>init</code> prints prose all the way through now, rather than passing a timestamped,
+          ANSI-coloured warning from the RPC layer through the middle of it. Drop-in: swap the binary
+          and restart, no config changes and no data migration.
+        </p>
 
       <h2 class="ih">Shell script</h2>
       <p>Detects your platform, downloads the matching static binary from the latest GitHub release, verifies its SHA-256 checksum, and puts it on your <code>PATH</code>. Covers macOS Apple Silicon and Linux x86_64; other targets fall back to <code>cargo</code>.</p>
@@ -74,7 +65,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:2.5.0-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:2.6.3-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
