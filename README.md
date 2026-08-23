@@ -88,6 +88,13 @@ from the site, or if a page has stopped making a claim the repo makes. `npm run 
 The same check runs in CI after every merge to `main` and once a day; it is not a pull-request gate,
 because on a PR the deployed site is meant to be behind.
 
+**Expect the first run to be red, and do not read that as a broken workflow.** The site currently
+live was built before `dist/build-info.json` existed, so the fingerprint check reports that it can
+establish nothing about the deployed build's age until a `vercel --prod` runs from a `npm run build`
+that stamps it. That first stamped deploy clears it permanently. Until then the check is still doing
+its job: as of 2026-08-23 it also names `/docs/operate/costs`, a page that merged and was never
+published.
+
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Framework preset: Astro (or "None")
