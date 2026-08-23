@@ -7,6 +7,22 @@ order: 10
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
 consumers eat downtime or stale data during the flip.
 
+## Upgrading to 2.7.0
+
+This is a binary swap. Stop the service, replace the binary, and start it again. On-disk state is
+forward-readable, `dev` flags are unchanged, and there is no migration or re-index.
+
+The behaviour change is additive: a nest declaring `[[calls]]` may now use `--seal-direct`, and all
+direct-seal paths resolve those pinned reads before committing a segment. Factory backfills now
+narrow and retry when newly discovered children exceed a provider's response cap. Declared events
+which have not fired resolve as empty typed tables, so a view referring to one no longer disappears.
+
+If you benchmark a calls nest, pass `--state-rpc`. Both arms now perform the declared reads and the
+command refuses to run without the archive endpoint rather than publishing a flattering measurement
+of work it skipped. The previously published seal-direct multipliers have been withdrawn after a
+harness correction and contradictory public-RPC runs; use the current [performance notes](/docs/operate/performance/)
+instead.
+
 In 2.0 there is **no upgrade command**. The runtime does the classifying, and grafting does the rest.
 
 :::note[What changed]

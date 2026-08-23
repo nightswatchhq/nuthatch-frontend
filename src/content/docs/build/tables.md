@@ -22,6 +22,10 @@ Every declared event becomes a table named `{alias}__{event_snake_case}`. For a 
 with a `Transfer(address from, address to, uint256 value)` event, you get a table `usdc__transfer` with
 columns `from`, `to`, `value`.
 
+The table exists even before that event has fired. It resolves as an empty typed view, so an authored
+view may safely refer to a rare event from the first run rather than failing to load until the first
+matching log happens to arrive. Startup logs name declared tables which are currently empty.
+
 ## Implicit columns
 
 Every table also carries the same implicit columns, before the event's own fields:
@@ -51,6 +55,11 @@ footguns) are derived from `nuthatch.toml` + the ABIs. After editing config, reg
 ```sh
 nuthatch schema
 ```
+
+The live registry is authoritative at runtime. Since 2.7.0, a stale `schema.json` no longer hides
+columns which the current config and ABI declare, and the startup message explaining why a hand edit
+did not regenerate the file is visible at the default log level. Regenerate it anyway. Consumers of
+the checked-in artifact should not have to depend on runtime repair.
 
 ## Next
 

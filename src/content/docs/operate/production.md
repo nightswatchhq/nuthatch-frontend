@@ -27,7 +27,8 @@ nuthatch doctor --rpc https://your-endpoint/ --address 0xA0b86991c6218b36c1D19D4
 
 `doctor` probes the three limits that otherwise surface mid-backfill as a retry loop that merely looks
 like slowness: max `eth_getLogs` width, max JSON-RPC batch size, and archive depth. It prints the
-largest safe `--window` for that endpoint.
+largest safe `--window` for that endpoint. With `--dir`, it probes the full declared contract set,
+not merely the first address, so the advice matches the filter the backfill will actually issue.
 
 Two failure modes worth knowing before they cost you an afternoon:
 
@@ -79,8 +80,10 @@ sudo -u nuthatch nuthatch dev --dir /opt/nuthatch/my-nest \
 ```
 
 `--seal-direct` writes finalized history straight to Parquet instead of through the hot store, which
-is much faster for a from-deployment backfill. Let it reach the tip, then stop it. The service you
-install next will resume rather than start over.
+avoids writing and later pruning the same rows in redb. Its speedup over the ordinary path is being
+re-measured on a deterministic replay rig after public-RPC runs disagreed, so do not plan from an old
+multiplier. Let it reach the tip, then stop it. The service you install next will resume rather than
+start over.
 
 If the nest ships `checks/`, prove it before serving anyone:
 

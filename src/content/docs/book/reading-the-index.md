@@ -11,10 +11,12 @@ capable of expressing both a simple point lookup and a careful event-derived cal
 
 ## Start from the raw event
 
-Every selected event has a table. The table contains decoded event fields and chain coordinates:
-block number, transaction hash, log index, emitting address and related identity information. These
-columns let a consumer order simultaneous events, trace a result back to a transaction and decide
-how to display the distance from finality.
+Every selected event has a table, including an event which the contract has not emitted yet. In
+that case the table is present and empty, rather than appearing only on the day the first log
+arrives. The table contains decoded event fields and chain coordinates: block number, transaction
+hash, log index, emitting address and related identity information. These columns let a consumer
+order simultaneous events, trace a result back to a transaction and decide how to display the
+distance from finality.
 
 Raw tables are the audit trail. They may not be the API a product wants to hand to a browser, and
 that is quite all right. They are the stable base upon which a product-specific interface can be

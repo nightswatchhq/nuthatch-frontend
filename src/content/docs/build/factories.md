@@ -51,6 +51,11 @@ children in the same order, keyed off the parent's events. A reorg that un-emits
 that child and its rows along with everything else - factories inherit the same reorg safety as any table
 (see [Reorgs](/docs/concepts/reorgs/)).
 
+During a direct backfill, the fetch which reads logs from children discovered in the current chunk
+uses the same adaptive narrowing as the ordinary contract fetch. A provider response cap therefore
+shrinks the window and retries; it does not abort the factory backfill. This was made consistent in
+2.7.0 after a mainnet Uniswap V2 run found the one uncaught path in the field.
+
 ## Runaway factories are bounded
 
 A factory that discovers a vast number of children is exactly the kind of thing that could blow the

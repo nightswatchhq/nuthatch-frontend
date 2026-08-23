@@ -1,11 +1,13 @@
 <!-- Regenerate against the repo README + docs/rfcs when either changes materially.
      Ground-truth rule: README / progress log wins over this page.
-     Last reconciled against docs/rfcs/README.md at the v2.6.3 release (2026-08-21). Since v2.5.0:
+     Last reconciled against docs/rfcs/README.md at the v2.7.0 release (2026-08-22). Since v2.5.0:
      v2.6.0 closed subgraph parity - pinned eth_call (RFC-0023 tier 3) and verified IPFS resolution
      (RFC-0037) - and added BSC, Polygon, Gnosis and Optimism; v2.6.1 fixed a transient RPC failure
      that could end a nest mid-backfill; v2.6.2 grouped the CLI's front door; v2.6.3 bounded the
      window controller's growth by what a provider has actually served, so a first run on mainnet
-     no longer stalls. A feature freeze runs to the end of 2026
+     no longer stalls; v2.7.0 made seal-direct resolve [[calls]], hardened factory cap handling,
+     made declared-but-unfired events empty typed tables, and withdrew unsupported backfill
+     multipliers. A feature freeze runs to the end of 2026
      (docs/roadmap-2027.md): no new capability, only fixes, security, performance, maintenance and
      the delightful core. Since v2.0.0: RFC-0036
      added the block and transaction tables (2.1.0), and 2.2.0 hardened the cold-data path - a bad
@@ -18,7 +20,7 @@
      slices, RFC-0022 went from design-only to implemented-and-verified-across-machines, RFC-0013's
      benchmark gate was run and DataFusion did not meet it, and `init --from-subgraph` landed as the
      first external contribution.
-     v2.6.3 is the current release.
+     v2.7.0 is the current release.
      Keep it product-neutral: describe the binary, not any deployment or commercial
      arrangement. -->
 ---
@@ -131,9 +133,9 @@ const progressLog = `${REPO}#progress-log`;
       <p class="grp">Backfill throughput, measured</p>
       <ul class="rl">
         <li><code>nuthatch bench backfill</code> reports the median of events per second, wall-clock, peak RSS and RPC requests; every published number traces to a report artifact.</li>
-        <li>Seal-direct plus pipelined fetching moved a fixed USDC workload from ≈289 to 2,521 to 5,837 events/sec on public RPC - about 20× over the redb baseline - with byte-identical segments regardless of the storage path.</li>
+        <li>Hot-store, seal-direct and pipelined paths produce byte-identical segments. The former ≈8.7× seal-direct and ≈20× stacked multipliers were withdrawn in v2.7.0: their denominator came from a pre-fix harness which did not use the indexer's real commit path, and public-RPC remeasurement produced contradictory results. A deterministic replay rig comes before another multiplier.</li>
         <li>An adaptive <code>getLogs</code> chunker targets ≈2,000 logs per response and self-heals into any provider's result cap, instead of a hand-tuned constant.</li>
-        <li><code>dev --seal-direct</code> runs that 20× cold start in <code>dev</code>: fast-seal history to Parquet, rebuild the balance view, then hand off to the tip loop.</li>
+        <li><code>dev --seal-direct</code> writes finalised history straight to Parquet, rebuilds the balance view, then hands off to the tip loop. Since 2.7.0 it resolves declared <code>[[calls]]</code> on every direct-seal path rather than refusing the combination.</li>
       </ul>
 
       <p class="grp">Operator surface</p>
@@ -234,7 +236,7 @@ const progressLog = `${REPO}#progress-log`;
 
       <p class="grp">Release and footprint</p>
       <ul class="rl">
-        <li><strong>v2.6.3 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). It is the release that makes a first run on mainnet work: the window controller grew fourfold on an empty range, reaching a 100,000-block request in four steps having never been served anything near that width, and every mainnet provider refuses a range that wide. Growth is bounded by what a provider has actually served <em>whole</em> now - across a 200,000-block prefix behind a 10,000-block cap, refused requests go from 24 to 4 and the run terminates. v2.6.2 grouped <code>--help</code> into CORE, OPERATING and SCALED, and 2.6.3 gave a bare <code>nuthatch</code> the same listing while keeping its exit 2. v2.6.0 closed subgraph parity: a <code>[[calls]]</code> block reads contract state pinned to a fixed block, and an <code>[[ipfs]]</code> block resolves documents and verifies the bytes against the content address that names them - so the two things a subgraph could do and a nest could not are no longer missing, and neither costs the determinism. It also added BSC, Polygon, Gnosis and Optimism. v2.6.1 fixed a transient RPC failure that could end a nest mid-backfill. Semantic versioning applies to the <strong>2.x</strong> line: a minor is <code>2.1</code>, <code>2.2</code>, and breaking changes wait for <code>3.0</code>. MSRV is 1.95 - measured, not asserted.</li>
+        <li><strong>v2.7.0 is the current release</strong> (tagged, with prebuilt binaries and container images on ghcr). It is a drop-in binary swap: no config change, migration or re-index. Seal-direct now resolves every declared <code>[[calls]]</code> input; factory backfills narrow and retry when newly discovered children hit a provider cap; declared-but-unfired events resolve as empty typed tables; timestamp retry splits run concurrently; and <code>doctor --dir</code> measures the full contract set. The release also withdraws the former seal-direct multipliers after finding that their baseline came from a stale harness. v2.6.3 made a first run on mainnet terminate by bounding window growth to ranges a provider had actually served whole. v2.6.0 closed subgraph parity with pinned calls and verified IPFS resolution. Semantic versioning applies to the <strong>2.x</strong> line: a minor is <code>2.1</code>, <code>2.2</code>, and breaking changes wait for <code>3.0</code>. MSRV is 1.95 - measured, not asserted.</li>
         <li><strong>2.2 is about degrading honestly.</strong> A page-corrupt sealed segment used to fail an entire <code>/sql</code> query; now it reduces its own table and the nest reports the damage - <code>degraded</code> and <code>degraded_tables</code> over HTTP, a warning line on the CLI, the same notice through MCP. The caveat states a fact about the nest rather than about the rows you happened to receive, so it cannot be dodged by a query that missed the gap. Blocks-only nests start, derive one row per block, and stop asking endpoints for every log on the chain; and the per-nest memory estimate was refitted against measurement after being roughly <strong>13x</strong> pessimistic, which had been refusing mounts that fit.</li>
         <li><strong>2.0 is the one release that moves data on disk</strong>, and it ships the command that does it. <code>nuthatch migrate</code> moves files and rewrites a config; it never re-indexes. Measured on a real two-nest deployment: <strong>0.259s</strong>. Tenancy moved into the runtime and the roost was retired - not renamed, removed - so there is one <code>nuthatch dev</code> and the directory decides what runs. Nest data is keyed by content address, so two tenants mounting the same nest share one dataset and it is never indexed twice. See the <a href="/docs/operate/upgrades/">upgrade notes</a>.</li>
         <li>Every prior line, for context: 0.6 brought portable nest bundles, the nest registry, zero-downtime N-1 upgrades, multichain runtimes, derive-first recipes and adaptive MCP tools; 0.7-0.8 the live mount/unmount surface and fault quarantine; 0.9 scaled mode's writer pool and the backfill work below; 1.0 the stability commitment itself. <strong>0.9.3 is a security patch</strong> - every earlier release is vulnerable to an arbitrary file read on <code>/sql</code>, because DuckDB accepts a quoted function name and the guard only matched an unquoted one. <strong>0.6.2 was also a security patch</strong>, for <code>;</code>-stacked statements, which was an arbitrary file-<em>write</em> primitive. If you expose <code>/sql</code> to anyone you do not trust, upgrade. <code>cargo install --git</code> needs <code>+1.95.0</code> exactly - <code>rust-toolchain.toml</code> does not apply to it, and rustc 1.97 hits a dbsp ICE.</li>

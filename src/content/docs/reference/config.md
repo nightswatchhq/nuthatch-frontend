@@ -50,6 +50,10 @@ column that consumers may be reading, which RFC-0020 classifies as *breaking*, a
 re-index. Blocks give you ordering; only timestamps give you time. If you are unsure, keep them - 
 the default is on for a reason.
 
+When an endpoint returns only part of a timestamp batch, Nuthatch divides the range and retries.
+Since 2.7.0 the top-level halves run concurrently rather than descending serially, which reduces the
+retry storms observed on very long backfills. It does not remove the underlying header cost.
+
 Flipping the value in `nuthatch.toml` by hand is refused at startup rather than honoured silently,
 because a store written one way cannot be read the other.
 

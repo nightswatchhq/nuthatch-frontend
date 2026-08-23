@@ -36,7 +36,8 @@ without telling you.
 widest `eth_getLogs` range it will serve, the largest JSON-RPC batch it accepts, and whether it has
 archive depth. Each of those limits otherwise surfaces mid-backfill as a retry loop that looks
 exactly like slowness, which is the worst way to learn it. Point it at the nest with `--dir` and it
-probes with the contract filter the nest will actually issue, rather than an empty one.
+probes with the full declared contract filter the nest will actually issue, rather than an empty
+one or the first contract in the file.
 
 Read its window figure as a **floor**, not a ceiling. A probe with no address filter measures the
 provider's raw block-range capacity; every measurement on record has address-filtered limits coming

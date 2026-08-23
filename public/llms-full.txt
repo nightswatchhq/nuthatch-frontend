@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v2.6.3** - a promise about stability (no CLI flag, HTTP route, config key or
+own indexer." Status: **v2.7.0** - a promise about stability (no CLI flag, HTTP route, config key or
 generated column renamed or removed within 2.x without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
@@ -38,7 +38,8 @@ obstacle has been the operational weight of the tooling, which is an engineering
    Code skill. Omit `--chain` and it probes each supported chain for the contract's bytecode. It does
    not yet auto-generate the view logic, handlers, or tests from the ABI.
 2. `nuthatch dev` - polls logs over RPC (round-robin failover, adaptive `getLogs` chunking), decodes
-   every declared event of every contract (topic0 registry → one table per `{alias}__{event}`),
+   every declared event of every contract (topic0 registry → one table per `{alias}__{event}`, an
+   empty typed table even before a declared event has fired),
    stores rows in an embedded hot store (redb), seals finalized ranges to content-addressed Parquet
    (pruning the hot store), and serves a local HTTP API on 127.0.0.1:8288: `/tables`,
    `/table/{name}` (hot+cold merged), `/schema` (the enriched data model), `/sql` (read-only DuckDB,
@@ -47,7 +48,10 @@ obstacle has been the operational weight of the tooling, which is an engineering
    stalled), `/metrics` (Prometheus), and a localhost-gated admin UI at `/_admin/`. Every row carries provenance columns (`block_hash`,
    `_seq`, `block_timestamp`) and `*_dec`/`*_overflow` siblings. The balance view is DBSP-maintained
    in i128 (decimal-string serialised); a reorg is a retraction; the view replays from stored facts
-   on restart. `dev --seal-direct` runs a ~20× faster phased cold-start backfill.
+   on restart. `dev --seal-direct` writes finalized history straight to Parquet, resolves declared
+   `[[calls]]`, and produces the same sealed bytes as the hot-store path. The former ~8.7x
+   seal-direct and ~20x stacked multipliers were withdrawn in 2.7.0 after their denominator was
+   traced to an obsolete harness path.
 3. Nests: `nuthatch init --from <git-url | ./dir>` runs a published nest (vendored ABIs + deployment
    blocks, schema-version guarded); authored `views/*.sql` (RFC-0018) are a validated, drift-gated
    layer (each binds against the schema at load, so a moved column is a loud `nuthatch check` failure,
@@ -95,7 +99,9 @@ obstacle has been the operational weight of the tooling, which is an engineering
     `eth_call` for - no archive node, no eth_call. `nuthatch metadata fetch` calls once and caches
     the immutable reads (`decimals`/`symbol`/`name`). Tier 3 shipped in 2.6.0: a `[[calls]]` block
     reads contract state via `eth_call` **pinned to a fixed block**, so a value that genuinely cannot
-    be derived is still reproducible rather than whatever the chain says today. Tier 4 (a local
+    be derived is still reproducible rather than whatever the chain says today. Since 2.7.0 all
+    streaming and seal-direct paths resolve it, and both benchmark arms require `--state-rpc` rather
+    than silently skipping the work. Tier 4 (a local
     execution engine, RFC-0024) is designed and deferred.
 12. Adaptive MCP tool advertisement (RFC-0025): `GET /shape` reports what a nest can actually answer
     and the MCP bridge filters `tools/list`/`prompts/list` to match, so an agent is never handed an
@@ -121,11 +127,12 @@ silently. The bundled free public RPCs exist so `init` → `dev` works with zero
 rate-limited, shared, sometimes fail by returning an empty result rather than an error, and are
 unsuitable for deep backfills or production - use your own node or a paid provider for real work.
 Measured footprint (not a target): ~37 MB single contract, ~58 MB three-contract 23-table nest -
-2.8% of the ≤2 GB per-cursor CI budget (the `footprint` job fails above 256 MB). The measured backfill
-throughput progression is ~289 → 2,521 → 5,837 ev/s on public RPC (~20× over baseline,
-byte-identical segments). On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
+2.8% of the ≤2 GB per-cursor CI budget (the `footprint` job fails above 256 MB). Backfill paths are
+correctness-gated to produce byte-identical sealed segments; no storage-path multiplier is currently
+claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
+disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v2.6.3 is the current release,
+against a real provider - the event count matching Sentio's own README. v2.7.0 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -220,7 +227,7 @@ PaulieB14/horizon-indexer-subgraph, credited to Paul Barba's "Horizon Indexer Pe
 subgraph - as a Nuthatch nest: Graph Horizon staking on Arbitrum One across three contracts, one
 `init` over several addresses, per-event tables queryable during backfill, AssemblyScript handlers
 rebuilt as declarative `views/*.sql` (reorgs retract; no hand-written rollback), a shareable nest
-consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v2.6.3.
+consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v2.7.0.
 Still design targets, marked as such on the page: an auto-generated GraphQL layer, SSE streams, and
 AI-assisted schema/test generation from an ABI. Scaffolding from a **subgraph manifest** ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
@@ -235,7 +242,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`POST /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v2.6.3: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
+v2.7.0: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
 views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance pack, the admin UI,
 and webhooks. The main forward-looking piece for these stories is a GraphQL layer for subgraph-shaped
 clients. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
@@ -262,8 +269,9 @@ promised - order is.
   (RFC-0018), the `nuthatch check` parity framework);
   three chains (Ethereum mainnet + Arbitrum One + Base) with finality as policy; the complete
   backfill work (RFC-0004: bench harness, seal-direct, pipelined fetching, adaptive chunker,
-  `dev --seal-direct`) measured at ~289 → 2,521 → 5,837 ev/s on public RPC (~20× over baseline,
-  byte-identical segments); factory/dynamic contract discovery (RFC-0009 - it indexes Uniswap); the
+  `dev --seal-direct`) with byte-identical segments across paths and no throughput multiplier claimed
+  until the corrected harness has a deterministic replay source; factory/dynamic contract discovery
+  (RFC-0009 - it indexes Uniswap); the
   compliance pack (RFC-0008 complete - screening, threshold/velocity flags, counterparty exposure,
   alert webhooks, signed pack manifest + reproducible `audit replay`); a local admin UI + webhooks
   with HMAC-signed egress (RFC-0010); content-addressed nest packaging (RFC-0012 - `nest bundle`/
@@ -278,7 +286,7 @@ promised - order is.
   co-tenant restart (RFC-0027); `eth_getLogs` range-control hardening (RFC-0028); the tenant runtime
   that retired the roost and keyed nest data by content address (RFC-0032); identity and grafting
   (RFC-0033); the query allowlist (RFC-0034); verified IPFS resolution (RFC-0037); subgraph-manifest
-  scaffolding (RFC-0038); distributed scaled mode (RFC-0022); v2.6.3 the current release with
+  scaffolding (RFC-0038); distributed scaled mode (RFC-0022); v2.7.0 the current release with
   prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
@@ -297,17 +305,14 @@ promised - order is.
 
 ## Install
 
-v2.6.3 is the current release. The installer and `cargo` fetch the latest.
+v2.7.0 is the current release. The installer and `cargo` fetch the latest.
 
-**2.6.3 is the release that makes a first run on Ethereum mainnet work.** The adaptive `eth_getLogs`
-window grew fourfold on an empty range - and an empty range says nothing about capacity - so from a
-1,000-block start it reached a 100,000-block request in four steps having never been served anything
-near that width, and every mainnet provider refuses a range that wide. Worse, the splitter that
-recovered by halving returned a merged success, so the controller grew again on the strength of a
-success that never happened at that width. Growth is bounded by what a provider has actually served
-*whole* now: across a 200,000-block prefix behind a 10,000-block cap, refused requests fall from 24
-to 4, the widest attempt from 100,000 blocks to 16,000, and the run terminates. If you are advising
-anyone who tried nuthatch on mainnet before 2.6.3 and concluded it was broken - it was.
+**2.7.0 makes `[[calls]]` and `--seal-direct` compatible.** Every direct-seal path resolves the
+pinned reads before committing. Factory backfills narrow on a provider cap in the newly-discovered
+child pass; declared-but-unfired events resolve as empty typed tables; a stale `schema.json` no longer
+hides live registry columns; `doctor --dir` probes the full contract set; timestamp retry splits run
+concurrently; and benchmark output redacts state-RPC credentials. It is a binary swap with no config
+change, migration or re-index.
 
 - Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with SHA-256
   checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)

@@ -23,7 +23,7 @@ Every command that operates on a nest takes `--dir` (default `.`).
   resolved - ABIs are vendored, so it's cloned, copied, and validated).
 - **`nuthatch dev`** - run it: backfill, follow the tip, serve the API. `--listen` (default
   `127.0.0.1:8288`), `--rpc` runtime overrides, `--backfill N` (recent-history mode),
-  `--seal-direct` (backfill finalized history straight to Parquet - much faster from deployment),
+  `--seal-direct` (backfill finalized history straight to Parquet, bypassing the hot store),
   `--concurrency` (concurrent window fetches; 8-16 against your own node), `--window` (override the
   `getLogs` block-window - large for sparse contracts), `--no-admin`.
 
@@ -82,7 +82,9 @@ Every command that operates on a nest takes `--dir` (default `.`).
 
 - **`nuthatch bench backfill --from N --to N`** - events/sec, wall-clock, peak RSS over a pinned
   range (`--runs 3`; the report is the median). `--seal-direct` measures the direct-to-Parquet
-  path.
+  path. A nest declaring `[[calls]]` also needs `--state-rpc`; both benchmark arms resolve the calls,
+  and the command refuses to under-measure them when the endpoint is absent. State RPC URLs are
+  redacted in output because they often contain credentials.
 - **`nuthatch bench query`** - the read path: entity point-read p50/p99 and the `/sql` hot∪cold
   scan cost. Run offline against an already-indexed nest (stop `dev` first).
 - **`nuthatch transform <component.wasm>`** - run a WASIp2 transform component over stored

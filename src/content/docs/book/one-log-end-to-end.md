@@ -80,9 +80,10 @@ only when the output is ready to become the committed sealed history. The matchi
 be pruned. The event is no longer subject to ordinary reorg rollback.
 
 `--seal-direct` uses the same sealed representation for old, already-final history, bypassing the
-hot store during an initial bulk backfill. It is an optimisation with an important precondition:
-the range must be past finality. It does not use a fast path to declare recent, reversible blocks
-permanent.
+hot store during an initial bulk backfill. It still resolves every declared `[[calls]]` input at its
+pinned block before it commits the segment. It is an optimisation with an important precondition:
+the range must be past finality. It does not use a fast path to omit declared inputs or declare
+recent, reversible blocks permanent.
 
 ## 6. Answer a query with provenance
 

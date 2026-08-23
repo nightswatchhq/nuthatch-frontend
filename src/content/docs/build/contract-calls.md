@@ -43,12 +43,21 @@ disagreement is visible rather than silent.
 
 ### The cost, before you turn it on
 
-Pinned reads resolve inside the indexing window, and **`--seal-direct` is refused while calls are
-declared**. A seal-direct run would sail past every sampled block and seal the range with the table
-silently absent, which is worse than refusing.
+Pinned reads resolve inside the indexing window. Since 2.7.0, all three `--seal-direct` paths resolve
+them too, so a calls nest can use direct sealing without omitting its calls table. The sealed segment
+contains the same declared inputs as the streaming path.
 
-Measured on a real nest: adding one `[[calls]]` entry took the same 454-million-block backfill from
-about **12 minutes to about 66**. Worth knowing before rather than after.
+The cost depends on sampling density and the state endpoint. A controlled near-tip comparison found
+about **7%** overhead for the calls nest; an earlier 454-million-block field run with roughly 2,725
+pinned reads was about 5.5 times slower. Those workloads were about 300 times apart in read density,
+so neither figure is a universal multiplier. Measure the nest you mean to run. In 2.7.0 the calls
+path also reuses the block hash already returned by the batched header fetch, removing a second round
+trip at each sampled block.
+
+`nuthatch bench backfill` resolves declared calls in both the hot-store and seal-direct arms. Supply
+the same archive endpoint with `--state-rpc`; the benchmark refuses a calls nest without it rather
+than quietly measuring a workload with the calls missing. The endpoint is redacted in benchmark
+output because archive URLs commonly contain API keys.
 
 ## `[[ipfs]]` - documents, verified
 
