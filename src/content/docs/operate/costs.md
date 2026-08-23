@@ -48,6 +48,40 @@ The busiest of the three averaged **~549,000 requests a day** over the audit win
 producing about 345,600 blocks a day - the right order of magnitude for a header fetch per block plus
 its log polling on top.
 
+## The multiplier nobody had measured
+
+Everything above is the **nominal** bill: what a nest asks for when the endpoint answers. On a
+rate-limited endpoint it asks for considerably more, and the reason is a loop.
+
+Measured 2026-08-23 with the [replay rig](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0039-the-recorded-tape.md),
+which records every call a run makes so the request the code *asked for* can be compared with what
+actually went over the wire. A 120-block USDC range, fixed 20-block window:
+
+| | |
+|---|---:|
+| calls the indexer made | **12** |
+| HTTP requests those became | **84** |
+| amplification | **7x** |
+
+Five of six timestamp batches came back `429` from the bundled public endpoints, and each was retried
+up to four times across a three-endpoint pool.
+
+**Being rate-limited makes a nest send more requests, which gets it rate-limited harder.** On a free
+tier you are not paying the nominal figure above, you are paying some multiple of it - and the
+multiple grows exactly when the endpoint is least willing to serve you.
+
+Two practical consequences, neither of them a recommendation to change a default:
+
+- **Measuring nuthatch through a rate-limited endpoint measures the endpoint.** The same rig found the
+  network to be **99.3% of backfill wall clock**, so a throughput number taken on a free tier is a
+  statement about your provider.
+- **A paid endpoint can be cheaper than a free one**, because the retry loop above never starts. That
+  is an uncomfortable thing to put on our own page and it appears to be true.
+
+Tracked as [RFC-0040](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0040-the-freshness-dial.md),
+which argues for letting an operator trade freshness for money rather than paying a production-sized
+bill for a dashboard nobody reads hourly. Design only - nothing is being built this year.
+
 ## What that costs against a priced endpoint
 
 None of the volume above was billed - most of those nests run against a free public endpoint. Pricing

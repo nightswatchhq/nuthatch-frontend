@@ -7,6 +7,16 @@ order: 7
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
 which claims we have and have not tested ourselves.
 
+> **Still deciding whether to trust nuthatch at all?** This page is for proving a deployment works
+> once you have adopted one. The step before it is
+> [`docs/kicking-the-tyres.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/kicking-the-tyres.md),
+> written from the opposite posture: *you are not trying to confirm the claims, you are trying to
+> falsify them, and it tells you where we think you have the best chance.* It covers the cold walk
+> against a contract we did not pick, correctness against a public subgraph, what it costs to keep
+> running, a red-team pass on `/sql` naming both of our own past security patches and one open
+> finding, and a section listing where we have already been wrong. We would rather you found the next
+> one than a user did.
+
 The full runbook lives in the repo at
 [`docs/verification.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/verification.md).
 Levels 0 - 4 are automated:
