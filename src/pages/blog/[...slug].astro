@@ -19,7 +19,7 @@ const fmt = (d: Date) =>
   description={post.data.description}
 >
   <section class="page">
-    <article class="wrap narrow prose">
+    <article class="wrap post prose">
       <a href="/blog" class="back">← Blog</a>
       <h1>{post.data.title}</h1>
       <p class="meta">
@@ -33,6 +33,9 @@ const fmt = (d: Date) =>
 
 <style>
   .page { padding-block: clamp(2.4rem, 5vw, 3.6rem) clamp(4rem, 9vw, 6.5rem); }
+  /* The book's text column (BookLayout's `minmax(0, 58rem)`), not the 44rem `.narrow` the
+     manifesto and roadmap share - a post carries wide code blocks and tables that 44rem crops. */
+  .post { max-width: 58rem; }
   .back {
     display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
     color: var(--text-muted); margin-bottom: 1.6rem;
@@ -45,7 +48,7 @@ const fmt = (d: Date) =>
   h1 { font-size: clamp(1.9rem, 4vw, 2.8rem); line-height: 1.1; margin-bottom: 0.4rem; letter-spacing: -0.025em; }
 
   /* Markdown body - matches the manifesto's prose, extended to headings, lists, code and quotes. */
-  .prose :global(p) { color: var(--text-muted); font-size: 1.06rem; line-height: 1.75; margin-bottom: 1.35rem; }
+  .prose :global(p) { color: var(--text-muted); font-size: 1.12rem; line-height: 1.75; margin-bottom: 1.35rem; }
   .prose :global(h2) {
     font-size: 1.5rem; letter-spacing: -0.02em; color: var(--text);
     margin: 2.8rem 0 1rem; line-height: 1.25;
@@ -58,7 +61,7 @@ const fmt = (d: Date) =>
   .prose :global(a:hover) { border-bottom-color: var(--accent); }
   .prose :global(strong) { color: var(--text); font-weight: 600; }
   .prose :global(em) { font-style: italic; }
-  .prose :global(ul), .prose :global(ol) { color: var(--text-muted); font-size: 1.06rem; line-height: 1.7; margin: 0 0 1.35rem; padding-left: 1.3rem; }
+  .prose :global(ul), .prose :global(ol) { color: var(--text-muted); font-size: 1.12rem; line-height: 1.7; margin: 0 0 1.35rem; padding-left: 1.3rem; }
   .prose :global(li) { margin-bottom: 0.5rem; }
   .prose :global(li::marker) { color: var(--text-faint, var(--text-muted)); }
   .prose :global(hr) { border: none; border-top: 1px solid var(--border); margin: 2.6rem 0; }
