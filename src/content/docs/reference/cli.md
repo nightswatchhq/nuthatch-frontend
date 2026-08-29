@@ -39,6 +39,10 @@ Every command that operates on a nest takes `--dir` (default `.`).
 - **`nuthatch check [name]`** - run the nest's invariant/parity checks (`checks/*.sql`) against
   recorded expected results; `--update` records current results as the fixtures.
 
+`entities.toml` needs no special command: `dev` loads and maintains it. A nest declaring an entity
+must use the normal ingest path; `dev --seal-direct` is refused because direct sealing bypasses the
+entity circuit.
+
 ## Derive-first reads (RFC-0023)
 
 - **`nuthatch recipe list`** / **`recipe add <name>`** - add a derived view that computes a read

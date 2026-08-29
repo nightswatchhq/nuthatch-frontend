@@ -69,6 +69,10 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   its oversized-range refusal as HTTP 400, which the classifier did not enumerate, so a window that
   needed splitting was retried unchanged forever. It now completes in **74.8 s for 294,278 events in
   321 RPC requests** - the record count matching Sentio's own README.
+- **0041 Authored incremental entities** *(Implemented; v3.0.0)* - a nest-declared, bounded keyed
+  relation maintained as blocks arrive. The alpha's real-chain soak found restart truncation,
+  history-growing update cost, a pooled-connection explain leak, a 429 classification error and a
+  split-lock freshness label; all are fixed in the stable release.
 - **0030 Adding EVM chains** *(Implemented)* - the registry, the endpoint bar, and Gnosis first;
   `nuthatch doctor --rpc` makes that bar self-service, and Gnosis clears it comfortably.
 - **0031 Optimism and Polygon** *(Optimism implemented; Polygon shipped but not yet reliable)* -

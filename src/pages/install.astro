@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v2.7.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Portable nest bundles, a nest registry, multichain runtimes with one isolated cursor per chain, derive-first contract reads, and fault quarantine. Checksums verified; an OCI image ships alongside."
+  description="Install Nuthatch v3.0.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Authored incremental entities, provenance-attested release artifacts, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,15 +19,11 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-          <strong>v2.7.0 is out.</strong> A nest declaring <code>[[calls]]</code> can use
-          <code>--seal-direct</code> again: every direct-seal path resolves the pinned reads before
-          committing its segment. Factory backfills now narrow and retry when newly discovered
-          children exceed a provider's response cap, and declared events which have not fired yet
-          appear as empty typed tables rather than taking an authored view down. <code>doctor</code>
-          measures a nest's full contract set, timestamp retry splits run concurrently, and
-          benchmark output no longer prints state-RPC credentials. The old seal-direct performance
-          multipliers have been withdrawn after a harness correction made their baseline invalid.
-          Drop-in: swap the binary and restart, with no config change, data migration or re-index.
+          <strong>v3.0.0 is out.</strong> A nest can now declare an authored incremental entity in
+          <code>entities.toml</code>: a keyed relation maintained as blocks arrive instead of
+          recomputed on every query. The binary swap remains drop-in for existing nests - no config
+          migration, data migration or re-index. Adding an entity is the deliberate exception: the
+          next restart seeds it from local history before serving it.
         </p>
 
       <h2 class="ih">Shell script</h2>
@@ -59,7 +55,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:2.7.0-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:3.0.0-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
@@ -87,12 +83,13 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="sha256sum -c nuthatch-<target>.tar.gz.sha256" prompt={true} />
       <div class="keybox">
-        <span class="keybox-label">Detached signatures <span class="tag">planned</span></span>
+        <span class="keybox-label">Build provenance</span>
         <p class="keybox-note">
-          Releases ship checksums but not yet detached signatures. Minisign and cosign signing, with a
-          published key, land with the remaining release engineering - see the
-          <a href="/roadmap">roadmap</a>. Until then, verify the checksum.
+          Every v3 release artifact also carries a GitHub build-provenance attestation. A checksum says
+          the file arrived intact; this verifies which repository and workflow built it. The repository
+          constraint is load-bearing:
         </p>
+        <CopyBlock command="gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatchhq/nuthatch" />
       </div>
 
       <p class="backlink"><a href={GH} rel="noopener">Source, docs, and issues on GitHub →</a></p>

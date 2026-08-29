@@ -19,13 +19,20 @@ puts `nuthatch` on your `PATH`. It's short and
 audit it first if `curl | sh` makes you itch.
 
 Prebuilt binaries cover **macOS (Apple Silicon)** and **Linux x86_64**. Intel Mac is deliberately not
-built. Checksums ship with every release; a Homebrew tap and detached release signatures are on the
-[roadmap](/roadmap).
+built. Checksums ship with every release. Every v3 artifact also has a GitHub build-provenance
+attestation, which establishes the producing repository and workflow rather than merely the integrity
+of bytes in transit:
+
+```sh
+gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatchhq/nuthatch
+```
+
+The `--repo` constraint matters. Without it, an attestation from any repository may be accepted.
 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:2.7.0 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:3.0.0 --version
 ```
 
 `linux/amd64` only for now. The image carries the **same binary attached to the GitHub Release**, so

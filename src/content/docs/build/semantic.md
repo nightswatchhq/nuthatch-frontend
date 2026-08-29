@@ -1,7 +1,7 @@
 ---
 title: The semantic layer
 description: Describe what tables and columns mean, so agents query correctly instead of guessing.
-order: 4
+order: 5
 ---
 
 A schema tells you a column is named `value` and typed `uint256`. It doesn't tell you that `value` is
@@ -19,7 +19,8 @@ Nuthatch keeps that meaning in a **semantic layer**: a `semantic.toml` beside th
   a number 10¹⁸ too big.
 - **Footguns** - the sharp edges: zero-address-means-mint, fee-on-transfer tokens, a `value` that's
   actually shares not assets. Every gotcha that produces a confidently wrong answer.
-- **View meanings** - what each [authored view](/docs/build/views/) computes and when to reach for it.
+- **View and entity meanings** - what each [authored view](/docs/build/views/) or maintained
+  [entity](/docs/build/entities/) computes and when to reach for it.
 
 ## Why it exists
 
@@ -41,6 +42,7 @@ decode registry no longer has, `dev` warns loudly at startup - stale semantics a
 
 ## Next
 
-- [Authored SQL views](/docs/build/views/) - the logic the semantic layer describes
+- [Authored SQL views](/docs/build/views/) - general query-time logic
+- [Authored incremental entities](/docs/build/entities/) - bounded logic maintained while indexing
 - [MCP server](/docs/ai/mcp/) - how agents consume the semantic layer
 - [llms.txt](/docs/ai/llms-txt/) - the other half of the AI surface

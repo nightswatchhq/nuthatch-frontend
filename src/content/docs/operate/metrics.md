@@ -46,6 +46,13 @@ Health series (RFC-0026), which is where you look when *part* of a runtime is un
 | `nuthatch_nest_quarantine_total{nest}` | Times this nest has been quarantined since start - a flapping nest shows up here before anyone notices. |
 | `nuthatch_cursor_live{chain}` | `1` while the chain's cursor is running, `0` once it has died. |
 
+Each declared authored incremental entity adds six gauges, labelled by nest and entity:
+`nuthatch_entity_applied_through`, `nuthatch_entity_current`, `nuthatch_entity_rows`,
+`nuthatch_entity_faulted`, `nuthatch_entity_unavailable`, and
+`nuthatch_entity_seconds_since_progress`. Page on `faulted`; investigate a `current` gauge that stays
+zero or a progress age that keeps climbing. This is the difference between a maintained answer that is
+fresh and one that merely happens to have a table-shaped name.
+
 ## The footprint budget
 
 The budget is a non-negotiable, CI-enforced: **≤2 GB RAM per active-chain cursor** - one chain's

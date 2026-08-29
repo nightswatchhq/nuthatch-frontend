@@ -47,6 +47,12 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 ## Derived & compliance
 
+- `GET /derived/{entity}` - the first page of a declared incremental entity, including its
+  applied-through provenance.
+- `GET /derived/{entity}/{key}` - a keyed point read from that maintained relation. The key follows
+  the order declared in `entities.toml`. An entity is also a relation on `/sql`, so it can be joined
+  with decoded tables.
+
 - `GET /balances?limit=N` - top holder balances from the incrementally-maintained view (i128 base
   units as decimal strings).
 - `GET /balance/{address}` - one address's derived balance.

@@ -1,6 +1,6 @@
 ---
 title: Authored SQL views
-description: First-class authored logic - CREATE VIEWs over the tip ∪ sealed surface.
+description: General SQL authored with a nest and evaluated when a reader asks for it.
 order: 3
 ---
 
@@ -36,11 +36,17 @@ Authored views aren't just dropped in and hoped over. They're a first-class laye
 - **Drift-gated** - CI catches a view that no longer matches the schema.
 - **Taught** - the builder skill teaches an agent to author them with real syntax, not hallucinated SQL.
 
-## Not a core change
+## Views are not entities
 
 Views are read-only `CREATE VIEW`s over already-sealed segments and the hot snapshot. Nothing about them
-touches the deterministic ingest → decode → seal path - they're a *query-time* layer. That's why they're
-safe to add, edit, and iterate freely.
+touches the deterministic ingest → decode → seal path - they are a *query-time* layer. That is why they
+are safe to add, edit, and iterate freely, and why a costly view still scans its inputs every time it is
+asked.
+
+An [authored incremental entity](/docs/build/entities/) is the deliberate alternative for a frequent,
+expensive keyed aggregate. It lives in `entities/` with a declaration in `entities.toml`, has a bounded
+SQL subset and RAM budget, and is maintained as blocks arrive. Do not promote a view merely because it
+looks important. Prefer the view unless measurements show that recomputation is the read-path cost.
 
 ## Recipes are views
 
@@ -51,5 +57,6 @@ extend it; it's ordinary SQL.
 ## Next
 
 - [Recipes](/docs/build/recipes/) - derive contract reads with no eth_call
+- [Authored incremental entities](/docs/build/entities/) - pay for one repeated aggregate while indexing
 - [The semantic layer](/docs/build/semantic/) - describe what a view means
 - [The SQL surface](/docs/reference/sql/) - the query engine underneath

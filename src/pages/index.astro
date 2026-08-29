@@ -23,7 +23,7 @@ const rows = [
   <!-- 1. HERO -->
   <section class="hero">
     <div class="wrap">
-      <p class="hero-eyebrow rise rise-1"><span class="tag">v2.7.0 · MIT OR Apache-2.0</span></p>
+      <p class="hero-eyebrow rise rise-1"><span class="tag">v3.0.0 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
         Nuthatch is a self-hosted blockchain indexer in one Rust binary. From contract
@@ -106,11 +106,11 @@ const rows = [
           </p>
         </div>
         <div>
-          <h3>Entities as incremental views</h3>
+          <h3>Entities maintained as blocks arrive</h3>
           <p>
-            Entities are declarative views over decoded events, maintained incrementally. A
-            reorg is a retraction, not a pile of rollback code. Backfills are the same circuit
-            run as a batch. The columnar layer stays append-only, by construction.
+            General authored views run when queried. For a repeated, expensive aggregate, declare
+            an entity in <code>entities.toml</code> and Nuthatch maintains the keyed relation as
+            blocks arrive. A reorg is a retraction, not a pile of rollback code.
           </p>
         </div>
         <div>
@@ -208,7 +208,7 @@ const rows = [
           <h2 class="teaser-h">A subgraph, rebuilt as a nest.</h2>
           <p class="teaser-copy">
             A real Graph Horizon subgraph rebuilt as a Nuthatch nest - multiple contracts on
-            Arbitrum One, folded delegation state, user-authored views, parity-checked. It runs
+            Arbitrum One, folded delegation state, authored views and maintained entities, parity-checked. It runs
             today; a GraphQL compatibility layer for subgraph-shaped clients is the main piece
             still on the roadmap.
           </p>

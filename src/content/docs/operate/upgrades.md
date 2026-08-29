@@ -7,21 +7,33 @@ order: 10
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
 consumers eat downtime or stale data during the flip.
 
-## Upgrading to 2.7.0
+## Upgrading to 3.0.0
 
 This is a binary swap. Stop the service, replace the binary, and start it again. On-disk state is
 forward-readable, `dev` flags are unchanged, and there is no migration or re-index.
 
-The behaviour change is additive: a nest declaring `[[calls]]` may now use `--seal-direct`, and all
-direct-seal paths resolve those pinned reads before committing a segment. Factory backfills now
-narrow and retry when newly discovered children exceed a provider's response cap. Declared events
-which have not fired resolve as empty typed tables, so a view referring to one no longer disappears.
+For a nest without `entities.toml`, that is the whole upgrade. Production data was counted before and
+after the swap on the Lodestar Horizon nest: all 73 tables matched at a pinned watermark, with
+2,376,135 rows.
 
-If you benchmark a calls nest, pass `--state-rpc`. Both arms now perform the declared reads and the
-command refuses to run without the archive endpoint rather than publishing a flattering measurement
-of work it skipped. The previously published seal-direct multipliers have been withdrawn after a
-harness correction and contradictory public-RPC runs; use the current [performance notes](/docs/operate/performance/)
-instead.
+3.0 adds [authored incremental entities](/docs/build/entities/). They are additive, but adding one to
+a nest that already has data changes the next restart: Nuthatch seeds the maintained relation from the
+sealed corpus and hot tail. It does not make RPC calls or re-index. Measured seeds took 1.9 seconds for
+249,979 rows over 733 segments and 2.4 seconds for 346,288 rows over 2,985 segments. Plan that one-off
+restart work where a service has a tight availability budget.
+
+An entity-bearing nest must not use `--seal-direct`; 3.0 refuses the combination because direct sealing
+bypasses the incremental ingest path. The refusal is intentional. A completed run with an empty entity
+would be indistinguishable from a healthy one to far too many dashboards.
+
+The accompanying hardening fixes the release found on real chains: a provider-wide 429 now narrows to a
+single block before failing, a backfill that makes no progress fails after 64 attempts, and `/sql`
+captures both entity rows and their applied-through watermark under one lock rather than attaching a
+newer label to older rows.
+
+Release binaries now carry a GitHub build-provenance attestation as well as a checksum. Verify a manual
+download with `gh attestation verify <tarball> --repo nightswatchhq/nuthatch`; the `--repo` clause is
+what prevents an attestation from an unrelated repository being accepted.
 
 In 2.0 there is **no upgrade command**. The runtime does the classifying, and grafting does the rest.
 

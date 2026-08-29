@@ -6,6 +6,7 @@
   <url><loc>https://nuthatch-indexer.com/blog/content-addressed-nests-and-data-reuse</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/index-uniswap-v3-with-nuthatch</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/no-subgraph-no-problem</loc></url>
+  <url><loc>https://nuthatch-indexer.com/blog/nuthatch-3-authored-incremental-entities</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/nuthatch-data-service-on-graph-horizon</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/serving-lodestar-from-one-box</loc></url>
   <url><loc>https://nuthatch-indexer.com/blog/the-graph-put-nuthatch-in-their-hackathon-bounty</loc></url>
@@ -20,6 +21,7 @@
   <url><loc>https://nuthatch-indexer.com/docs/book/a-reorganisation-walked-through</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/identity-upgrades-and-reuse</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/index</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/book/maintaining-an-answer</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/one-log-end-to-end</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/operating-a-truthful-index</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/book/reading-the-index</loc></url>
@@ -31,6 +33,7 @@
   <url><loc>https://nuthatch-indexer.com/docs/build/compliance</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/config</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/contract-calls</loc></url>
+  <url><loc>https://nuthatch-indexer.com/docs/build/entities</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/factories</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/recipes</loc></url>
   <url><loc>https://nuthatch-indexer.com/docs/build/semantic</loc></url>

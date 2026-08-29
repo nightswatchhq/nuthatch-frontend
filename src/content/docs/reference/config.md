@@ -4,7 +4,8 @@ description: "nuthatch.toml and mounts.toml, field by field."
 order: 2
 ---
 
-Three files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `semantic.toml` is
+Four files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `entities.toml` declares
+maintained relations; `semantic.toml` is
 covered in [The semantic layer](/docs/build/semantic/); `mounts.toml` mounts many nests. A nest
 declaring a `schema_version` newer than the binary understands is rejected on load - the guard that
 makes `init --from` and `nest load` safe.
@@ -171,6 +172,29 @@ secret = "…"                      # optional; adds X-Nuthatch-Signature: sha25
 
 `since = "registration"` means a `--seal-direct` backfill won't fire history at your endpoint. See
 [Webhooks](/docs/build/webhooks/).
+
+## `entities.toml`
+
+`entities.toml` is optional. It declares an [authored incremental entity](/docs/build/entities/): a
+keyed relation whose SQL is maintained while blocks arrive. The SQL is a separate file containing one
+`SELECT`; it is not a `CREATE VIEW` statement.
+
+```toml
+[[entities]]
+name = "indexer_rewards"
+sql = "entities/indexer_rewards.sql"
+key = ["indexer"]
+max_rows = 100000
+```
+
+`name` is the relation name served on `/sql`. `key` lists unique output columns in point-read order.
+`max_rows` is required and positive. It is the resource bound Nuthatch admits, not merely an estimate:
+crossing it faults the entity and quarantines the nest. The entity SQL subset is deliberately smaller
+than DuckDB SQL, so use an authored view for a query it refuses.
+
+Adding this file to a nest with history makes the next normal start seed the relation from local sealed
+segments and the hot tail. It does not re-index from RPC. Do not start an entity-bearing nest with
+`--seal-direct`: 3.0.0 refuses that combination rather than serving an empty maintained relation.
 
 ## `mounts.toml`
 

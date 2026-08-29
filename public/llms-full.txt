@@ -2,8 +2,8 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v2.7.0** - a promise about stability (no CLI flag, HTTP route, config key or
-generated column renamed or removed within 2.x without a major bump; upgrades stay a binary swap with
+own indexer." Status: **v3.0.0** - a promise about stability (no CLI flag, HTTP route, config key or
+generated column renamed or removed without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the binary does
@@ -65,6 +65,12 @@ obstacle has been the operational weight of the tooling, which is an engineering
    and it is never indexed twice; unmounting one of two decrements a reference, and `nuthatch prune`
    reclaims what nothing mounts. `nuthatch migrate` moves a pre-2.0 directory across. A tenant is an
    opaque ownership label - no identity, no authentication, no quotas, no metering.
+   A nest may also declare an authored incremental entity in `entities.toml` (RFC-0041, stable in
+   3.0.0): one admitted `SELECT`, a unique output key and `max_rows`, maintained as blocks arrive
+   and retracted on reorg. It is queryable by name from `/sql` and via `/derived/{entity}`, and has
+   per-entity applied-through/current/rows/faulted/unavailable/progress metrics. It is not an
+   authored view: views run at query time. Entity state seeds from local sealed history on restart;
+   `dev --seal-direct` refuses a nest declaring an entity.
 4. `nuthatch transform <component.wasm>` - runs a pure, zero-capability WASM transform over an Arrow
    batch; effectful stages take per-component capability grants (`kv` today). `nuthatch mcp` -
    serves the Model Context Protocol over stdio (12 tools: status, schema, tables, table, sql,
@@ -132,7 +138,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v2.7.0 is the current release,
+against a real provider - the event count matching Sentio's own README. v3.0.0 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -305,9 +311,16 @@ promised - order is.
 
 ## Install
 
-v2.7.0 is the current release. The installer and `cargo` fetch the latest.
+v3.0.0 is the current release. The installer and `cargo` fetch the latest.
 
-**2.7.0 makes `[[calls]]` and `--seal-direct` compatible.** Every direct-seal path resolves the
+**3.0.0 makes authored incremental entities stable.** An entity declared in `entities.toml` is a
+bounded keyed relation maintained while blocks arrive, not a view recomputed at query time. Existing
+nests upgrade by binary swap with no migration or re-index; adding an entity seeds it from local stored
+history at the next restart. `--seal-direct` refuses an entity-bearing nest. Release artifacts carry
+GitHub build-provenance attestations, verifiable with `gh attestation verify <tarball> --repo
+nightswatchhq/nuthatch`.
+
+**2.7.0 made `[[calls]]` and `--seal-direct` compatible.** Every direct-seal path resolves the
 pinned reads before committing. Factory backfills narrow on a provider cap in the newly-discovered
 child pass; declared-but-unfired events resolve as empty typed tables; a stale `schema.json` no longer
 hides live registry columns; `doctor --dir` probes the full contract set; timestamp retry splits run

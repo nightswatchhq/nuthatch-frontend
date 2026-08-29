@@ -24,7 +24,7 @@ const mcpConfig = `{
 <Layout
   path="/stories"
   title="Who runs Nuthatch - Nuthatch"
-  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v2.7.0; GraphQL compatibility remains on the roadmap."
+  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v3.0.0; GraphQL compatibility remains on the roadmap."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -36,11 +36,12 @@ const mcpConfig = `{
         nests for people who want data without writing indexing code, and a built-in MCP
         server for agents. Same data and the same nest definition, on hardware you control.
       </p>
-      <p class="illus">Illustrative workflows, not customer stories - current for Nuthatch v2.7.0.</p>
+      <p class="illus">Illustrative workflows, not customer stories - current for Nuthatch v3.0.0.</p>
 
       <p class="preview-note">
-        <strong>These workflows run on v2.7.0.</strong> Multi-contract nests, every declared event
+        <strong>These workflows run on v3.0.0.</strong> Multi-contract nests, every declared event
         as a queryable table, Arbitrum One and Base, user-authored <code>views/*.sql</code>,
+        maintained <code>entities.toml</code> relations,
         <code>init --from</code>, read-only <code>/sql</code>, and the MCP server all ship today - as
         do factories, the compliance pack, the admin UI, and webhooks. The main forward-looking piece
         for these stories is the GraphQL layer, noted where it appears; the personas are
@@ -81,8 +82,8 @@ const mcpConfig = `{
       <p>
         Every declared event becomes a queryable table as the backfill streams through history. The
         explicit alias makes the table name predictable: <code>usdc__transfer</code>. Her API can
-        read the raw layer directly or put a derived view in front of it when the application needs
-        a stable model:
+        read the raw layer directly, put a derived view in front of it for a stable model, or make
+        a repeatedly-read aggregate a maintained entity.
       </p>
       <p>
         Her API route calls <code>GET /sql?q=…</code>, a read-only HTTP endpoint on localhost. It is
@@ -123,9 +124,10 @@ const mcpConfig = `{
         he ran it on his own hardware and can read every line of what produced the numbers.
       </p>
       <p class="note">
-        Derived views read finalized data; the raw event tables are fresh to the tip. A
-        dashboard built on views trails the chain head by finality - the honest trade for
-        numbers that never retract under you.
+        Derived views read finalized data; the raw event tables are fresh to the tip. A dashboard
+        built on views trails the chain head by finality - the honest trade for numbers that never
+        retract under you. An incremental entity is different: it follows its source through the
+        hot tip and carries its own applied-through provenance.
       </p>
 
       <hr class="divider seg" />

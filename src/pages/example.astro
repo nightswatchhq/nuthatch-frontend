@@ -17,7 +17,7 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
 <Layout
   path="/example"
   title="From contract to nest: indexing USDC - Nuthatch"
-  description="A worked Nuthatch example: index USDC from its contract address, inspect its raw event tables, and query the local read-only SQL API. Runs on Nuthatch v2.7.0."
+  description="A worked Nuthatch example: index USDC from its contract address, inspect raw event tables, and choose an authored view or maintained entity. Runs on Nuthatch v3.0.0."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -25,7 +25,7 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
       <h1>From contract to nest: indexing USDC</h1>
 
       <p class="preview-note">
-        <strong>This is the current, executable path on v2.7.0.</strong> It creates a nest from
+        <strong>This is the current, executable path on v3.0.0.</strong> It creates a nest from
         a verified contract, backfills it, follows the chain, and serves decoded event data locally.
         GraphQL compatibility remains on the <a href="/roadmap">roadmap</a>; the data surface is
         read-only SQL over HTTP and MCP.
@@ -80,9 +80,25 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
 
       <h2>Turn facts into your application model</h2>
       <p>
-        Raw events are available immediately. Add authored views or recipes when your application
-        needs a stable derived shape, and commit checks with recorded fixtures when the result matters.
-        That keeps the decoding boundary reusable while making the application-specific logic explicit.
+        Raw events are available immediately. Add an authored view when your application needs a
+        stable derived shape, and commit checks with recorded fixtures when the result matters. A
+        view is evaluated at query time, so it is broad and inexpensive until someone asks for it.
+      </p>
+
+      <h2>When a view becomes a hot read</h2>
+      <p>
+        If one grouped answer is asked often enough that rescanning history is the expensive part,
+        make the distinction explicit: put its one <code>SELECT</code> in
+        <code>entities/holders.sql</code> and declare its key and bound in
+        <code>entities.toml</code>. Nuthatch then maintains the relation for each arriving block,
+        exposes it to <code>/sql</code> by name, and retracts it on a reorganisation.
+      </p>
+      <CodeCard code={`[[entities]]\nname = "holders"\nsql = "entities/holders.sql"\nkey = ["holder"]\nmax_rows = 100000`} lang="bash" label="entities.toml" />
+      <p>
+        This is not a faster spelling of a view. An entity reserves memory and accepts a deliberately
+        small SQL subset, but makes a repeated aggregate an indexing-time cost instead of a query-time
+        one. Keep general SQL in <code>views/</code>. The full authoring contract, including restart
+        seeding and the admissible SQL, is in the <a href="/docs/build/entities/">entities guide</a>.
       </p>
 
       <hr class="divider close-div" />

@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v2.7.0**. Stability is a promise, not a claim of completeness: within 2.x no
+MIT OR Apache-2.0. Status: **v3.0.0**. Stability is a promise, not a claim of completeness: no
 CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
 upgrading stays a binary swap with no data migration. This file separates what the binary does today
 from the design targets, so a model does not present unbuilt features as present-tense fact.
@@ -45,6 +45,12 @@ Tagline: "Be your own indexer."
   validated, drift-gated layer - each binds against the schema at load, so a moved column is a loud
   `nuthatch check` failure, described in `semantic.toml` and surfaced in `/schema`; `nuthatch check`
   also runs `checks/*.sql` against recorded fixtures (hermetic parity/invariant framework).
+- Authored incremental entities (RFC-0041, stable in 3.0.0): an `entities.toml` declaration points
+  to one `SELECT`, its unique key and `max_rows`. Nuthatch maintains that bounded relation as blocks
+  arrive, retracts it on reorg, exposes it on `/sql` and `/derived/{entity}`, and reports its
+  applied-through watermark plus six per-entity Prometheus series. Views remain query-time SQL. An
+  entity seeds from locally stored history on restart and `dev --seal-direct` refuses a nest that
+  declares one rather than serving an empty result.
 - Balances are an incrementally-maintained view (DBSP): i128 base units serialised as decimal
   strings, a reorg is a retraction, and the view replays from stored facts on restart.
 - `dev --seal-direct` writes finalized history straight to Parquet, bypassing the hot store, while
@@ -187,11 +193,18 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v2.7.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v3.0.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
-`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:2.7.0`, `:2.7.0-scaled`, `:latest`).
+`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.0.0`, `:3.0.0-scaled`, `:latest`).
 
-**2.7.0 makes `[[calls]]` and `--seal-direct` compatible.** It also narrows and retries the factory
+**3.0.0 makes authored incremental entities stable.** A nest can declare a bounded keyed relation in
+`entities.toml`, maintained as blocks arrive and queryable through `/sql` and `/derived`. Existing
+nests remain a binary-swap upgrade; adding an entity seeds local history on restart, and
+`--seal-direct` refuses an entity-bearing nest. Every release artifact carries a GitHub
+build-provenance attestation, verified with `gh attestation verify <tarball> --repo
+nightswatchhq/nuthatch`.
+
+**2.7.0 made `[[calls]]` and `--seal-direct` compatible.** It also narrows and retries the factory
 fetch for newly discovered children on a provider cap, gives declared-but-unfired events empty typed
 tables, repairs stale schema columns from the live registry, probes all contracts in `doctor --dir`,
 parallelises timestamp retry splits, and redacts state-RPC credentials from benchmark output. The old
@@ -257,7 +270,7 @@ mount and unmount with no co-tenant restart (RFC-0027), `eth_getLogs` range-cont
 the `[extract]` surface (RFC-0014 slice 0 - decode, schemas and volume guard; extraction itself
 still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-manifest scaffolding
 (RFC-0038), and distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
-leases, and an independently-scaled query-FE tier). v2.7.0 is the current release, with prebuilt
+leases, and an independently-scaled query-FE tier). v3.0.0 is the current release, with prebuilt
 binaries and container images - one embedded, one `-scaled`.
 
 **A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`): no new capability this year,

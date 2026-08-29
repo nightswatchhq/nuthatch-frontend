@@ -1,6 +1,6 @@
 ---
 title: "5. Reading the index"
-description: "Raw tables, authored views, HTTP and SQL, with no invented claim of universal subgraph parity."
+description: "Raw tables, query-time views, maintained entities, HTTP and SQL."
 order: 6
 ---
 
@@ -42,6 +42,23 @@ distinction this section is drawing survives intact. Nuthatch makes the event-de
 dependable, and it does not perform other forms of data acquisition behind the reader's back - it
 performs them in front of the reader, or not at all.
 
+## An answer that is already computed
+
+For a question that is expensive, repeated, and naturally keyed, Nuthatch 3.0 adds a third surface:
+an authored incremental entity. Its `SELECT` is deliberately restricted, declared with a key and a
+row bound in `entities.toml`, then maintained as each block arrives. The relationship is not a cached
+view. A reorganisation submits the removed facts as retractions, and the maintained answer retracts
+with them.
+
+This changes where the cost falls. A normal view is free until a reader asks, and is the correct
+default. An entity reserves memory whether it is queried or not, and makes every incoming block pay a
+small update cost. The payoff is that a reader need not fold all sealed history again. On Lodestar, the
+same 82-row rewards result moved from 2.15 seconds at p50 as a view to 87.7 ms as an entity.
+
+That comes with an operator's obligations. The declared maximum rows is a hard admission bound, a
+fault quarantines rather than serving a frozen answer, and a restart seeds the entity from locally
+stored facts before serving it. The [entities guide](/docs/build/entities/) spells out those limits.
+
 ## Serving safely
 
 The SQL endpoint is read-only and bounded. It has a concurrency semaphore, a request timeout, a
@@ -56,7 +73,7 @@ is important not to describe the whole server as “read-only” merely because 
 administrator can make changes, so the administrative listener needs the corresponding protection.
 
 MCP and semantic descriptions provide more guided access for agents and tools. They are not a
-second data model. They describe and query the same underlying tables and views.
+second data model. They describe and query the same underlying tables, views and entities.
 
 ## A good consumer contract
 

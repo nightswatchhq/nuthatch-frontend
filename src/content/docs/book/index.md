@@ -9,7 +9,7 @@ which command and setting to use. This book explains why the machine is shaped a
 invariants it protects, and what each boundary buys you when something goes wrong at three in the
 morning.
 
-It describes Nuthatch 2.7.0. It is deliberately grounded in the running implementation, not a
+It describes Nuthatch 3.0.0. It is deliberately grounded in the running implementation, not a
 design sketch for a future product. Where the system has a limitation, it is named. A system that
 is honest about its edge is more useful than one that claims to be a universal solvent.
 
@@ -31,22 +31,24 @@ the manual gives you the precise TOML, route and command spelling.
 3. [The cursor](/docs/book/the-cursor/) - following a chain without confusing a temporary tip for
    history.
 4. [Storage and sealing](/docs/book/storage-and-sealing/) - hot data, cold data, finality and SQL.
-5. [Reading the index](/docs/book/reading-the-index/) - tables, views, APIs and the boundary of
+5. [Reading the index](/docs/book/reading-the-index/) - tables, views, entities, APIs and the boundary of
    event-derived truth.
-6. [Identity, upgrades and reuse](/docs/book/identity-upgrades-and-reuse/) - why package identity
+6. [Maintaining an answer](/docs/book/maintaining-an-answer/) - when an aggregate belongs in the
+   indexing path, and what it costs.
+7. [Identity, upgrades and reuse](/docs/book/identity-upgrades-and-reuse/) - why package identity
    and data identity are separate things.
-7. [The runtime](/docs/book/the-runtime/) - many nests, tenants, cursors and scaled workers.
-8. [Operating a truthful index](/docs/book/operating-a-truthful-index/) - verification, security,
+8. [The runtime](/docs/book/the-runtime/) - many nests, tenants, cursors and scaled workers.
+9. [Operating a truthful index](/docs/book/operating-a-truthful-index/) - verification, security,
    failure isolation and the questions worth asking before trusting a number.
 
 The appendices slow the camera down over three mechanisms which are easy to describe quickly and
 quite another matter to implement correctly:
 
-9. [One log, end to end](/docs/book/one-log-end-to-end/) - from an RPC response to a durable query
+10. [One log, end to end](/docs/book/one-log-end-to-end/) - from an RPC response to a durable query
    result.
-10. [A reorganisation, walked through](/docs/book/a-reorganisation-walked-through/) - rollback at
+11. [A reorganisation, walked through](/docs/book/a-reorganisation-walked-through/) - rollback at
    the hot boundary, and why a finality violation halts rather than guesses.
-11. [A lease handover, walked through](/docs/book/a-lease-handover-walked-through/) - the fencing
+12. [A lease handover, walked through](/docs/book/a-lease-handover-walked-through/) - the fencing
    rule that makes two scaled workers safe.
 
 The chapters are intended to stand up to a close read. The [RFC archive](/docs/contributing/rfcs/)

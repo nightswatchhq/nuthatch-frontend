@@ -4,7 +4,7 @@ description: The one config file a nest has - the [nest] header and one or more 
 order: 1
 ---
 
-A nest has exactly one config file: `nuthatch.toml`. `init` generates it from a contract address; you
+A nest starts with `nuthatch.toml`. `init` generates it from a contract address; you
 edit it to add contracts, events, factories, and the optional compliance and webhook stages. Everything
 else in a nest (`schema.json`, `llms.txt`) is *derived* from it - regenerate with `nuthatch schema`.
 
@@ -57,6 +57,8 @@ One block per contract. Repeat it to index many contracts in one nest.
 - `[[templates]]` + `[[factories]]` - index dynamically discovered children. See [Factories](/docs/build/factories/).
 - `[screening]` + `[flags]` + `[[alerts]]` - the compliance pack. See [Compliance pack](/docs/build/compliance/).
 - `[[webhooks]]` - POST sealed rows to a URL. See [Webhooks](/docs/build/webhooks/).
+- `entities.toml` - bounded keyed relations maintained as blocks arrive. See [Authored incremental
+  entities](/docs/build/entities/).
 
 Absent stages cost nothing - a nest with none of them is a plain, fast log indexer.
 
