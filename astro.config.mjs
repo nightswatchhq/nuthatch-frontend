@@ -15,4 +15,14 @@ export default defineConfig({
   // Astro sends no telemetry when ASTRO_TELEMETRY_DISABLED is set; we also
   // disable it in the build script environment. No client runtime is shipped.
   devToolbar: { enabled: false },
+  markdown: {
+    // Two themes, neither of them the default: Shiki then emits every token
+    // colour as --shiki-light / --shiki-dark rather than a hard inline colour,
+    // which is what global.css switches on. With a single theme the light
+    // toggle left dark-theme token colours sitting on a near-white ground.
+    shikiConfig: {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
+    },
+  },
 });

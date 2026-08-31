@@ -62,8 +62,8 @@
   --border:      #eaeaea;
   --border-hi:   rgba(0, 0, 0, 0.14);
   --text:        #2f3437;
-  --text-muted:  #787774;
-  --text-faint:  #9a968e;
+  --text-muted:  #57554f;   /* 7.3:1 on --bg; #787774 was 4.4:1 and read washed */
+  --text-faint:  #6e6b64;   /* 5.2:1 - metadata, still comfortably legible */
   --accent:      #1f6c9f;
   --accent-ink:  #1a5680;
   --rust:        #a85a38;
@@ -200,7 +200,7 @@ kbd {
   font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
   font-size: 0.86rem;
   line-height: 1.7;
-  background: transparent !important;
+  background: var(--bg-code) !important;
   scrollbar-width: thin;
 }
 .astro-code, .astro-code span { color: var(--shiki-dark); }
