@@ -47,16 +47,49 @@ else
 fi
 
 echo
-echo "the four that have bitten before, checked explicitly:"
-for probe in \
-  'src/pages/index.astro|hero tag' \
-  'src/pages/install.astro|install page + docker tag' \
-  'public/llms.txt|what agents read' \
-  'public/llms-full.txt|what agents read'
-do
-  f=${probe%%|*}; what=${probe##*|}
-  if [ -f "$f" ]; then
-    if grep -q "$WANT" "$f"; then printf "  OK      %-26s (%s)\n" "$f" "$what"
-    else                          printf "  MISSING %-26s (%s)  <-- states no current version\n" "$f" "$what"; fi
+echo "the four that have bitten before, checked at the exact line that carries the claim:"
+#
+# **Why these probe a line and not a file.** Until 2026-09-02 each probe was `grep -q "$WANT" "$f"`:
+# does this file mention the current version anywhere. That is not the claim. `index.astro` reported
+# **OK** while its hero tag said `v3.0.0` and the release was `3.1.0`, because `$WANT` was used
+# unescaped, so `3.1.0` is a regex whose dots match anything, and it matched `3-1.0` inside an SVG
+# path coordinate on line 46. A check written *because* a release pass missed the hero tag was
+# certifying that hero tag on the strength of vector geometry.
+#
+# Two faults, both fixed here: the version is matched literally with `grep -F`, and each probe reads
+# the line that makes the claim rather than the file that contains it.
+fail=0
+probe() {  # probe <file> <what> <grep-args...>  - the matched line must carry $WANT literally
+  local f=$1 what=$2; shift 2
+  [ -f "$f" ] || return 0
+  local line
+  line=$(grep -m1 "$@" "$f" 2>/dev/null)
+  if [ -z "$line" ]; then
+    printf "  BROKEN  %-26s (%s)  <-- the probe matched nothing; the page changed shape\n" "$f" "$what"
+    fail=1
+  elif printf '%s' "$line" | grep -qF "$WANT"; then
+    printf "  OK      %-26s (%s)\n" "$f" "$what"
+  else
+    printf "  STALE   %-26s (%s)\n" "$f" "$what"
+    printf "          %s\n" "$(printf '%s' "$line" | cut -c1-96)"
+    fail=1
   fi
-done
+}
+
+probe src/pages/index.astro  "hero tag"                    -E 'class="tag"'
+probe src/pages/install.astro "install page description"    -E '^  description="Install Nuthatch'
+probe public/llms.txt         "what agents read"            -E '^MIT OR Apache-2.0\. Status:'
+probe public/llms-full.txt    "what agents read"            -E 'Status: \*\*v'
+
+echo
+if [ "$fail" -ne 0 ]; then
+  echo "FAIL: the site advertises a version that is not $WANT."
+  echo
+  echo "This is not cosmetic. A stale version on the hero tag or in llms.txt points readers and"
+  echo "coding agents at a build we may have shipped a security fix past. Fix the lines above, then"
+  echo "re-run. A BROKEN probe means the page was restructured and the probe needs re-pointing -"
+  echo "treat that as a failure too, because a probe that matches nothing is the one that let"
+  echo "v1.0.2 sit in llms.txt for four majors."
+  exit 1
+fi
+echo "every checked claim states $WANT."
