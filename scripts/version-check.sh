@@ -4,6 +4,9 @@
 #   ./scripts/version-check.sh            # checks against the latest GitHub release
 #   ./scripts/version-check.sh 2.5.0      # checks against a version you name
 #
+# CI (.github/workflows/version-check.yml) always passes the version as $1, after a fetch
+# that is itself allowed to fail the job. Do not add a skip path.
+#
 # Written after 2026-08-15, when a release pass took three attempts. The first missed `llms.txt`
 # entirely (it still said v1.0.2 - four majors stale, in the file coding agents read). The second
 # missed the **hero tag on the homepage**, the single most prominent version string on the site,
@@ -47,7 +50,7 @@ else
 fi
 
 echo
-echo "the four that have bitten before, checked at the exact line that carries the claim:"
+echo "current-release claims, checked at the exact line that carries each one:"
 #
 # **Why these probe a line and not a file.** Until 2026-09-02 each probe was `grep -q "$WANT" "$f"`:
 # does this file mention the current version anywhere. That is not the claim. `index.astro` reported
@@ -76,10 +79,15 @@ probe() {  # probe <file> <what> <grep-args...>  - the matched line must carry $
   fi
 }
 
-probe src/pages/index.astro  "hero tag"                    -E 'class="tag"'
-probe src/pages/install.astro "install page description"    -E '^  description="Install Nuthatch'
-probe public/llms.txt         "what agents read"            -E '^MIT OR Apache-2.0\. Status:'
-probe public/llms-full.txt    "what agents read"            -E 'Status: \*\*v'
+probe src/pages/index.astro            "hero tag"                  -E 'class="tag"'
+probe src/pages/install.astro           "install page description"  -E '^  description="Install Nuthatch'
+probe src/pages/example.astro           "worked example"            -E 'current, executable path'
+probe src/layouts/DocsLayout.astro      "docs verification"         -E 'Checked against Nuthatch'
+probe src/layouts/BookLayout.astro      "book kicker"               -E 'class="book-kicker"'
+probe src/content/docs/book/index.md    "book describes"            -E 'It describes Nuthatch'
+probe src/pages/book/print.astro        "print edition version"     -E '<span>Version '
+probe public/llms.txt                   "what agents read"          -E '^MIT OR Apache-2.0\. Status:'
+probe public/llms-full.txt              "what agents read"          -E 'Status: \*\*v'
 
 echo
 if [ "$fail" -ne 0 ]; then

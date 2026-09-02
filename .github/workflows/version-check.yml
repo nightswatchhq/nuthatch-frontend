@@ -1,0 +1,61 @@
+# Does the site advertise the nuthatch release that actually exists?
+#
+# scripts/version-check.sh exists because a release pass once missed the hero tag, then certified
+# that stale tag on the strength of an SVG path coordinate. Until this file landed, nothing ran
+# it. A check that cannot fail is not a check, and a check nobody runs is the same shape.
+#
+# Two steps, on purpose. Fetching the latest GitHub release is the part the network can refuse.
+# If that fetch fails, this job fails: there is no continue-on-error, no skip, no "assume 3.1.0".
+# The version is then passed as an argument so the script is judging a value we actually obtained,
+# not retrying the same API call with a softer failure.
+name: version-check
+
+on:
+  # Unfiltered: a `branches:` list on pull_request matches the PR's *base*, so a stacked PR
+  # targeting anything other than main would run zero jobs and read as green. Same lesson as
+  # nightswatchhq/nuthatch#454.
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: version-check-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  version-check:
+    name: advertised version matches current release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: read the current nuthatch release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=$(curl -fsS -m 20 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/nightswatchhq/nuthatch/releases/latest)
+          tag=$(printf '%s' "$body" | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -1)
+          if [ -z "$tag" ]; then
+            echo "::error::GitHub returned no tag_name for nightswatchhq/nuthatch latest release"
+            exit 1
+          fi
+          echo "tag=v${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag}" >> "$GITHUB_OUTPUT"
+          echo "latest nuthatch release is v${tag}"
+
+      - name: advertised version matches current release
+        shell: bash
+        run: ./scripts/version-check.sh "${{ steps.release.outputs.version }}"
