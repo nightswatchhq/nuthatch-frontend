@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v3.0.0**. Stability is a promise, not a claim of completeness: no
+MIT OR Apache-2.0. Status: **v3.1.0**. Stability is a promise, not a claim of completeness: no
 CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
 upgrading stays a binary swap with no data migration. This file separates what the binary does today
 from the design targets, so a model does not present unbuilt features as present-tense fact.
@@ -193,7 +193,7 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v3.0.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v3.1.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
 `control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.0.0`, `:3.0.0-scaled`, `:latest`).
 
@@ -270,7 +270,7 @@ mount and unmount with no co-tenant restart (RFC-0027), `eth_getLogs` range-cont
 the `[extract]` surface (RFC-0014 slice 0 - decode, schemas and volume guard; extraction itself
 still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-manifest scaffolding
 (RFC-0038), and distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
-leases, and an independently-scaled query-FE tier). v3.0.0 is the current release, with prebuilt
+leases, and an independently-scaled query-FE tier). v3.1.0 is the current release, with prebuilt
 binaries and container images - one embedded, one `-scaled`.
 
 **A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`): no new capability this year,

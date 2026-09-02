@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v3.0.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Authored incremental entities, provenance-attested release artifacts, portable nests and fault quarantine."
+  description="Install Nuthatch v3.1.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Authored incremental entities, provenance-attested release artifacts, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,7 +19,11 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-          <strong>v3.0.0 is out.</strong> A nest can now declare an authored incremental entity in
+          <strong>v3.1.0 is out</strong>, carrying a wasmtime 46.0.3 security update (RUSTSEC-2026-0268,
+          RUSTSEC-2026-0269) and two production defects that only measurement found: a
+          <code>tip_lag_blocks</code> gauge that read 0 on a lagging nest, so no alert could fire,
+          and a read-only nest reporting <code>ready:false</code>. Since <strong>v3.0.0</strong>, a
+          nest can declare an authored incremental entity in
           <code>entities.toml</code>: a keyed relation maintained as blocks arrive instead of
           recomputed on every query. The binary swap remains drop-in for existing nests - no config
           migration, data migration or re-index. Adding an entity is the deliberate exception: the
@@ -55,7 +59,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:3.0.0-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:3.1.0-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.

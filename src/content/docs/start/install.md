@@ -32,7 +32,7 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:3.0.0 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:3.1.0 --version
 ```
 
 `linux/amd64` only for now. The image carries the **same binary attached to the GitHub Release**, so
