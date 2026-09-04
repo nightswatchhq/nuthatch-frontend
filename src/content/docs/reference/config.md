@@ -15,7 +15,7 @@ makes `init --from` and `nest load` safe.
 ```toml
 [nest]
 name = "usdc"                 # nest name (also the runtime mount name)
-chain = "mainnet"             # mainnet | arbitrum-one | base | bsc | polygon | gnosis | optimism
+chain = "mainnet"             # mainnet | arbitrum-one | base | bsc | polygon | gnosis | optimism | monad
 chain_id = 1
 rpc_urls = ["https://…"]      # tried in order, with failover
 schema_version = 1            # managed by nuthatch
@@ -64,10 +64,9 @@ registry build.
 
 ### Any other EVM chain
 
-Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis and Optimism are **built in** - keyless
-public endpoints, a tuned `eth_getLogs` window and chain-appropriate finality. `init` probes
-Ethereum, Arbitrum One and Base by bytecode when you omit `--chain`; name the others explicitly
-with `--chain polygon`. Public endpoints are measured, not assumed - and a measurement is a
+Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis, Optimism and Monad are **built in** -
+keyless public endpoints, a tuned `eth_getLogs` window and chain-appropriate finality. `init` probes
+all eight by bytecode when you omit `--chain`, or name one explicitly with `--chain polygon`. Public endpoints are measured, not assumed - and a measurement is a
 snapshot, not a property, so run `nuthatch doctor --rpc <url>` before trusting a long backfill to
 any of them.
 

@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v3.1.0**. Stability is a promise, not a claim of completeness: no
+MIT OR Apache-2.0. Status: **v3.3.0**. Stability is a promise, not a claim of completeness: no
 CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
 upgrading stays a binary swap with no data migration. This file separates what the binary does today
 from the design targets, so a model does not present unbuilt features as present-tense fact.
@@ -15,7 +15,7 @@ Tagline: "Be your own indexer."
 
 ## What it does today
 
-- `nuthatch init 0xAddr [0xAddr…] [--chain <mainnet|arbitrum-one|base|bsc|polygon|gnosis|optimism>]`
+- `nuthatch init 0xAddr [0xAddr…] [--chain <mainnet|arbitrum-one|base|bsc|polygon|gnosis|optimism|monad>]`
   resolves each contract's
   ABI (Sourcify, then an Etherscan-class API; EIP-1967/legacy-OZ proxies resolved) and scaffolds a
   multi-contract nest: `nuthatch.toml`, `abis/`, a `schema.json`, a `semantic.toml` (per-nest
@@ -115,8 +115,8 @@ Tagline: "Be your own indexer."
   by `GET /nests` (live per-nest health merged per request), runtime-root and per-nest `/ready`, and the
   `nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` metrics.
   `--fail-fast` restores exit-on-first-fault for CI.
-- Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100)
-  and Optimism (10) are built in, with keyless public endpoints, a tuned `eth_getLogs` window, and
+- Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100),
+  Optimism (10) and Monad (143) are built in, with keyless public endpoints, a tuned `eth_getLogs` window, and
   finality as a per-chain policy. **Any other EVM chain
   also works** by supplying `chain_id` + `rpc_urls` by hand (`dev`, `sql`, `bench`, `serve` are
   chain-agnostic; `init`/`add` are not, since ABI resolution is chain-gated) - an unlisted chain
@@ -193,7 +193,7 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v3.1.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v3.3.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
 `control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.0.0`, `:3.0.0-scaled`, `:latest`).
 
@@ -255,8 +255,8 @@ tables are fresh to the tip.
 
 `/roadmap` is generated from the source repo, not from marketing copy: the README's working-now
 table and progress log are the source of truth for what is shipped, and the numbered RFCs under
-`docs/rfcs/` for what is planned. Shipped: the embedded pipeline end to end, nests, seven built-in
-chains (Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis, Optimism), the correctness-gated
+`docs/rfcs/` for what is planned. Shipped: the embedded pipeline end to end, nests, eight built-in
+chains (Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis, Optimism, Monad), the correctness-gated
 seal-direct and pipelined backfill paths (RFC-0004), the operator surface (`/metrics`, `/sql` guards, graceful
 shutdown), factory/dynamic discovery (RFC-0009, it indexes Uniswap), the compliance pack (RFC-0008:
 screening, flags, exposure, signed audit), a local admin UI + webhooks (RFC-0010), content-addressed
@@ -270,7 +270,7 @@ mount and unmount with no co-tenant restart (RFC-0027), `eth_getLogs` range-cont
 the `[extract]` surface (RFC-0014 slice 0 - decode, schemas and volume guard; extraction itself
 still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-manifest scaffolding
 (RFC-0038), and distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
-leases, and an independently-scaled query-FE tier). v3.1.0 is the current release, with prebuilt
+leases, and an independently-scaled query-FE tier). v3.3.0 is the current release, with prebuilt
 binaries and container images - one embedded, one `-scaled`.
 
 **A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`): no new capability this year,
