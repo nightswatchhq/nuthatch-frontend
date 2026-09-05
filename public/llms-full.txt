@@ -349,5 +349,6 @@ kind; non-EVM chains before EVM is airtight; trusted-execution attestation or ze
 - Who runs Nuthatch (personas): https://www.nuthatch-indexer.com/stories
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Manifesto: https://www.nuthatch-indexer.com/manifesto
+- Nuthatch and The Graph (complements, not competitors): https://www.nuthatch-indexer.com/the-graph
 - Source, docs, discussions: https://github.com/nightswatchhq/nuthatch
 - Licence: MIT OR Apache-2.0

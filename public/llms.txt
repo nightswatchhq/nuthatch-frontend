@@ -290,6 +290,7 @@ README progress log when the two disagree.
 - Who runs Nuthatch (personas): https://www.nuthatch-indexer.com/stories
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Manifesto: https://www.nuthatch-indexer.com/manifesto
+- Nuthatch and The Graph (complements, not competitors): https://www.nuthatch-indexer.com/the-graph
 - Source and docs: https://github.com/nightswatchhq/nuthatch
 - Full description for models: https://www.nuthatch-indexer.com/llms-full.txt
 - Licence: MIT OR Apache-2.0

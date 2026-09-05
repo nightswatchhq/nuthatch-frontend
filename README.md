@@ -34,6 +34,7 @@ src/
     install.astro        expanded install instructions + verification
     example.astro        worked example: a Graph Horizon subgraph rebuilt as a nest
     manifesto.astro      the essay
+    the-graph.astro      how Nuthatch and The Graph complement each other
   styles/global.css      design tokens (dark default + light) and shared styles
 astro.config.mjs         static output, inlined CSS, compressed HTML
 wrangler.toml            static-host config (Cloudflare Pages); production is Vercel
