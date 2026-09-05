@@ -1,5 +1,29 @@
 ---
 import Mark from './Mark.astro';
+
+// Top-level links stay flat; the rest fold into two groups. Each group is a CSS-only dropdown on
+// desktop (hover or focus-within, zero JavaScript, like the theme toggle) and a labelled section of
+// the hamburger list on mobile.
+const groups = [
+  {
+    label: 'Docs',
+    links: [
+      { href: '/docs', text: 'Documentation' },
+      { href: '/docs/book', text: 'Book' },
+      { href: '/example', text: 'Worked example' },
+      { href: '/nests', text: 'Nests' },
+    ],
+  },
+  {
+    label: 'Project',
+    links: [
+      { href: '/stories', text: 'Stories' },
+      { href: '/roadmap', text: 'Roadmap' },
+      { href: '/manifesto', text: 'Manifesto' },
+      { href: '/the-graph', text: 'Nuthatch & The Graph' },
+    ],
+  },
+];
 ---
 <header class="nav">
   <div class="wrap nav-inner">
@@ -16,14 +40,23 @@ import Mark from './Mark.astro';
 
     <nav class="nav-links" aria-label="Primary">
       <a href="/install">Install</a>
-      <a href="/docs">Docs</a>
-      <a href="/docs/book">Book</a>
-      <a href="/example">Example</a>
-      <a href="/nests">Nests</a>
-      <a href="/stories">Stories</a>
-      <a href="/blog">Blog</a>
-      <a href="/roadmap">Roadmap</a>
-      <a href="/manifesto">Manifesto</a>
+      {groups.map((group, i) => (
+        <>
+        <div class="nav-group">
+          <button type="button" class="nav-group-btn" aria-haspopup="true" aria-controls={`nav-menu-${i}`}>
+            {group.label}
+            <svg class="nav-chevron" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <div class="nav-menu" id={`nav-menu-${i}`}>
+            {group.links.map((link) => <a href={link.href}>{link.text}</a>)}
+          </div>
+        </div>
+        {/* Blog sits between the two groups, so the flat links alternate with the folded ones. */}
+        {i === 0 && <a href="/blog">Blog</a>}
+        </>
+      ))}
       <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">GitHub</a>
       <!-- CSS-only theme toggle: a :has() checkbox hack, zero JavaScript. -->
       <input type="checkbox" id="theme-toggle" class="theme-input" aria-label="Switch to light theme" />
@@ -56,6 +89,30 @@ import Mark from './Mark.astro';
   .nav-links { display: flex; align-items: center; gap: clamp(0.9rem, 2.4vw, 1.6rem); }
   .nav-links a { color: var(--text-muted); font-size: 0.92rem; }
   .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+  /* Dropdown groups. The trigger is a real button so it takes keyboard focus; the menu opens on
+     hover or on focus anywhere inside the group, and closes when both leave. */
+  .nav-group { position: relative; }
+  .nav-group-btn {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font: inherit; font-size: 0.92rem; color: var(--text-muted);
+    background: none; border: 0; padding: 0; cursor: pointer;
+  }
+  .nav-chevron { width: 10px; height: 10px; transition: transform 0.18s var(--ease); }
+  .nav-group:hover .nav-group-btn, .nav-group:focus-within .nav-group-btn { color: var(--text); }
+  .nav-group:hover .nav-chevron, .nav-group:focus-within .nav-chevron { transform: translateY(1px); }
+  .nav-menu {
+    display: none; flex-direction: column; gap: 0.1rem;
+    position: absolute; top: calc(100% + 0.55rem); left: -0.5rem; min-width: 12.5rem;
+    background: var(--bg-elev); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.4rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  }
+  /* Invisible bridge over the gap between trigger and menu, so the pointer can cross it. */
+  .nav-menu::before { content: ''; position: absolute; left: 0; right: 0; top: -0.65rem; height: 0.65rem; }
+  .nav-group:hover .nav-menu, .nav-group:focus-within .nav-menu { display: flex; }
+  .nav-menu a { padding: 0.5rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap; }
+  .nav-menu a:hover, .nav-menu a:focus-visible { background: var(--bg-inset); color: var(--text); }
 
   /* Hamburger - hidden on desktop, a CSS-only toggle on mobile. */
   .nav-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
@@ -91,7 +148,8 @@ import Mark from './Mark.astro';
   :root[data-theme='light'] .theme-word--dark { display: none; }
   :root[data-theme='light'] .theme-word--light { display: inline; }
 
-  /* Mobile: collapse the links into a dropdown behind the hamburger. */
+  /* Mobile: collapse the links into a dropdown behind the hamburger. Groups flatten into labelled
+     sections of the same list, so nothing needs a second tap to reach. */
   @media (max-width: 48rem) {
     .nav-burger { display: inline-flex; }
     .nav-links {
@@ -105,7 +163,20 @@ import Mark from './Mark.astro';
     :root:has(#nav-toggle:checked) .nav-links { display: flex; }
     .nav-links a { padding: 0.7rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.98rem; }
     .nav-links a:hover { background: var(--bg-inset); }
-    .theme-toggle { align-self: flex-start; margin: 0.4rem 0.8rem 0.2rem; }
+    .nav-group { display: flex; flex-direction: column; }
+    .nav-group-btn {
+      pointer-events: none; padding: 0.8rem 0.8rem 0.3rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-faint);
+    }
+    .nav-chevron { display: none; }
+    .nav-menu {
+      display: flex; position: static; min-width: 0; gap: 0;
+      background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none;
+    }
+    .nav-menu::before { display: none; }
+    .nav-menu a { padding: 0.6rem 0.8rem 0.6rem 1.4rem; white-space: normal; }
+    .theme-toggle { align-self: flex-start; margin: 0.6rem 0.8rem 0.2rem; }
     /* Burger → X when open. */
     :root:has(#nav-toggle:checked) .nav-burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
     :root:has(#nav-toggle:checked) .nav-burger span:nth-child(2) { opacity: 0; }

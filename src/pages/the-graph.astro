@@ -1,0 +1,157 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const REPO = 'https://github.com/nightswatchhq/nuthatch';
+const DS_REPO = 'https://github.com/nightswatchhq/nuthatch-ds';
+const HORIZON_NEST = 'https://github.com/nightswatchhq/horizon-nest';
+const DS_CONTRACT = 'https://arbiscan.io/address/0x647D1Fd14AF2DE3947522B74F1de5B99d317c10A';
+---
+<Layout
+  path="/the-graph"
+  title="Nuthatch & The Graph - Nuthatch"
+  description="The Graph is a network and a market for indexed data. Nuthatch is a binary that produces it. Why the two complement rather than compete: the Horizon data service, the subgraph fallback, init --from-subgraph, and the hackathon bounty."
+>
+  <section class="page">
+    <article class="wrap narrow prose">
+      <p class="section-label">Nuthatch &amp; The Graph</p>
+      <h1>Different jobs, same data</h1>
+
+      <p>
+        Nuthatch gets read, now and then, as a competitor to The Graph. It is not one, and the
+        reason is structural rather than diplomatic. The Graph is a network: a market in which
+        indexers serve subgraphs, consumers pay query fees, and the protocol arbitrates who did
+        the work honestly. Nuthatch is a binary. It turns a contract address into an indexed API
+        on whichever machine you happen to be sitting at. One is a place to buy indexed data. The
+        other is a tool for producing it. Markets do not compete with tools; they run on them.
+      </p>
+
+      <h2>The self-hosting argument</h2>
+
+      <p>
+        Saying that Nuthatch competes with The Graph is a little like saying that graph-node does.
+        Anyone has always been free to run their own graph-node, Postgres and IPFS and index their
+        own subgraph on their own hardware, and nobody has ever called that a rival protocol. It is
+        the protocol's own software, self-hosted. Nuthatch is the same shape with the operational
+        weight taken out: one static binary, an embedded store, no Docker, nothing to rent. A team
+        that runs a nest for the contracts it wrote is not a lost customer of the network, any more
+        than a team running its own graph-node is. Most of them were never going to buy that index
+        from anyone.
+      </p>
+
+      <p>
+        The two projects also agree about the thing that matters. The Graph's answer to a
+        centralised data provider is to decentralise who serves you. Nuthatch's answer is that, for
+        the contracts you own, you need not be served at all. Both are ways of not trusting one
+        company's endpoint. Neither is wrong, and they are not exclusive: run your own nest for the
+        protocol you build, and query the network for the fifteen thousand contracts you do not.
+      </p>
+
+      <h2>Where they already meet</h2>
+
+      <p>
+        This is not a hypothetical courtesy. The touchpoints exist, and most of them are on chain
+        or in a repository you can open.
+      </p>
+
+      <ul class="meets">
+        <li>
+          <strong>Nuthatch is a Graph Horizon data service.</strong> The
+          <a href={DS_REPO} rel="noopener">Nuthatch Data Service</a> is a UUPS Horizon data
+          service on Arbitrum One, with a Rust gateway that validates TAP receipts, rejects
+          replays and collects RAVs. A provider advertises a nest identity, a query mode and an
+          endpoint on chain, so a consumer buys a reproducible dataset rather than a server that
+          says it does SQL. The <a href={DS_CONTRACT} rel="noopener">contract is live</a>, the
+          first offering is <a href={HORIZON_NEST} rel="noopener">an index of Horizon itself</a>,
+          and a first bounded payment has been settled.
+          <a href="/blog/nuthatch-data-service-on-graph-horizon">The write-up</a> is candid about
+          what is still gated.
+        </li>
+        <li>
+          <strong>The worked example is a Graph subgraph, rebuilt.</strong> The example this site
+          walks through is a real Graph Horizon subgraph reproduced as a nest, checked field by
+          field against the gateway. A public dashboard serves two of its panels from that nest
+          today, next to the panels the gateway still serves.
+          <a href="/example">See the example</a>, or <a href="/stories">the story behind it</a>.
+        </li>
+        <li>
+          <strong>A nest is a fallback for a stuck subgraph.</strong> When a subgraph has no
+          indexer, falls behind, or goes unreachable, the event-derived part of its data can keep
+          being served from a nest until it recovers. The docs describe
+          <a href="/docs/build/subgraph-fallback">how to draw that boundary</a> before the outage
+          rather than during it, and
+          <a href="/blog/no-subgraph-no-problem">the blog</a> has the first case where it was needed.
+        </li>
+        <li>
+          <strong><code>init --from-subgraph</code> reads a subgraph manifest.</strong> Point
+          Nuthatch at a manifest CID and it maps each data source to a contract, vendors the ABIs
+          the manifest pins, and carries the start blocks and event handlers across. It was
+          <a href={REPO + '/issues/241'} rel="noopener">the project's first external contribution</a>,
+          from someone inside the Graph community.
+        </li>
+        <li>
+          <strong>The Graph named Nuthatch in a hackathon bounty.</strong> ETHGlobal Lisbon's Best
+          AI Tooling track listed a self-hosted indexer such as Nuthatch as an accepted data
+          backend, alongside Subgraph Studio, in the qualification rules rather than the examples.
+          <a href="/blog/the-graph-put-nuthatch-in-their-hackathon-bounty">Somebody wrote that sentence on purpose.</a>
+        </li>
+      </ul>
+
+      <p>
+        And the people. Nuthatch was written by people who spent years inside The Graph's ecosystem
+        and still work there. The front page carries a comparison table with The Graph in it, and
+        it states facts rather than a verdict, because the authors know rather precisely what the
+        network does well.
+      </p>
+
+      <h2>Where they part ways</h2>
+
+      <p>
+        Honesty about the seam is the point of this page, so here is what Nuthatch is not. It is
+        not a network. There is no market, no curation, no query fees in the binary, and no
+        dispute process; verification means re-executing deterministic code and getting the same
+        bytes, which is a strong property for one operator and a different property from a
+        decentralised one. It does not speak GraphQL yet; a compatibility layer for
+        subgraph-shaped clients is <a href="/roadmap">on the roadmap</a> and not in the release.
+        Contract reads and IPFS documents are pinned and verified rather than fetched freely, so a
+        subgraph that leans on either needs its query surface reviewed rather than assumed. And it
+        does not pretend to serve a hundred thousand subgraphs to strangers from one box. If your
+        application reads from protocols you do not own, across chains you do not run nodes for,
+        the network is the right tool, and Nuthatch will not argue.
+      </p>
+
+      <h2>What comes next</h2>
+
+      <p>
+        Two pieces of work point the same way. A hosted nests data service, some of it
+        community-driven, so that a team which does not want to operate a box can still buy a nest
+        through the protocol rather than from a private vendor. And the GraphQL compatibility
+        layer, so a subgraph-shaped client can point at a nest without being rewritten. Neither
+        has a date, because the roadmap promises order rather than dates. Both make a nest a
+        better citizen of the network, not a way around it.
+      </p>
+
+      <p class="signoff">
+        Run your own nest for the contracts you own. Query the network for everything else.
+        <a href="/install">Install it</a>, or
+        <a href={DS_REPO} rel="noopener">read the data service</a>.
+      </p>
+    </article>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  .prose h1 { margin-bottom: 1.8rem; }
+  .prose h2 { font-size: 1.45rem; margin: 2.6rem 0 1rem; }
+  .prose p { color: var(--text-muted); font-size: 1.08rem; line-height: 1.75; margin-bottom: 1.4rem; }
+  .prose p:first-of-type { color: var(--text); }
+  .prose code { font-size: 0.9em; }
+  .meets { list-style: none; padding: 0; margin: 0 0 1.6rem; display: flex; flex-direction: column; gap: 1rem; }
+  .meets li {
+    color: var(--text-muted); font-size: 1.02rem; line-height: 1.7;
+    padding: 1rem 1.15rem; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-elev);
+  }
+  .meets strong { color: var(--text); font-weight: 600; }
+  .signoff { color: var(--text) !important; font-weight: 500; margin-top: 2rem; }
+</style>
