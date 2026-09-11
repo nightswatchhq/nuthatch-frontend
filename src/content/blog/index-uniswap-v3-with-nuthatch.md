@@ -161,6 +161,10 @@ The indexer is free. Self-hosting is free (it runs on your laptop). The one thin
   contract call, and nuthatch's declarative core deliberately doesn't make calls, so amounts and
   prices come out in *raw* units. Join a small vendored token-decimals list to get human values and
   USD. (This is a feature, not a miss: no calls means the index is deterministic and re-runnable.)
+  *Update, September 2026: this edge is gone. Since 2.6.0 a `[[calls]]` block makes contract calls
+  pinned to a block, sampled or one per event row, and `nuthatch metadata fetch` caches decimals,
+  symbol and name. The determinism survived. See
+  [We said nuthatch would never call a contract. It does now.](/blog/closing-the-subgraph-parity-gap)*
 - **A recent slice, not all of history, by default.** Indexing every pool and swap since the 2021
   launch is a bigger backfill, a paid RPC tier or your own node. The *workflow* is identical; only the
   block range changes.
