@@ -103,8 +103,11 @@ Tagline: "Be your own indexer."
   events already indexed - no archive node, no eth_call. `nuthatch metadata fetch` calls once and
   caches the immutable reads (`decimals`/`symbol`/`name`). Tier 3 (2.6.0) is the escape hatch when a
   value genuinely cannot be derived: a `[[calls]]` block reads contract state via `eth_call` **pinned
-  to a fixed block**, so the result is reproducible rather than whatever the chain says today. Since
-  2.7.0 the streaming and every seal-direct path resolve these reads; the benchmark does so in both
+  to a fixed block**, so the result is reproducible rather than whatever the chain says today. A
+  `[[calls]]` block is either sampled (one fixed calldata every N blocks) or row-driven (RFC-0038 §3:
+  one call per row of a table at that row's block, arguments taken from the row's columns - what a
+  mapping's `balanceOf(event.params.to)` does). Since 2.7.0 the streaming and every seal-direct path
+  resolve these reads; the benchmark does so in both
   arms and requires `--state-rpc` rather than silently skipping them.
 - Adaptive MCP tool advertisement (RFC-0025): `GET /shape` reports which capabilities a nest can
   actually answer, and the MCP bridge filters `tools/list`/`prompts/list` accordingly, so an agent is

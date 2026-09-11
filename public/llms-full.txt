@@ -105,7 +105,10 @@ obstacle has been the operational weight of the tooling, which is an engineering
     `eth_call` for - no archive node, no eth_call. `nuthatch metadata fetch` calls once and caches
     the immutable reads (`decimals`/`symbol`/`name`). Tier 3 shipped in 2.6.0: a `[[calls]]` block
     reads contract state via `eth_call` **pinned to a fixed block**, so a value that genuinely cannot
-    be derived is still reproducible rather than whatever the chain says today. Since 2.7.0 all
+    be derived is still reproducible rather than whatever the chain says today. A `[[calls]]` block
+    is either sampled (one fixed calldata every N blocks) or row-driven (RFC-0038 §3: one call per
+    row of a table at that row's block, arguments from the row's columns - what a mapping's
+    `balanceOf(event.params.to)` does). Since 2.7.0 all
     streaming and seal-direct paths resolve it, and both benchmark arms require `--state-rpc` rather
     than silently skipping the work. Tier 4 (a local
     execution engine, RFC-0024) is designed and deferred.
