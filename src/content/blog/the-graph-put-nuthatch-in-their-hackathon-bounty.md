@@ -59,6 +59,10 @@ Directions we'd genuinely love to see someone take, and which map cleanly onto t
 
 Two honest caveats, because this blog doesn't do brochures: the escape-hatch WASM component story is young, and there's no calldata or IPFS ingestion yet, so if your idea needs those, check the [roadmap](https://nuthatch-indexer.com/roadmap) before you commit your weekend to it. When in doubt, ask.
 
+*Update, September 2026: both caveats are history. Calldata decode (`[extract] top_level_calls`),
+contract calls (`[[calls]]`, pinned or one per event row) and verified IPFS documents (`[[ipfs]]`)
+shipped in 2.6.0 and 2.7.0. See [the parity post](/blog/closing-the-subgraph-parity-gap).*
+
 ## We're on call
 
 For the duration of the hackathon we'll be watching [GitHub Discussions](https://github.com/nightswatchhq/nuthatch/discussions) and issues with unusual attentiveness. Sharp edges found under 36-hour pressure are the most valuable bug reports there are, and we'd rather you lose ten minutes asking than three hours guessing. If you hit a wall, open a discussion with what you ran and what it said; if you hit a genuine bug, we'll do our best to cut a fix while the weekend is still young. The deadlock war story from the last post should reassure you that we take "it just stopped" reports seriously.

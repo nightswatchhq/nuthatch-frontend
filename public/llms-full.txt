@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v3.1.0** - a promise about stability (no CLI flag, HTTP route, config key or
+own indexer." Status: **v3.6.1** - a promise about stability (no CLI flag, HTTP route, config key or
 generated column renamed or removed without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
@@ -105,7 +105,10 @@ obstacle has been the operational weight of the tooling, which is an engineering
     `eth_call` for - no archive node, no eth_call. `nuthatch metadata fetch` calls once and caches
     the immutable reads (`decimals`/`symbol`/`name`). Tier 3 shipped in 2.6.0: a `[[calls]]` block
     reads contract state via `eth_call` **pinned to a fixed block**, so a value that genuinely cannot
-    be derived is still reproducible rather than whatever the chain says today. Since 2.7.0 all
+    be derived is still reproducible rather than whatever the chain says today. A `[[calls]]` block
+    is either sampled (one fixed calldata every N blocks) or row-driven (RFC-0038 §3: one call per
+    row of a table at that row's block, arguments from the row's columns - what a mapping's
+    `balanceOf(event.params.to)` does). Since 2.7.0 all
     streaming and seal-direct paths resolve it, and both benchmark arms require `--state-rpc` rather
     than silently skipping the work. Tier 4 (a local
     execution engine, RFC-0024) is designed and deferred.
@@ -138,7 +141,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v3.1.0 is the current release,
+against a real provider - the event count matching Sentio's own README. v3.6.1 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -311,7 +314,7 @@ promised - order is.
 
 ## Install
 
-v3.1.0 is the current release. The installer and `cargo` fetch the latest.
+v3.6.1 is the current release. The installer and `cargo` fetch the latest.
 
 **3.0.0 makes authored incremental entities stable.** An entity declared in `entities.toml` is a
 bounded keyed relation maintained while blocks arrive, not a view recomputed at query time. Existing
