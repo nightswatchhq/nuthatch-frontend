@@ -142,6 +142,30 @@ a track like that, check before you decide which half of the split is the demo.
 And a nest on one box is one box. The network has indexers in several countries with someone paid to
 keep them up; your VPS has you. For a week that is fine. For a product it is a decision.
 
+## We subsidise hackathon projects, always
+
+If you are building on a testnet against a deadline and the quota is in the way, send us a message.
+We will build the nest, test it, and host it for the duration on our own box, at no cost and with no
+key. That is not a promotion; it is what happened this morning, and the shape of it is worth
+describing because it is the shape of every hackathon project.
+
+The builder above gave us four contract addresses on Arc Testnet and start blocks. None of the four
+was verified on the explorer, so the ABIs came from his public repository, along with his subgraph
+manifest, which told us the nine events his mappings handle and that his mappings make no contract
+calls. Across all four contracts the chain held **thirty logs in total**. He was being rate-limited
+polling thirty events. The nest scaffolded to 33 tables, every one of the twenty distinct event
+topics seen on chain matched an event in his ABIs, and six SQL views reproduce his five GraphQL
+entities and the pending-intents query his agent polls, so his app's questions have answers by the
+same names. A Sepolia twin, where his intents are actually created, caught up in three seconds. Both
+run on our Helsinki box behind a vhost with no auth and open CORS, so his browser can call them
+directly.
+
+The only thing that fought back was the RPC. Arc Testnet's public endpoints enforce a sliding quota
+that a cold start drains, and nuthatch read the resulting 429s as a range problem and gave up, which
+is now [issue #1297](https://github.com/nightswatchhq/nuthatch/issues/1297). A keyed endpoint and a
+4,000-block window made it a non-event. Subsidising a hackathon project costs us a few thousand RPC
+calls and an afternoon, and it finds bugs like that one.
+
 ## Try it
 
 The starter is at
