@@ -53,7 +53,8 @@ read the resulting 429s as "the range is too large", halved its window five time
 seconds and gave up. That is our bug, now
 [#1297](https://github.com/nightswatchhq/nuthatch/issues/1297), and it is the kind of bug a
 hackathon finds for you: public testnet endpoints are where the assumptions in an RPC client go to be
-tested. A keyed endpoint and a 4,000-block window made it a non-event.
+tested. dRPC's public Arc endpoint, which serves 5,120-block windows without complaint, and a
+4,000-block window made it a non-event.
 
 ## What he got
 
