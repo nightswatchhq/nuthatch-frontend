@@ -116,9 +116,9 @@ const meets = [
             is not a network. There is no market, no curation, no query fees in the binary, and no
             dispute process; verification means re-executing deterministic code and getting the
             same bytes, which is a strong property for one operator and a different property from
-            a decentralised one. It does not speak GraphQL yet; a compatibility layer for
-            subgraph-shaped clients is <a href="/roadmap">on the roadmap</a> and not in the
-            release. Contract reads and IPFS documents are pinned and verified rather than fetched
+            a decentralised one. It does not speak full GraphQL: 3.7.0 carries a partial read surface for
+            subgraph-shaped clients, exact for event-shaped fields and a named refusal for the rest,
+            and it is <a href="/roadmap">parked</a>. Contract reads and IPFS documents are pinned and verified rather than fetched
             freely, so a subgraph that leans on either needs its query surface reviewed rather than
             assumed. And it does not pretend to serve a hundred thousand subgraphs to strangers
             from one box. If your application reads from protocols you do not own, across chains
@@ -127,12 +127,12 @@ const meets = [
 
           <h2>What comes next</h2>
           <p>
-            Two pieces of work point the same way. A hosted nests data service, some of it
+            One piece of work points that way. A hosted nests data service, some of it
             community-driven, so that a team which does not want to operate a box can still buy a
-            nest through the protocol rather than from a private vendor. And the GraphQL
-            compatibility layer, so a subgraph-shaped client can point at a nest without being
-            rewritten. Neither has a date, because the roadmap promises order rather than dates.
-            Both make a nest a better citizen of the network, not a way around it.
+            nest through the protocol rather than from a private vendor. It has no date, because the roadmap promises order rather than dates, and it makes a nest
+            a better citizen of the network, not a way around it. The GraphQL read surface is parked:
+            an analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for
+            one field it cannot answer.
           </p>
 
           <p class="signoff">
