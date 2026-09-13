@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v3.6.1** - a promise about stability (no CLI flag, HTTP route, config key or
+own indexer." Status: **v3.7.0** - a promise about stability (no CLI flag, HTTP route, config key or
 generated column renamed or removed without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
@@ -121,6 +121,24 @@ obstacle has been the operational weight of the tooling, which is an engineering
     at `GET /nests` (live per-nest health merged per request), runtime-root and per-nest `/ready`, and
     the `nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` metrics.
     `--fail-fast` restores exit-on-first-fault for CI and deterministic tests.
+14. Publishing sealed segments (RFC-0052, 3.7.0): `nuthatch publish sync --target <dir |
+    s3://bucket/prefix>` mirrors every segment that is not provisional to `<target>/<data identity>/`,
+    writing Parquet first, then the catalogue byte for byte, then `publish.json`. `publish verify`
+    checks every published object against the local catalogue (`--deep` downloads and re-hashes each
+    one; `--etag-md5` compares ETags on a store whose ETag is the object's MD5, such as AWS S3 without
+    SSE-KMS or SSE-C, or MinIO), and `publish status` prints local and remote `sealed_through` and what
+    is still to upload, writing nothing. `dev` and `serve` publish continuously with
+    `--publish-target`, `--publish-interval` and `--publish-parallelism`; a runtime directory takes the
+    same settings per mount from `[mounts.publish]` in `mounts.toml`. The mirror runs on its own
+    thread, so a slow bucket delays the mirror and never a seal. Credentials are the usual `AWS_*`
+    variables. A published prefix is plain Parquet plus a catalogue; CI publishes to a real MinIO and
+    requires Trino's counts and sums over the prefix to match DuckDB's.
+15. `nuthatch emit dune --dir <nest> --out <dir> --source <namespace>` (RFC-0055, 3.7.0): one plain
+    DuneSQL `SELECT` per event table over `dune.<namespace>.<table>`, written offline and
+    deterministically. Each column is cast to its DuneSQL type, every wide integer keeps its exact
+    text beside it as `<name>_raw`, and implicit columns take Dune's `evt_*` names. Views, call tables
+    and block tables are not emitted. The queries push interpretation, not rows: they do not by
+    themselves put data in Dune.
 
 Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100)
 and Optimism (10) are built in - keyless public
@@ -141,7 +159,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v3.6.1 is the current release,
+against a real provider - the event count matching Sentio's own README. v3.7.0 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -149,7 +167,7 @@ with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container 
 default): **v0.9.3** fixes an **arbitrary file read** - DuckDB accepts a quoted function name and the
 guard matched only an unquoted one, so `SELECT * FROM "read_csv"('/etc/passwd')` executed, and every
 earlier release is affected - and **v0.6.2** fixes an **arbitrary file write** via `;`-stacked
-`COPY … TO`. Upgrading the binary is a plain swap: on-disk state is forward-readable and the `dev`
+`COPY … TO`. Apart from 3.7.0's two exceptions (under Install), upgrading the binary is a plain swap: on-disk state is forward-readable and the `dev`
 flags are stable, so there is no migration or re-backfill.
 
 ## Not built yet (design targets)
@@ -314,7 +332,21 @@ promised - order is.
 
 ## Install
 
-v3.6.1 is the current release. The installer and `cargo` fetch the latest.
+v3.7.0 is the current release. The installer and `cargo` fetch the latest.
+
+**3.7.0 mirrors sealed segments to a bucket and emits DuneSQL.** `nuthatch publish sync|verify|status`
+and `--publish-target` on `dev`/`serve` (RFC-0052); `nuthatch emit dune` (RFC-0055). The DuckDB memory
+walls are environment settings with unchanged defaults and refuse a query rather than shrink, new
+seals are zstd with the writer profile named in the catalogue, a declared query (`/q/{name}`) answers
+`422` when its plan could read more than 512 MiB or could rescan, and a local offchain file drop
+stores a file as an immutable snapshot outside the chain seal. The x402 counter and `nuthatch settle`
+exist only in a `--features counter` build; no release binary contains them. A nest with a ported
+`graph/schema.graphql` answers GraphQL as a partial read surface, exact or refused by name field by
+field, that is parked and is not a drop-in replacement for a subgraph. Most operators swap the binary
+and restart. The exceptions: `NUTHATCH_SQL_MAX_CONCURRENCY` above 2 refuses to start unless
+`NUTHATCH_ANALYTICS_MEMORY_LIMIT` comes down (256MB at four permits), and a nest with a fully named,
+non-indexed tuple event parameter gets a new NID and re-indexes (#1364). Downgrading to 3.6.1 after
+running 3.7.0 is not safe.
 
 **3.0.0 makes authored incremental entities stable.** An entity declared in `entities.toml` is a
 bounded keyed relation maintained while blocks arrive, not a view recomputed at query time. Existing

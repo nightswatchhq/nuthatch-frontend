@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v3.6.1**. Stability is a promise, not a claim of completeness: no
+MIT OR Apache-2.0. Status: **v3.7.0**. Stability is a promise, not a claim of completeness: no
 CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
 upgrading stays a binary swap with no data migration. This file separates what the binary does today
 from the design targets, so a model does not present unbuilt features as present-tense fact.
@@ -118,6 +118,18 @@ Tagline: "Be your own indexer."
   by `GET /nests` (live per-nest health merged per request), runtime-root and per-nest `/ready`, and the
   `nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` metrics.
   `--fail-fast` restores exit-on-first-fault for CI.
+- Publishing sealed segments (RFC-0052, 3.7.0): `nuthatch publish sync --target <dir |
+  s3://bucket/prefix>` mirrors every segment that is not provisional to `<target>/<data identity>/`;
+  `publish verify` checks each object against the local catalogue (`--deep` re-downloads and
+  re-hashes; `--etag-md5` compares ETags on a store whose ETag is the object's MD5), and `publish
+  status` reports what is still to upload and writes nothing. `dev` and `serve` mirror continuously
+  with `--publish-target`, `--publish-interval` and `--publish-parallelism`, on their own thread, so a
+  slow bucket delays the mirror and never a seal. Credentials are the usual `AWS_*` variables. A
+  published prefix is plain Parquet plus a catalogue; CI checks Trino against DuckDB over one.
+- `nuthatch emit dune --dir <nest> --out <dir> --source <namespace>` (RFC-0055, 3.7.0) writes one plain
+  DuneSQL `SELECT` per event table over `dune.<namespace>.<table>`, offline and deterministically,
+  keeping every wide integer's exact text beside it as `<name>_raw`. The queries do not by themselves
+  put data in Dune; `--source` names the namespace the rows were uploaded into.
 - Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100)
   and Optimism (10) are built in, with keyless public endpoints, a tuned `eth_getLogs` window, and
   finality as a per-chain policy. **Any other EVM chain
@@ -196,9 +208,22 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v3.6.1 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v3.7.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
-`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.6.1`, `:3.6.1-scaled`, `:latest`).
+`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.7.0`, `:3.7.0-scaled`, `:latest`).
+
+**3.7.0 mirrors sealed segments to a bucket and emits DuneSQL.** `nuthatch publish sync|verify|status`
+and `--publish-target` on `dev`/`serve` (RFC-0052); `nuthatch emit dune` (RFC-0055). The DuckDB memory
+walls are environment settings with unchanged defaults, new seals are zstd, a declared query
+(`/q/{name}`) answers `422` when its plan could read more than 512 MiB, and a local offchain file drop
+stores a file as an immutable snapshot. The x402 counter and `nuthatch settle` exist only in a
+`--features counter` build; no release binary contains them. A nest with a ported
+`graph/schema.graphql` answers GraphQL as a partial read surface, exact or refused by name field by
+field, that is parked and is not a drop-in replacement for a subgraph. Most operators swap the binary
+and restart. The exceptions: `NUTHATCH_SQL_MAX_CONCURRENCY` above 2 refuses to start unless
+`NUTHATCH_ANALYTICS_MEMORY_LIMIT` comes down (256MB at four permits), and a nest with a fully named,
+non-indexed tuple event parameter gets a new NID and re-indexes (#1364). Downgrading to 3.6.1 after
+running 3.7.0 is not safe.
 
 **3.0.0 makes authored incremental entities stable.** A nest can declare a bounded keyed relation in
 `entities.toml`, maintained as blocks arrive and queryable through `/sql` and `/derived`. Existing
@@ -213,7 +238,7 @@ tables, repairs stale schema columns from the live registry, probes all contract
 parallelises timestamp retry splits, and redacts state-RPC credentials from benchmark output. The old
 seal-direct multipliers were withdrawn because their baseline came from an obsolete harness path.
 
-Upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
+Apart from the 3.7.0 exceptions above, upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
 no migration or re-backfill is involved. Minimum supported Rust version is **1.95**.
 
 **Two security patches are worth knowing about if you advise anyone on a version.** Both are on the
@@ -272,8 +297,9 @@ mount and unmount with no co-tenant restart (RFC-0027), `eth_getLogs` range-cont
 (RFC-0032), identity and grafting (RFC-0033), the query allowlist (RFC-0034), calldata decode and
 the `[extract]` surface (RFC-0014 slice 0 - decode, schemas and volume guard; extraction itself
 still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-manifest scaffolding
-(RFC-0038), and distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
-leases, and an independently-scaled query-FE tier). v3.6.1 is the current release, with prebuilt
+(RFC-0038), distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
+leases, and an independently-scaled query-FE tier), sealed segments mirrored to a bucket (RFC-0052),
+and DuneSQL queries emitted for a nest (RFC-0055). v3.7.0 is the current release, with prebuilt
 binaries and container images - one embedded, one `-scaled`.
 
 **A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`): no new capability this year,

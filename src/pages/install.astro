@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v3.6.1: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Authored incremental entities, provenance-attested release artifacts, portable nests and fault quarantine."
+  description="Install Nuthatch v3.7.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Authored incremental entities, provenance-attested release artifacts, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,15 +19,16 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-          <strong>v3.6.1 is out</strong>, one fix on a defect that had two production nests reporting
-          perfect health while their sealed watermark had not moved in two days: a sparse nest with a
-          single finalized row could hold <code>sealed_through</code> until twenty thousand had
-          accumulated (#1199). It closes a week of measured releases: <code>--poll-interval</code> and
-          <code>--finality-only</code> in 3.5.0 turn the RPC bill down for a nest nobody reads every
-          two seconds, 3.5.1 stops concurrent <code>/sql</code> segfaulting on a shared DuckDB spill
-          directory, and 3.6.0 memoises repeated <code>/sql</code> answers under a hash of everything
-          they read. The binary swap remains drop-in for existing nests - no config migration, data
-          migration or re-index.
+          <strong>v3.7.0 is out</strong>, and a nest can now mirror its sealed segments to a bucket as it
+          seals them: <code>nuthatch publish sync</code>, <code>verify</code> and <code>status</code>, or
+          <code>--publish-target</code> on <code>dev</code> and <code>serve</code>, readable as plain
+          Parquet from DuckDB or Trino. <code>nuthatch emit dune</code> writes a DuneSQL query for each
+          event table, the DuckDB memory walls are operator settings, new seals are zstd, and a declared
+          query is bounded by what it reads. For most operators it is still a binary swap and a restart,
+          with two exceptions: <code>NUTHATCH_SQL_MAX_CONCURRENCY</code> above 2 refuses to start until
+          <code>NUTHATCH_ANALYTICS_MEMORY_LIMIT</code> comes down (256MB at four permits), and a nest with
+          a fully named tuple event parameter re-indexes under a new identity (#1364). Downgrading to
+          3.6.1 afterwards is not safe.
         </p>
 
       <h2 class="ih">Shell script</h2>
@@ -59,7 +60,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
       <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:3.6.1-scaled</code> carries the Postgres
+        <code>:latest</code> is the embedded build. <code>:3.7.0-scaled</code> carries the Postgres
         driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
         commands. The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
