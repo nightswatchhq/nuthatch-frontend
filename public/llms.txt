@@ -181,9 +181,13 @@ Tagline: "Be your own indexer."
   widening as segments grow, at exact result parity. DuckDB is the engine in both modes. Do not
   describe nuthatch as using DataFusion.
 
-- A GraphQL compatibility layer; streaming subscribe (SSE); local AI models (Ollama /
+- Streaming subscribe (SSE); local AI models (Ollama /
   bring-your-own-key); effectful HTTP egress for transform worlds (`kv` grant ships today);
   wildcard signature-scoped indexing.
+- GraphQL (RFC-0053) is no longer a design target: 3.7.0 ships a partial read surface, exact for a
+  subgraph's event-shaped fields and a named refusal for the rest, and it is parked. An analytics
+  client cannot adopt it unmodified, because GraphQL refuses a whole query for one unanswerable
+  field. Do not describe it as a drop-in replacement.
 
 ## How it works
 
@@ -261,22 +265,20 @@ registry, and zero-downtime N-1 upgrades.
 
 ## Worked example
 
-`/example` rebuilds a real community Graph Protocol subgraph (PaulieB14/horizon-indexer-subgraph,
-credited to Paul Barba) as a Nuthatch nest - Graph Horizon staking on Arbitrum One across three
-contracts, one `init` over several addresses, per-event tables queryable during backfill,
-AssemblyScript handlers rebuilt as declarative `views/*.sql` (reorgs retract; no rollback code),
-and parity via `nuthatch check`. Most of it runs on v2.7.0; the auto-generated GraphQL layer, SSE
-streams, and AI-assisted schema/test generation are marked as design targets.
+`/example` indexes USDC on Ethereum mainnet from its contract address: `init` vendors the ABI and
+scaffolds the nest, `nuthatch dev` backfills and follows the tip, every declared event becomes a table
+(`usdc__transfer`) queryable through read-only SQL over HTTP and MCP, and the page then chooses
+between an authored view and a maintained entity. It is the current, executable path on v3.7.0.
 
 ## Who runs it
 
 `/stories` answers "is this for me?" through three illustrative personas (not testimonials),
 each mapped to one of the three front doors: an SQL endpoint for application backends, published
 nests for analysts who write no indexing code, and the built-in MCP server for agents. These
-workflows run on v2.7.0 - multi-contract nests, every declared event as a table, seven built-in
-chains, user-authored views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance
-pack, the admin UI, and webhooks. The main forward-looking piece for these stories is a GraphQL
-layer for subgraph-shaped clients. It notes that derived views read finalized data while raw event
+workflows run on v3.7.0 - multi-contract nests, every declared event as a table, seven built-in
+chains, user-authored views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all
+ship, as do factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the
+front doors: its 3.7.0 read surface is partial and parked. It notes that derived views read finalized data while raw event
 tables are fresh to the tip.
 
 ## Roadmap
@@ -302,11 +304,13 @@ leases, and an independently-scaled query-FE tier), sealed segments mirrored to 
 and DuneSQL queries emitted for a nest (RFC-0055). v3.7.0 is the current release, with prebuilt
 binaries and container images - one embedded, one `-scaled`.
 
-**A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`): no new capability this year,
-only bug fixes, security, performance, maintenance, marketing, and making the delightful core best
-in class. The core deliverables are delivered. Deferred, not cancelled: reth ExEx wiring (RFC-0003,
-needs a synced node), the remaining release engineering (RFC-0005: signing, Homebrew), firehose-class
-*extraction* (RFC-0014, needs the node), a GraphQL layer, IVM generalisation, and wildcard indexing.
+**The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full. The
+work since is the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data, x402 at the
+counter, the lakehouse commitments, pricing query access), plus RFC-0053, RFC-0052 and RFC-0055.
+Deferred items stay deferred and reopen one at a time (`docs/frozen-for-2027.md` in the nuthatch
+repo): reth ExEx wiring (RFC-0003, needs a synced node), the remaining release engineering (RFC-0005:
+signing, Homebrew), firehose-class *extraction* (RFC-0014, needs the node), IVM generalisation, and
+wildcard indexing.
 Not planned: a token or decentralized-network features, telemetry, a Kubernetes-first deployment,
 and any gateway/auth/metering layer in the core. It promises order, not dates, and defers to the
 README progress log when the two disagree.

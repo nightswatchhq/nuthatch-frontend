@@ -27,8 +27,9 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
       <p class="preview-note">
         <strong>This is the current, executable path on v3.7.0.</strong> It creates a nest from
         a verified contract, backfills it, follows the chain, and serves decoded event data locally.
-        GraphQL compatibility remains on the <a href="/roadmap">roadmap</a>; the data surface is
-        read-only SQL over HTTP and MCP.
+        The data surface is read-only SQL over HTTP and MCP. GraphQL is a partial read surface, exact
+        for a subgraph's event-shaped fields and a named refusal for the rest, and it is parked; see the
+        <a href="/roadmap">roadmap</a>.
       </p>
 
       <p>

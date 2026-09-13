@@ -7,9 +7,8 @@
      window controller's growth by what a provider has actually served, so a first run on mainnet
      no longer stalls; v2.7.0 made seal-direct resolve [[calls]], hardened factory cap handling,
      made declared-but-unfired events empty typed tables, and withdrew unsupported backfill
-     multipliers. A feature freeze runs to the end of 2026
-     (docs/roadmap-2027.md): no new capability, only fixes, security, performance, maintenance and
-     the delightful core. Since v2.0.0: RFC-0036
+     multipliers. The 2026 feature freeze ran from 2026-08-20 to 2026-09-08 and is lifted; deferred
+     items reopen one at a time (docs/frozen-for-2027.md). Since v2.0.0: RFC-0036
      added the block and transaction tables (2.1.0), and 2.2.0 hardened the cold-data path - a bad
      sealed segment reduces its table and says so, rather than failing the query.
      Since v1.0.2: RFC-0032
@@ -62,6 +61,7 @@ const RFCS = {
   '0029': '0029-the-fastest-indexer.md',
   '0041': '0041-authored-incremental-entities.md',
   '0052': '0052-the-mirrored-nest.md',
+  '0053': '0053-graph-subgraph-compatibility.md',
   '0055': '0055-the-dune-view-emitter.md',
 };
 const rfc = (n: keyof typeof RFCS) => `${REPO}/blob/main/docs/rfcs/${RFCS[n]}`;
@@ -270,19 +270,19 @@ const progressLog = `${REPO}#progress-log`;
           reth ExEx wiring (<a href={rfc('0003')} rel="noopener">RFC-0003</a>): the <code>Source</code>
           trait, the library split, and the push-to-pull bridge are in and tested, and rustc 1.95
           satisfies both reth and dbsp - the toolchain and dependency blockers are cleared.
-          Wiring the ExEx needs a synced node, and it is parked for the rest of 2026 under the
-          feature freeze rather than blocked: the work is capability, and this year is for fixes,
-          performance and polish.
+          Wiring the ExEx needs a synced node. It stays deferred now that the 2026 feature freeze is
+          lifted: deferred items reopen one at a time, not all at once.
         </li>
       </ul>
 
       <!-- PLANNED -->
       <h2 class="stat s-planned">Planned</h2>
         <p class="note">
-          <strong>Through the end of 2026 these are parked, not cancelled.</strong> Nuthatch's core
-          deliverables are shipped; the work for the rest of the year is bug fixes, security,
-          performance, maintenance and making the first-run experience best in class. Everything here
-          stays on the list and none of it is repudiated.
+          <strong>The 2026 feature freeze ran from 2026-08-20 to 2026-09-08, and is lifted.</strong>
+          The work since is the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data, x402
+          at the counter, the lakehouse commitments and pricing query access), plus RFC-0053, RFC-0052
+          and RFC-0055. What the freeze deferred stays deferred, and reopens one item at a time
+          (<code>docs/frozen-for-2027.md</code>). Nothing here is repudiated.
         </p>
       <ul class="rl">
         <li>
@@ -304,7 +304,7 @@ const progressLog = `${REPO}#progress-log`;
           state diffs (<a href={rfc('0014')} rel="noopener">RFC-0014</a>), both gated on wiring the
           ExEx to a synced node.
         </li>
-        <li>A GraphQL compatibility layer <span class="rfc-todo">(RFC to come)</span> - for subgraph-shaped clients.</li>
+        <li>GraphQL for subgraph-shaped clients (<a href={rfc('0053')} rel="noopener">RFC-0053</a>) - shipped in 3.7.0 as a partial read surface, exact for a subgraph's event-shaped fields and a named refusal for the rest, and now parked. An analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for one unanswerable field.</li>
         <li>IVM generalisation <span class="rfc-todo">(RFC to come)</span> - lift more derived views from DuckDB SQL over sealed data into incrementally-maintained views.</li>
         <li>Effectful HTTP egress for transform worlds <span class="rfc-todo">(RFC to come)</span> - a <code>wasi:http</code> sandboxed variant beyond today's <code>kv</code> capability grant.</li>
         <li>Wildcard, signature-scoped indexing <span class="rfc-todo">(RFC to come)</span> - index an event by its signature across every emitter.</li>

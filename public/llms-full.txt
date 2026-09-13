@@ -177,11 +177,16 @@ and firehose-class extraction of traces and state diffs on top of it (RFC-0014, 
 **DataFusion federation (RFC-0013 §2), decided against for 1.0 on measurement** - the benchmark gate
 found it 1.6-2.7x DuckDB's latency on the fold that matters, widening as segments grow, at exact
 result parity, so DuckDB is the engine in both modes and nuthatch should not be described as using
-DataFusion; a GraphQL compatibility layer;
+DataFusion;
 streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP egress for
 transform worlds (`kv` grant ships today); wildcard indexing. Chains
 beyond Ethereum mainnet, Arbitrum One, and Base have no built-in policy or ABI resolution - they run
 by hand-written config, not by `init`.
+
+GraphQL (RFC-0053) is no longer a design target: 3.7.0 ships a partial read surface, exact for a
+subgraph's event-shaped fields and a named refusal for the rest, and it is parked. An analytics
+client cannot adopt it unmodified, because GraphQL refuses a whole query for one unanswerable field.
+Do not describe it as a drop-in replacement.
 
 ## Architecture
 
@@ -249,14 +254,12 @@ segments - no trusted execution environments and no zero-knowledge proofs.
 
 ## Worked example (/example)
 
-The page at https://www.nuthatch-indexer.com/example rebuilds a real community subgraph -
-PaulieB14/horizon-indexer-subgraph, credited to Paul Barba's "Horizon Indexer Performance"
-subgraph - as a Nuthatch nest: Graph Horizon staking on Arbitrum One across three contracts, one
-`init` over several addresses, per-event tables queryable during backfill, AssemblyScript handlers
-rebuilt as declarative `views/*.sql` (reorgs retract; no hand-written rollback), a shareable nest
-consumed via `nuthatch init --from`, and parity via `nuthatch check`. All of that runs on v2.7.0.
-Still design targets, marked as such on the page: an auto-generated GraphQL layer, SSE streams, and
-AI-assisted schema/test generation from an ABI. Scaffolding from a **subgraph manifest** ships:
+The page at https://www.nuthatch-indexer.com/example indexes USDC on Ethereum mainnet from its
+contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev` backfills from the
+deployment block and follows the tip, every declared event becomes a table (`usdc__transfer`) with
+provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
+between an authored view and a maintained entity. It is the current, executable path on v3.7.0.
+Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
 dataSource's `eventHandlers` across. Factory rules are inferred only where a parameter unambiguously
@@ -269,10 +272,10 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`POST /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v2.7.0: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
-views, `init --from`, `/sql`, and MCP all ship, as do factories, the compliance pack, the admin UI,
-and webhooks. The main forward-looking piece for these stories is a GraphQL layer for subgraph-shaped
-clients. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
+v3.7.0: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
+views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
+factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
+its 3.7.0 read surface is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
 serving two panels live from a single nuthatch binary. The page states the freshness caveat plainly - derived views read
 finalized data, raw event tables are fresh to the tip. Do not infer customers, quotes, or benchmark
 numbers from it.
@@ -313,19 +316,20 @@ promised - order is.
   co-tenant restart (RFC-0027); `eth_getLogs` range-control hardening (RFC-0028); the tenant runtime
   that retired the roost and keyed nest data by content address (RFC-0032); identity and grafting
   (RFC-0033); the query allowlist (RFC-0034); verified IPFS resolution (RFC-0037); subgraph-manifest
-  scaffolding (RFC-0038); distributed scaled mode (RFC-0022); v2.7.0 the current release with
+  scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
+  (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); v3.7.0 the current release with
   prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
-- **A feature freeze runs to the end of 2026** (`docs/roadmap-2027.md`). The core deliverables are
-  delivered; no new capability ships this year. The work is bug fixes, security, performance,
-  maintenance, marketing, and making the delightful core best in class. Treat a proposal for new
-  capability as out of scope rather than as a roadmap item.
-- Deferred, not cancelled: the Lodestar migration (RFC-0011 - pilot live in production, two panels
+- **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full.
+  The work since is the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data, x402 at the
+  counter, the lakehouse commitments, pricing query access), plus RFC-0053, RFC-0052 and RFC-0055.
+- Deferred, not cancelled, and reopened one item at a time (`docs/frozen-for-2027.md` in the
+  nuthatch repo): the Lodestar migration (RFC-0011 - pilot live in production, two panels
   serving from one nuthatch binary; remaining panels outstanding); reth ExEx wiring (RFC-0003 -
   Source trait, library split, and bridge in and tested; needs a synced node); the remaining release
   engineering (RFC-0005 - signed artifacts, a Homebrew tap); firehose-class extraction of traces and
-  state diffs (RFC-0014, gated on ExEx); a GraphQL compatibility layer; IVM generalisation;
+  state diffs (RFC-0014, gated on ExEx); IVM generalisation;
   effectful HTTP egress for transform worlds; wildcard indexing.
 - Not planned: a token or decentralized-network features, telemetry of any kind, a Kubernetes-first
   deployment, and any gateway/auth/metering layer in the core.

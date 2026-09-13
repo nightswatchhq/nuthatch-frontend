@@ -24,7 +24,7 @@ const mcpConfig = `{
 <Layout
   path="/stories"
   title="Who runs Nuthatch - Nuthatch"
-  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v3.7.0; GraphQL compatibility remains on the roadmap."
+  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v3.7.0; GraphQL is only a partial, parked read surface."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -43,9 +43,9 @@ const mcpConfig = `{
         as a queryable table, Arbitrum One and Base, user-authored <code>views/*.sql</code>,
         maintained <code>entities.toml</code> relations,
         <code>init --from</code>, read-only <code>/sql</code>, and the MCP server all ship today - as
-        do factories, the compliance pack, the admin UI, and webhooks. The main forward-looking piece
-        for these stories is the GraphQL layer, noted where it appears; the personas are
-        illustrative. See the <a href="/roadmap">roadmap</a> for the dividing line.
+        do factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front
+        doors: 3.7.0 has only a partial read surface for it, exact for a subgraph's event-shaped fields
+        and a named refusal for the rest, and it is parked. The personas are illustrative. See the <a href="/roadmap">roadmap</a> for the dividing line.
       </p>
 
       <div class="in-production">
@@ -155,7 +155,8 @@ const mcpConfig = `{
         The pattern across all three: nobody deployed to someone else's platform, nobody got an
         API key, and nobody's story ends with a monthly invoice. To a frontend, Nuthatch looks
         like a fast read-only database that fills itself from the chain and heals itself through
-        reorgs. GraphQL is on the roadmap for subgraph-shaped clients.
+        reorgs. GraphQL is a partial read surface, and parked: an analytics client cannot adopt it
+        unmodified, because GraphQL refuses a whole query for one field it cannot answer.
       </p>
       <p class="storylinks">
         <a class="btn btn-primary" href="/install">Try the quickstart</a>
