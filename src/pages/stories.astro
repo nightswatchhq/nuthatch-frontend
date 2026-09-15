@@ -67,6 +67,28 @@ const mcpConfig = `{
         </p>
       </div>
 
+      <div class="in-production">
+        <h2>Live at ETHOnline 2026: Arcaidia</h2>
+        <p>
+          Also real. <a href="https://arcaidia.io" rel="noopener">Arcaidia</a> is a speed layer over
+          Circle's CCTP between Ethereum Sepolia and Arc Testnet: an autonomous solver advances USDC
+          from a liquidity vault in seconds, and canonical CCTP settlement repays the vault minutes
+          later. Its solver discovers intents from two Nuthatch nests, its settlement agent tracks
+          CCTP through them, and its web console renders fills, settlements and vault history from
+          them, all over <code>/sql</code>. Nine vaults across the two chains, every one found from
+          the factory's own events rather than listed by hand.
+        </p>
+        <p class="prod-box">
+          It began with a rate limit. Subgraph Studio's development endpoint allows 3,000 queries a
+          day, the app needed about 120,000, and Arc Testnet has no paid tier to buy. The nests were
+          serving within two hours of the builder asking for a higher limit, and by 15 September they
+          had indexed about a thousand intents; a single console page sends 42 queries in its first
+          five seconds. Testnet, and hosted by us for the hackathon.
+          <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, and the
+          nest itself is <a href="https://github.com/nightswatchhq/arcaidia-nest" rel="noopener">published</a>.
+        </p>
+      </div>
+
       <!-- STORY 1 -->
       <h2>A dapp backend</h2>
       <p>
