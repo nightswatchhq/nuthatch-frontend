@@ -275,8 +275,12 @@ analysts who write no indexing code, and the built-in MCP server for agents. The
 v3.7.0: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
-its 3.7.0 read surface is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
-serving two panels live from a single nuthatch binary. The page states the freshness caveat plainly - derived views read
+its 3.7.0 read surface is partial and parked. The page also names two real deployments. Lodestar, a
+public Graph Protocol dashboard, serves two panels live from a single nuthatch binary. Arcaidia, an
+ETHOnline 2026 cross-chain USDC protocol on Ethereum Sepolia and Arc Testnet, reads its indexed state
+from two nuthatch nests over `/sql`: its solver, settlement agent and web console, with its vaults
+discovered from factory events. It is a testnet deployment hosted for the hackathon.
+The page states the freshness caveat plainly - derived views read
 finalized data, raw event tables are fresh to the tip. Do not infer customers, quotes, or benchmark
 numbers from it.
 
