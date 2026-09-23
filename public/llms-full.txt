@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v3.7.0** - a promise about stability (no CLI flag, HTTP route, config key or
+own indexer." Status: **v3.8.5** - a promise about stability (no CLI flag, HTTP route, config key or
 generated column renamed or removed without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
@@ -138,7 +138,29 @@ obstacle has been the operational weight of the tooling, which is an engineering
     deterministically. Each column is cast to its DuneSQL type, every wide integer keeps its exact
     text beside it as `<name>_raw`, and implicit columns take Dune's `evt_*` names. Views, call tables
     and block tables are not emitted. The queries push interpretation, not rows: they do not by
-    themselves put data in Dune.
+    themselves put data in Dune. Since 3.8.3 an authored view in `views/*.sql` is emitted too when its
+    translation is exact: DuckDB's parser reads the view and the query is rendered again from an
+    allowlist of constructs that return the same result in DuckDB and Trino. Every other view is
+    listed under "Not emitted" in the output `README.md` with the construct that stopped it.
+16. IPFS documents at scale (RFC-0037 slices 5 to 8, 3.8.0): `[[ipfs]]` takes `cid_json_path` (the
+    key holding the CID) and `json_match` (resolve only objects whose string fields equal the given
+    values), and the source can be an event column or a top-level call's calldata. Every document
+    resolves out of band behind the cursor, with retry, backoff and a recorded give-up after 10
+    failures, and sealing holds below any block whose documents are neither stored nor given up on.
+    A multi-block document is proven by re-encoding it in Kubo's default layout or by hashing each
+    block of a CAR against its CID; an unproven document writes no row and is retried. `[ipfs.rows]`
+    explodes a proven JSON document into one typed row per element, in a table of its own, and
+    `keep_content = false` drops the raw JSON. Since 3.8.2, every retried fetch is logged and counted
+    (`nuthatch_nest_ipfs_retries_total`), a `--seal-direct` window waits at most
+    `--ipfs-window-deadline` (300 s, `0` for none) for one document, and `GET /ipfs/gave-up?limit=`
+    lists documents given up on. A document given up on is absent from sealed history and is not
+    fetched again.
+17. Store coverage check (3.8.4): beside the registry hash, a nest records its chain and chain id,
+    each contract's address and start block, its factories and its extraction settings in the store
+    as `indexed_coverage`, and refuses to start a store holding data when `nuthatch.toml` no longer
+    matches, naming each part that moved. The first start after upgrading records rather than
+    verifies. RPC endpoints and the nest's name are not checked. `/` and `/nest` show `nid` and
+    `data_identity`.
 
 Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100)
 and Optimism (10) are built in - keyless public
@@ -159,7 +181,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v3.7.0 is the current release,
+against a real provider - the event count matching Sentio's own README. v3.8.5 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -167,7 +189,7 @@ with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container 
 default): **v0.9.3** fixes an **arbitrary file read** - DuckDB accepts a quoted function name and the
 guard matched only an unquoted one, so `SELECT * FROM "read_csv"('/etc/passwd')` executed, and every
 earlier release is affected - and **v0.6.2** fixes an **arbitrary file write** via `;`-stacked
-`COPY … TO`. Apart from 3.7.0's two exceptions (under Install), upgrading the binary is a plain swap: on-disk state is forward-readable and the `dev`
+`COPY … TO`. Apart from the 3.7.0 and 3.8.0 exceptions (under Install), upgrading the binary is a plain swap: on-disk state is forward-readable and the `dev`
 flags are stable, so there is no migration or re-backfill.
 
 ## Not built yet (design targets)
@@ -183,7 +205,7 @@ transform worlds (`kv` grant ships today); wildcard indexing. Chains
 beyond Ethereum mainnet, Arbitrum One, and Base have no built-in policy or ABI resolution - they run
 by hand-written config, not by `init`.
 
-GraphQL (RFC-0053) is no longer a design target: 3.7.0 ships a partial read surface, exact for a
+GraphQL (RFC-0053) is no longer a design target: 3.7.0 shipped a partial read surface, exact for a
 subgraph's event-shaped fields and a named refusal for the rest, and it is parked. An analytics
 client cannot adopt it unmodified, because GraphQL refuses a whole query for one unanswerable field.
 Do not describe it as a drop-in replacement.
@@ -258,7 +280,7 @@ The page at https://www.nuthatch-indexer.com/example indexes USDC on Ethereum ma
 contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev` backfills from the
 deployment block and follows the tip, every declared event becomes a table (`usdc__transfer`) with
 provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v3.7.0.
+between an authored view and a maintained entity. It is the current, executable path on v3.8.5.
 Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
@@ -272,10 +294,10 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`POST /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v3.7.0: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
+v3.8.5: multi-contract nests, every declared event as a table, seven built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
-its 3.7.0 read surface is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
+the read surface shipped in 3.7.0 is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
 serving two panels live from a single nuthatch binary. The page states the freshness caveat plainly - derived views read
 finalized data, raw event tables are fresh to the tip. Do not infer customers, quotes, or benchmark
 numbers from it.
@@ -317,7 +339,8 @@ promised - order is.
   that retired the roost and keyed nest data by content address (RFC-0032); identity and grafting
   (RFC-0033); the query allowlist (RFC-0034); verified IPFS resolution (RFC-0037); subgraph-manifest
   scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
-  (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); v3.7.0 the current release with
+  (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); proven, typed IPFS documents at
+  scale (RFC-0037 slices 5 to 8); v3.8.5 the current release with
   prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
@@ -336,7 +359,40 @@ promised - order is.
 
 ## Install
 
-v3.7.0 is the current release. The installer and `cargo` fetch the latest.
+v3.8.5 is the current release. The installer and `cargo` fetch the latest.
+
+**3.8.0 makes an `[[ipfs]]` nest over megabyte documents fit to deploy.** It was built for Edge &
+Node's QoS oracle on Gnosis. Every document a nest names resolves behind the cursor, is proven against
+its CID however many blocks it spans, and can be exploded into typed rows (`[ipfs.rows]`), and a seal
+cut is also bounded at 64 MiB of row JSON, so sealing those documents stays inside the memory budget.
+It adds `--cors <ORIGIN>` on `dev` and `serve` (it grants reach, not access; every guard still
+applies), `--explorer <URL>` on `init` and `add` for a Blockscout instance, `init --from-subgraph` over
+a local `subgraph.yaml`, and a `doctor` that finds its own probe address without `--address`. `/sql`
+and `/explain` answer `503` when the hot tip holds more than 64 MiB of row JSON, and a `/sql` request
+waits up to 250 ms for a free permit before it is told the node is busy. No CLI flag, config key or
+metric was removed or renamed. An events-only nest keeps its identity and data and swaps the binary.
+A nest with `[[calls]]` or `[[ipfs]]` adopts its full decode identity on first start without a
+re-index, but a nest that has indexed top-level calls must re-index, because call rows now carry the
+sender as `tx_from`; a nest with `[extract] traces` also gets a new identity. An `[[ipfs]]` name or
+`[ipfs.rows]` table declared twice or landing on an event or call table, and a decoded call argument
+named `tx_from`, now refuse to start. Downgrading to 3.7.0 is safe for an events-only nest and refused
+for any other after one start on 3.8.
+
+**3.8.1 to 3.8.5 are binary-swap patches, with no identity, configuration or segment change.** 3.8.1
+checks an empty document body against its CID rather than retrying immutable bytes ten times. 3.8.2
+logs and counts every retried document fetch (`nuthatch_nest_ipfs_retries_total`), grows the fetch
+timeout from 30 to 60 to 120 s, bounds a `--seal-direct` window's wait for one document with
+`--ipfs-window-deadline` (300 s by default), lists documents given up on at `GET /ipfs/gave-up`, adds
+`seal_direct_concurrency`, `seal_direct_ipfs_window_deadline_secs` and `ipfs_gave_up_documents` to
+`/ready`, and holds a hot-mounted nest to one backfill window at a time on a single-endpoint chain.
+3.8.3 keys a runtime nest's cursor, health and metrics by the route it is served under, so where the
+route differs from the nest's name the `nest` label on `nuthatch_nest_*` series is the route and
+unmounting the route stops its cursor; `emit dune` translates authored views whose DuneSQL is exact.
+3.8.4 refuses to start a store whose data no longer matches what `nuthatch.toml` covers
+(`indexed_coverage`); the first start after upgrading records rather than verifies, and a downgrade to
+3.8.3 is safe. 3.8.5 fixes a `/sql` panic when DuckDB returned a scaled `DECIMAL` too wide for the
+driver, now re-executed as exact strings, and sealed velocity seeds that were skipped silently because
+a window start used `/` where it needed integer division.
 
 **3.7.0 mirrors sealed segments to a bucket and emits DuneSQL.** `nuthatch publish sync|verify|status`
 and `--publish-target` on `dev`/`serve` (RFC-0052); `nuthatch emit dune` (RFC-0055). The DuckDB memory
