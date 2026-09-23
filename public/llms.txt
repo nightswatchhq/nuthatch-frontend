@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v3.7.0**. Stability is a promise, not a claim of completeness: no
+MIT OR Apache-2.0. Status: **v3.8.5**. Stability is a promise, not a claim of completeness: no
 CLI flag, HTTP route, config key or generated column is renamed or removed without a major bump, and
 upgrading stays a binary swap with no data migration. This file separates what the binary does today
 from the design targets, so a model does not present unbuilt features as present-tense fact.
@@ -129,7 +129,22 @@ Tagline: "Be your own indexer."
 - `nuthatch emit dune --dir <nest> --out <dir> --source <namespace>` (RFC-0055, 3.7.0) writes one plain
   DuneSQL `SELECT` per event table over `dune.<namespace>.<table>`, offline and deterministically,
   keeping every wide integer's exact text beside it as `<name>_raw`. The queries do not by themselves
-  put data in Dune; `--source` names the namespace the rows were uploaded into.
+  put data in Dune; `--source` names the namespace the rows were uploaded into. Since 3.8.3 it also
+  writes a query for each authored view whose DuneSQL translation is exact, and lists every other view
+  under "Not emitted" with the construct that stopped it.
+- IPFS documents at scale (RFC-0037 slices 5 to 8, 3.8.0): `[[ipfs]]` takes `cid_json_path` and
+  `json_match` to read a CID out of JSON in an event column or a top-level call's calldata. Every
+  document resolves behind the cursor with retry and a recorded give-up, and sealing holds below any
+  block whose documents are still undecided. A multi-block document is proven against its CID, and an
+  unproven one writes no row. `[ipfs.rows]` explodes a proven JSON document into typed rows in its own
+  table; `keep_content = false` drops the raw JSON. Documents given up on are listed at
+  `GET /ipfs/gave-up` (3.8.2), and under `--seal-direct` one document holds a window for at most
+  `--ipfs-window-deadline` (300 s by default). A seal cut is bounded at 20,000 rows or 64 MiB of row
+  JSON, whichever comes first.
+- Store coverage check (3.8.4): a nest records its chain, each contract's address and start block, its
+  factories and its extraction settings in the store, and refuses to start a store holding data if
+  `nuthatch.toml` has since changed any of them. RPC endpoints and the nest's name may change freely.
+  `/` and `/nest` show the nest's `nid` and `data_identity`.
 - Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100)
   and Optimism (10) are built in, with keyless public endpoints, a tuned `eth_getLogs` window, and
   finality as a per-chain policy. **Any other EVM chain
@@ -212,9 +227,35 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v3.7.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v3.8.5 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
-`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.7.0`, `:3.7.0-scaled`, `:latest`).
+`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:3.8.5`, `:3.8.5-scaled`, `:latest`).
+
+**3.8.0 makes an `[[ipfs]]` nest over megabyte documents fit to deploy.** Every document a nest names
+resolves behind the cursor, is proven against its CID however many blocks it spans, and can be
+exploded into typed rows (`[ipfs.rows]`); a seal cut is also bounded at 64 MiB of row JSON. It adds
+`--cors <ORIGIN>` on `dev` and `serve`, `--explorer <URL>` (a Blockscout instance) on `init` and `add`,
+`init --from-subgraph` over a local `subgraph.yaml`, and a `doctor` that finds its own probe address
+without `--address`. `/sql` and `/explain` answer `503` when the hot tip holds more than 64 MiB of row
+JSON, and a `/sql` request waits up to 250 ms for a free permit before it is refused. An events-only
+nest swaps the binary and restarts. A nest that has indexed top-level calls must re-index (call rows
+now carry `tx_from`), and a nest with `[extract] traces` gets a new identity. An `[[ipfs]]` name or
+`[ipfs.rows]` table declared twice or landing on an event or call table, and a decoded call argument
+named `tx_from`, now refuse to start. After one start on 3.8, a nest with `[[calls]]`, `[[ipfs]]` or
+`[extract]` is refused by 3.7.0; an events-only nest can go back.
+
+**3.8.1 to 3.8.5 are binary-swap patches.** 3.8.1 checks an empty document body against its CID
+instead of retrying it. 3.8.2 logs and counts every retried document fetch
+(`nuthatch_nest_ipfs_retries_total`), grows the fetch timeout from 30 to 60 to 120 s, gives a
+`--seal-direct` window at most `--ipfs-window-deadline` (300 s) per document, lists documents given up
+on at `GET /ipfs/gave-up`, adds three `/ready` fields, and holds a hot-mounted nest to one backfill
+window at a time on a single-endpoint chain. 3.8.3 keys a runtime nest's cursor, health and metrics by
+its route, so the `nest` label on `nuthatch_nest_*` is the route where it differs from the nest's name,
+and `emit dune` translates authored views whose DuneSQL is exact. 3.8.4 records what a store covers as
+`indexed_coverage` and refuses to start a store whose chain, contracts, start blocks, factories or
+extraction settings no longer match `nuthatch.toml`; the first start after upgrading records rather
+than verifies. 3.8.5 fixes a `/sql` panic on scaled `DECIMAL` results too wide for the driver, and
+sealed velocity seeds that were silently skipped.
 
 **3.7.0 mirrors sealed segments to a bucket and emits DuneSQL.** `nuthatch publish sync|verify|status`
 and `--publish-target` on `dev`/`serve` (RFC-0052); `nuthatch emit dune` (RFC-0055). The DuckDB memory
@@ -242,7 +283,7 @@ tables, repairs stale schema columns from the live registry, probes all contract
 parallelises timestamp retry splits, and redacts state-RPC credentials from benchmark output. The old
 seal-direct multipliers were withdrawn because their baseline came from an obsolete harness path.
 
-Apart from the 3.7.0 exceptions above, upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
+Apart from the 3.7.0 and 3.8.0 exceptions above, upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
 no migration or re-backfill is involved. Minimum supported Rust version is **1.95**.
 
 **Two security patches are worth knowing about if you advise anyone on a version.** Both are on the
@@ -268,17 +309,17 @@ registry, and zero-downtime N-1 upgrades.
 `/example` indexes USDC on Ethereum mainnet from its contract address: `init` vendors the ABI and
 scaffolds the nest, `nuthatch dev` backfills and follows the tip, every declared event becomes a table
 (`usdc__transfer`) queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v3.7.0.
+between an authored view and a maintained entity. It is the current, executable path on v3.8.5.
 
 ## Who runs it
 
 `/stories` answers "is this for me?" through three illustrative personas (not testimonials),
 each mapped to one of the three front doors: an SQL endpoint for application backends, published
 nests for analysts who write no indexing code, and the built-in MCP server for agents. These
-workflows run on v3.7.0 - multi-contract nests, every declared event as a table, seven built-in
+workflows run on v3.8.5 - multi-contract nests, every declared event as a table, seven built-in
 chains, user-authored views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all
 ship, as do factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the
-front doors: its 3.7.0 read surface is partial and parked. It notes that derived views read finalized data while raw event
+front doors: the read surface shipped in 3.7.0 is partial and parked. It notes that derived views read finalized data while raw event
 tables are fresh to the tip.
 
 ## Roadmap
@@ -301,7 +342,8 @@ the `[extract]` surface (RFC-0014 slice 0 - decode, schemas and volume guard; ex
 still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-manifest scaffolding
 (RFC-0038), distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
 leases, and an independently-scaled query-FE tier), sealed segments mirrored to a bucket (RFC-0052),
-and DuneSQL queries emitted for a nest (RFC-0055). v3.7.0 is the current release, with prebuilt
+DuneSQL queries emitted for a nest (RFC-0055), and proven, typed IPFS documents at scale (RFC-0037
+slices 5 to 8). v3.8.5 is the current release, with prebuilt
 binaries and container images - one embedded, one `-scaled`.
 
 **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full. The
