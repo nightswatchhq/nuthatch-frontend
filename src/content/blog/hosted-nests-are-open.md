@@ -4,7 +4,7 @@ date: "2026-09-24"
 description: "platform.nuthatch-indexer.com runs the stock nuthatch binary for people who would rather not. Sign in with GitHub or a wallet, point it at a repo or paste an ABI, and get a SQL endpoint with CORS open. Here is how to use it, what it costs, and what it does not do yet."
 author: "cargopete"
 tags: ["nuthatch", "hosting", "platform", "usdc"]
-draft: true
+draft: false
 ---
 
 Two weeks ago we [offered to host hackathon nests by hand](/blog/we-host-your-hackathon-nest), free
