@@ -12,8 +12,9 @@ draft: false
 > every account has a request and deploy budget across all its nests, deploying on Free needs a
 > linked GitHub account, and the $20 buys email support, with views and subgraph ports priced
 > separately. We also corrected two sentences that said every version gets its own container: an
-> unchanged redeploy reuses the running one, as the section on redeploys already said. The figures
-> below are the current ones; the rest is as first published.
+> unchanged redeploy reuses the running one, as the section on redeploys already said. New nests now
+> wait for a person to approve them before they start indexing; redeploys of an approved nest do not.
+> The figures below are the current ones; the rest is as first published.
 
 Two weeks ago we [offered to host hackathon nests by hand](/blog/we-host-your-hackathon-nest), free
 and the same day. People took us up on it, and running other people's nests by hand turned out to be
@@ -65,6 +66,9 @@ arcaidia-nest/
 ```
 
 Name the nest, paste the repository URL, choose the branch, directory and config, and press Deploy.
+A person at our end approves each new nest before it starts indexing, usually within a day; the
+nest's page says so while it waits.
+
 The platform clones it, runs `nuthatch schema` and `nuthatch nest nid` in a throwaway container with
 no network, and starts it.
 
@@ -110,7 +114,7 @@ If a deploy fails, the nest page says why in words: `Repository not found`, or
 | Backfill | up to 5 million blocks behind the tip | up to 50 million |
 | Endpoint | 10 requests/s, bursts of 100 | 100 requests/s, bursts of 1,000 |
 | Per account, all nests | 20 requests/s, 10 deploys an hour | 200 requests/s, 20 deploys an hour |
-| Chains | Sepolia and Arc Testnet on our RPC, or any chain with your own RPC | adds Ethereum, Base and Arbitrum One |
+| Chains | Sepolia and Arc Testnet on our RPC, or any chain we do not list, with your own RPC | adds Ethereum, Base and Arbitrum One |
 | People | | email support; views and subgraph ports priced separately |
 
 The rate limits are not decorative. We measured them on 24 September: of 150 simultaneous requests at
