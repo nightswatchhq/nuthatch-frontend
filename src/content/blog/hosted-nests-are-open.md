@@ -7,6 +7,12 @@ tags: ["nuthatch", "hosting", "platform", "usdc"]
 draft: false
 ---
 
+> **Updated, 2026-09-24, the same evening.** We tightened the plans after asking how someone might
+> abuse them: Paid is now 10 nests and 50 million blocks of backfill rather than 50 and unlimited,
+> every account has a request and deploy budget across all its nests, deploying on Free needs a
+> linked GitHub account, and the $20 buys email support, with views and subgraph ports priced
+> separately. The figures below are the current ones; the rest is as first published.
+
 Two weeks ago we [offered to host hackathon nests by hand](/blog/we-host-your-hackathon-nest), free
 and the same day. People took us up on it, and running other people's nests by hand turned out to be
 exactly as sustainable as it sounds. So we built the thing we kept doing manually. **As of today,
@@ -98,11 +104,12 @@ If a deploy fails, the nest page says why in words: `Repository not found`, or
 
 | | Free | Paid |
 |---|---|---|
-| Nests | 3 | 50 |
-| Backfill | up to 5 million blocks behind the tip | unlimited |
+| Nests | 3 | 10 |
+| Backfill | up to 5 million blocks behind the tip | up to 50 million |
 | Endpoint | 10 requests/s, bursts of 100 | 100 requests/s, bursts of 1,000 |
-| Chains | Sepolia and Arc Testnet on our RPC, or any chain with your own RPC | every chain we run |
-| People | | we write your views, port your subgraph, same-day answers |
+| Per account, all nests | 20 requests/s, 10 deploys an hour | 200 requests/s, 20 deploys an hour |
+| Chains | Sepolia and Arc Testnet on our RPC, or any chain with your own RPC | adds Ethereum, Base and Arbitrum One |
+| People | | email support; views and subgraph ports priced separately |
 
 The rate limits are not decorative. We measured them on 24 September: of 150 simultaneous requests at
 a free nest, 103 were served and 47 got `429`; of 1,500 at a paid one, 1,133 were served. Burst,
