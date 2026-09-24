@@ -11,7 +11,9 @@ draft: false
 > abuse them: Paid is now 10 nests and 50 million blocks of backfill rather than 50 and unlimited,
 > every account has a request and deploy budget across all its nests, deploying on Free needs a
 > linked GitHub account, and the $20 buys email support, with views and subgraph ports priced
-> separately. The figures below are the current ones; the rest is as first published.
+> separately. We also corrected two sentences that said every version gets its own container: an
+> unchanged redeploy reuses the running one, as the section on redeploys already said. The figures
+> below are the current ones; the rest is as first published.
 
 Two weeks ago we [offered to host hackathon nests by hand](/blog/we-host-your-hackathon-nest), free
 and the same day. People took us up on it, and running other people's nests by hand turned out to be
@@ -26,7 +28,7 @@ rule we set before we wrote a line of it, and the binary you download is the one
 
 ## What you get, and what it is made of
 
-Each version of each nest is its own container: `nuthatch dev` over its own directory, capped at 2 GB
+Each changed version of a nest is its own container: `nuthatch dev` over its own directory, capped at 2 GB
 of memory with no swap and 2 CPUs, all Linux capabilities dropped, and its admin surface turned off.
 Containers cannot see each other, and they cannot reach our network: a firewall on their bridge
 drops anything bound for a private or tailnet address, which we checked against a positive control
@@ -88,7 +90,7 @@ blocks a minute, which is why we pay for RPC on the chains we list.
 
 ## A URL that does not move when you redeploy
 
-Every deploy is a new version with its own container. Your endpoint follows the current version, and
+Every deploy is a new version; a changed one gets its own container. Your endpoint follows the current version, and
 the previous one keeps serving until you retire it, so a redeploy never breaks a reader mid-query.
 Each version also has a pinned URL, `/q/<login>/<nest>@v2/`, for a client that must not move.
 
