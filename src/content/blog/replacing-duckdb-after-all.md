@@ -77,14 +77,15 @@ rows before any timing was printed.
 
 | | DuckDB | Burrmill |
 |---|---:|---:|
-| authored views byte-identical | | **22 of 22** |
-| time-weighted, all 22 views | 39.6 s | 27.5 s, then **0.65x** with range joins |
-| views within 1.5x of DuckDB | | **22 of 22** |
-| peak RSS, 989,690 groups, 8 threads | 572-598 MB | **241-245 MB** |
-| serving all 22 views, qps at 1 to 32 clients | 1x | about **2x** |
-| worst p99 at 32 clients | 7,424 ms | 1,350 ms |
-| RSS at 32 clients | 15.4 GB | 3.9 GB |
-| fairness at 32 clients (1.0 is perfect) | 0.00 | 0.89-0.97 |
+| authored views with byte-identical output | | **22 of 22** |
+| all 22 views read whole, total time (27 Sep) | 41.4 s | **26.2 s** |
+| views within 1.5x of DuckDB's time | | **22 of 22** |
+| peak RSS, 989,690 groups, 8 threads | 572 to 598 MB | **241 to 245 MB** |
+| serving the 12 then-portable views, 1 client | 7.2 qps | 14.7 qps |
+| the same, 32 clients | 15.1 qps | **32.9 qps** |
+| worst client's p99 at 32 clients | 7,424 ms | 1,350 ms |
+| process RSS at 32 clients | 15.4 GB | 3.9 GB |
+| fairness at 32 clients, 1.0 when every client is served alike | 0.00 | 0.90 |
 
 The parity row is the one that matters and it is the one we would have bet against in August, when
 nine of the twenty-two views used syntax DataFusion has no notion of: `ASOF` joins, `LATERAL`,
@@ -93,11 +94,12 @@ Burrmill implements `list_reduce` as DataFusion's, and seven were rewritten in p
 branch of the nest, each rewrite checked against the original on DuckDB before Burrmill was allowed
 near it.
 
-The serving rows are less flattering to DuckDB than they should be. DuckDB is ahead on raw
-throughput in the synthetic fold test by being unfair: its fairness score at 32 clients is 0.00
-against Burrmill's 0.89-0.97, and its worst client waits 7.4 seconds at p99. Burrmill sits behind the same admission gate nuthatch already uses and
-serves everyone. DuckDB also fails outright at 32 clients under the default `ulimit -n`, which is a
-fact about file handles rather than engines.
+The serving rows are from 24 September, before the last seven views were rewritten, so they cover
+the 12 that were portable then. A fairness of 0.00 means at least one of the 32 clients completed
+nothing in the window while others completed ten; Burrmill sits behind the same admission gate
+nuthatch already uses and serves everyone. DuckDB also fails outright at 32 clients under the
+default `ulimit -n`, which is a fact about file handles rather than engines, and the row above was
+taken with the limit raised.
 
 Then there is the fuzzer, which is where the confidence actually comes from. `burrmill-bench fuzz`
 generates SQL from nuthatch's admitted grammar and runs each statement on both engines. As of today
