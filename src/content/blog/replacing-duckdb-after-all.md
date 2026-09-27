@@ -200,7 +200,8 @@ Nothing in nuthatch runs on Burrmill today. Every figure above is from a bench h
 engines over a copy of a real nest, and a bench harness can flatter: it lent Burrmill two DataFusion features the crate alone did not
 enable, which we only found by building a consumer that depended on Burrmill alone and watching
 `SUBSTRING` fail to plan. The 0.65x was measured on 25 September, before two further days of engine
-work, and has not been re-run on the nest since. The shadow period exists because a corpus, however wide,
+work. *Updated 2026-09-27:* re-run with all of it in, 22 of 22 views identical and **0.63x**,
+every view within 1.5x. The shadow period exists because a corpus, however wide,
 is friendly in ways live traffic is not: August's "24 of 24 exact" corpus could not see an i128
 overflow that a reviewer could, and we have not forgotten that.
 
