@@ -64,7 +64,9 @@ Burrmill owns the parts DataFusion gets wrong for an indexer:
 - **A lockdown.** An unconfigured DataFusion `SessionContext` will read `/etc/hosts` and write
   files. Burrmill's catalogue knows the nest's segments and nothing else.
 
-It is 112 MB of release binary and not one line of C++. The repository is not public yet.
+It is 112 MB of release binary and not one line of C++. The repository is
+[nightswatchhq/burrmill](https://github.com/nightswatchhq/burrmill); the measurements below are all
+in its `docs/`.
 
 ## The numbers, on a real nest
 
@@ -160,8 +162,9 @@ The second we have not seen reported. Once a connection has consulted its time z
 `year()` or `date_trunc` on a `TIMESTAMPTZ`, or reading the setting, `CAST(ts AS VARCHAR) < 'x'`
 drops every row when `'x'` does not parse as a timestamp, because an optimiser rule moves the cast
 onto the constant, the constant becomes NULL, and the guard that would stop it skips NULL. The switch
-is sticky for the connection, and nuthatch caches one per nest. The write-up is in Burrmill's
-repository with a reproduction; filing it is on our list. A mature engine is not a correct one, and
+is sticky for the connection, and nuthatch caches one per nest. The write-up is in
+[Burrmill's repository](https://github.com/nightswatchhq/burrmill/blob/main/docs/upstream/duckdb-cast-comparison-null-constant.md)
+with a reproduction; filing it is on our list. A mature engine is not a correct one, and
 the only way to know which parts of either you are relying on is to run them side by side on your
 own statements, which is now what we do.
 
