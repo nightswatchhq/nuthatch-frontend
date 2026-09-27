@@ -6,6 +6,12 @@ author: "cargopete"
 tags: ["nuthatch", "duckdb", "datafusion", "benchmarks", "rfc", "sql", "rust"]
 ---
 
+> **Superseded, 2026-09-26.** The decision below is reversed in
+> [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all): nuthatch will move to Burrmill, a
+> Rust engine built on DataFusion, once it has run beside DuckDB on live nests for a release with no
+> unexplained difference. Kept as written, because a project that quietly edits its old positions is
+> harder to trust than one that dates them.
+
 For most of August, Nuthatch carried an open question with a carve-out from our feature freeze:
 **can we remove DuckDB, and with it every C++ dependency in the shipped binary, without sacrificing
 anything?**
