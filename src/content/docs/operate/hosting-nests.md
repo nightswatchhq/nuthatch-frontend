@@ -136,6 +136,7 @@ nh localhost:8288/_admin/mounts          # {"mounts": [...]} - every mount the r
 | `joining` | Catching up beside its chain's cursor before joining it, so co-tenants are never dragged back through history. |
 | `live` | Indexing and serving at `/<name>/`. |
 | `failed` | Refused or broken; `reason` says why. |
+| `suspended` | Paused by the operator: off its cursor, answering `503`, until resumed. |
 
 Reading a job never waits on a mount in progress. Jobs are written to `mount-jobs.json` in the
 runtime directory: after a restart an unfinished job resumes, and a failed one stays readable until
@@ -194,7 +195,8 @@ suspended mount costs no RPC and no memory; it keeps its disk.
 
 Resume is an ordinary mount of the recorded NID: it catches up from where it stopped, and serves the
 `503` until it has joined. Resuming a quarantined mount is its explicit release. Suspending a name that
-is not mounted is `404`; resuming one that is not suspended is `404`.
+is not mounted is `404`; resuming one that is not suspended is `404`. While paused, its job reads
+`suspended`, and posting a mount for the name resumes it just as `resume` does.
 
 ## 7. Move a name to a new version
 

@@ -104,7 +104,7 @@ route key: `usdc`, or `acme/usdc` in a multi-tenant runtime. The walkthrough is
 | `DELETE /_admin/datasets/<nid>` | Free a dataset unmounted earlier | `200` reclaimed, `409` kept, `404` absent |
 
 A job is `{"name", "nid", "phase", "reason"?, "since_unixtime"}`, with `phase` one of `accepted`,
-`fetching`, `joining`, `live`, `failed`. Reading a job never waits on a mount in progress; unfinished
+`fetching`, `joining`, `live`, `failed`, or `suspended` while paused. Reading a job never waits on a mount in progress; unfinished
 jobs resume after a restart. Mount refusals: `400` malformed NID, `404` NID not held and no
 `--registry`, `409` name taken, chain not declared or its cursor dead, `507` over the cursor's RAM
 ceiling. On the job route each ends the job `failed` with the same reason.

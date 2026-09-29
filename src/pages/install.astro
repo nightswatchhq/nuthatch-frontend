@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v3.12.1: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
+  description="Install Nuthatch v3.13.0: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,7 +19,11 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-          <strong>v3.12.1 is out</strong>, the last of five releases since 3.8.5. 3.9.0 adds
+          <strong>v3.13.0 is out</strong>. A runtime now runs its own nests: hand it a NID over the admin API and
+          it fetches the nest from a registry, verifies and indexes it, and can dry-run, suspend, move and
+          reclaim it (<a href="/docs/operate/hosting-nests">Host nests for others</a>). 3.12.2 before it moved
+          Wasmtime past two security advisories and let a runtime start with nothing mounted. Of the five
+          releases before those, 3.9.0 adds
           <code>nest nid</code>, which prints the identity a nest's data is stored under, and <code>offchain pull</code>, a one-shot fetch that seals a JSON price feed as
           a snapshot authored entities can read. 3.11.0 takes block timestamps from the logs instead of a
           header per block, stops idle polls paying for a reorg check, sets the default poll interval to
@@ -27,7 +31,8 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
           <code>--rpc-fallback</code> for an endpoint asked only while the others fail. 3.12.0 changes
           nothing in the published binaries. 3.12.1 runs each <code>/sql</code> statement once rather than
           twice, and answers a query cut off by the time budget with 504 rather than 400. For most nests it
-          is a binary swap and a restart. Three things to read first: from 3.10.0 the GraphQL routes exist
+          is a binary swap and a restart; a script that mounts over the admin API adds <code>?wait=true</code>,
+          because from 3.13.0 a mount answers 202 while it runs. Three things to read first: from 3.10.0 the GraphQL routes exist
           only in a build with <code>--features graph</code>, so the published binaries answer them with
           404; since 3.9.0 an entity's SQL must live in <code>entities/&lt;name&gt;.sql</code>; and an
           <code>eth_call</code> error that is not a revert now stalls the nest rather than being stored as a
@@ -63,12 +68,12 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nightswatchhq/nuthatch:3.12.1' prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nightswatchhq/nuthatch:3.13.0' prompt={true} />
       <p class="note">
         The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
         <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
-        <code>:3.12.1</code> and <code>:latest</code> are the embedded build; pin the version for anything
-        you care about. <code>:3.12.1-scaled</code> carries the Postgres driver and the <code>worker</code>,
+        <code>:3.13.0</code> and <code>:latest</code> are the embedded build; pin the version for anything
+        you care about. <code>:3.13.0-scaled</code> carries the Postgres driver and the <code>worker</code>,
         <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only.
         The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.

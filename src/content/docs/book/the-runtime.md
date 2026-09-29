@@ -57,7 +57,7 @@ outside the process has to unpack, verify or arrange anything.
 
 A mount that fetches and backfills can take far longer than a caller will hold an HTTP request open, so
 it is a job rather than a call. The job moves through accepted, fetching, joining and then live or
-failed, and it is written to disk, so a restart in the middle picks it up again instead of forgetting
+failed (or reads suspended while an operator has paused it), and it is written to disk, so a restart in the middle picks it up again instead of forgetting
 it. The record of a job lives beside the runtime's lock rather than behind it: asking how a mount is
 going must never wait for the mount it is asking about.
 
