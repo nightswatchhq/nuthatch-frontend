@@ -59,7 +59,8 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
 - **Deterministic and finality-aware.** Sealed segments are immutable; only the hot tip can change
   under a reorg, and the union converges with it.
 - **Guarded:** a 30-second timeout, a 50,000-row cap, a 64 MiB result-byte ceiling, 2 concurrent
-  analytical queries, and a 16 KiB limit on the query text itself. A rejection is the node protecting itself - narrow the query
+  analytical queries, and a 16 KiB limit on the query text itself. On `/sql` a query cut off by the
+  timeout is answered with 504 (400 before 3.12.1). A rejection is the node protecting itself - narrow the query
   rather than fighting the guard. Validate cheaply first with `explain`.
 - **Provenance-stamped.** Results carry the block range and the content-addressed segment hashes
   they were computed from, so a number can be cited against immutable data and re-derived by

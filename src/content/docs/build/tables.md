@@ -9,7 +9,7 @@ mapping.
 
 ## ABIs
 
-At `init`, nuthatch resolves the contract's ABI - **Sourcify first, then an Etherscan-class API** - and
+At `init`, nuthatch resolves the contract's ABI - **Sourcify first, then keyless Blockscout, then Etherscan if `ETHERSCAN_API_KEY` is set** - and
 **vendors it** into `abis/`. From then on the ABI is a local file; nuthatch never re-fetches it at
 runtime. A `DecodeRegistry` is built from the vendored ABIs at startup: `topic0` → event decoder,
 filtered by contract address.

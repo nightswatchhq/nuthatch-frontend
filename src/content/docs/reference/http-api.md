@@ -29,7 +29,8 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 - `GET /entities` / `GET /entity/{id}` - entity point-reads from the hot store. Ids are formatted
   `{block:012}-{logindex:06}`.
 - `GET /sql?q=…&max_rows=N` - read-only SQL over the live tip ∪ sealed history (SELECT/WITH only).
-  Guarded: 30 s timeout, row cap (50,000 max; `max_rows` asks for less), 64 MiB result-byte cap, 2 concurrent. Results
+  Guarded: 30 s timeout, row cap (50,000 max; `max_rows` asks for less), 64 MiB result-byte cap, 2 concurrent.
+  A query cut off by the timeout is answered with 504, a malformed one with 400. Results
   carry a **provenance stamp** - the block range and content-addressed segments the answer came
   from - so a figure can be cited against immutable data. See
   [The SQL surface](/docs/reference/sql/).
@@ -47,6 +48,7 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 ## Derived & compliance
 
+- `GET /derived` - the nest's declared incremental entities, and how current each one is.
 - `GET /derived/{entity}` - the first page of a declared incremental entity, including its
   applied-through provenance.
 - `GET /derived/{entity}/{key}` - a keyed point read from that maintained relation. The key follows
@@ -60,6 +62,13 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   count and summed amount per label (RFC-0008).
 - `GET /flags?kind=threshold|velocity` - compliance flags: single transfers over the configured
   amount, or addresses over the windowed-volume threshold.
+
+- `GET /ipfs/gave-up` - the `[[ipfs]]` documents resolution gave up on, in block order. Each is
+  absent from sealed history.
+
+The GraphQL routes (`POST /graphql`, `/subgraphs/id/{id}`, `/subgraphs/name/…`) and `GET /graph/status`
+are registered only in a binary built with `--features graph`. The published binaries and images are
+not, and answer them with 404.
 
 ## Admin & runtime
 

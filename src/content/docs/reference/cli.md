@@ -16,16 +16,24 @@ Every command that operates on a nest takes `--dir` (default `.`).
 ## The two commands
 
 - **`nuthatch init <address>…`** - scaffold a nest from one or more contract addresses: resolve
-  each ABI (Sourcify → Etherscan), detect the deployment block, and write the project. Omit
+  each ABI (Sourcify → Blockscout → Etherscan), detect the deployment block, and write the project. Omit
   `--chain` - init probes the known chains for the contract's bytecode and picks the one it lives
-  on. `--alias` names the contracts (default `c0, c1, …`); `--rpc` prefers your own endpoints;
+  on. `--alias` names the contracts (default: the contract name from the ABI, else `c0, c1, …`);
+  `--rpc` uses your own endpoints; paired with a `--chain` name nuthatch does not ship, it scaffolds
+  any other EVM chain, reading the chain id from the endpoint. `--abi` supplies a local ABI (the escape
+  hatch for a proxy), `--explorer` names a Blockscout instance to resolve from, `--start-block` skips
+  the deploy-block probe, and `--no-timestamps` drops `block_timestamp` for good.
   `--from <git-url|dir>` initialises from a published nest instead of addresses (nothing is
-  resolved - ABIs are vendored, so it's cloned, copied, and validated).
+  resolved - ABIs are vendored, so it's cloned, copied, and validated); `--from-subgraph <cid|url>`
+  scaffolds from a subgraph manifest.
 - **`nuthatch dev`** - run it: backfill, follow the tip, serve the API. `--listen` (default
   `127.0.0.1:8288`), `--rpc` runtime overrides, `--backfill N` (recent-history mode),
   `--seal-direct` (backfill finalized history straight to Parquet, bypassing the hot store),
   `--concurrency` (concurrent window fetches; 8-16 against your own node), `--window` (override the
-  `getLogs` block-window - large for sparse contracts), `--no-admin`.
+  `getLogs` block-window - large for sparse contracts), `--no-admin`. Also `--rpc-fallback`
+  (endpoints asked only while every other one is failing), `--poll-interval` (default: the chain's
+  block time, never under 2 s), `--finality-only` (never index the unfinalised tip), `--cors`, and
+  `--state-rpc` (archive endpoints for declared `[[calls]]`).
 
 ## Everyday companions
 
@@ -38,6 +46,12 @@ Every command that operates on a nest takes `--dir` (default `.`).
   `--print-config` prints a copy-paste client config instead. See [MCP](/docs/ai/mcp/).
 - **`nuthatch check [name]`** - run the nest's invariant/parity checks (`checks/*.sql`) against
   recorded expected results; `--update` records current results as the fixtures.
+- **`nuthatch doctor`** - probe an RPC endpoint before trusting a backfill to it: widest `eth_getLogs`
+  range, batch limit, archive depth, and the largest safe `--window`. `--catalogue` checks the sealed
+  segment catalogue instead.
+- **`nuthatch serve`** - serve a nest without indexing it; `--hot-store` reads a Postgres hot store in
+  a scaled-mode build.
+- **`nuthatch emit dune`** - write one DuneSQL query per event table, offline.
 
 `entities.toml` needs no special command: `dev` loads and maintains it. A nest declaring an entity
 must use the normal ingest path; `dev --seal-direct` is refused because direct sealing bypasses the
@@ -61,6 +75,12 @@ entity circuit.
   asserts the hash; `--registry` resolves a `name[@version]` reference instead.
 - **`nuthatch nest publish <bundle> --registry <store>`** - publish under `name@version`, advancing
   `latest`.
+- **`nuthatch nest nid`** - print the NID the nest's data is stored under (`data/<nid>/`), without
+  running it.
+- **`nuthatch nest rename-alias <old> <new>`** - re-key a contract alias in `nuthatch.toml`, the ABI
+  file and `semantic.toml`.
+- **`nuthatch publish sync|status|verify --target <prefix>`** - mirror sealed segments to a directory
+  or `s3://bucket/prefix`; `dev --publish-target` does it as they seal.
 - **`nuthatch migrate --dir <dir>`** - move a pre-2.0 directory to identity-keyed datasets, and apply
   a staged nest upgrade. Classifies the change and **refuses a breaking one by name**
   (`--allow-breaking` to accept). Moves data and never re-indexes; `--dry-run` prints the plan.
@@ -70,6 +90,19 @@ entity circuit.
 - **`nuthatch dev`** - run many nests behind one listener; `--fail-fast` exits on the first
   fault instead of quarantining it (RFC-0026). See
   [Run a runtime](/docs/operate/many-nests/).
+
+## Offchain data (RFC-0045)
+
+- **`nuthatch offchain drop <file> --table <name>`** - seal a local CSV, JSON array or Parquet file as
+  an immutable snapshot under `offchain__<name>`.
+- **`nuthatch offchain pull <url> --table <name> --format json`** - fetch a JSON-array feed once and
+  seal it the same way; schedule it on the host. An authored entity can read `offchain__<name>`.
+
+## Scaled mode (RFC-0022)
+
+- **`nuthatch control`** / **`nuthatch worker`** - the control plane and a writer worker. Both need
+  the scaled build (`--features postgres-store`, or the `-scaled` release artifacts). See
+  [Scaled mode](/docs/operate/scaled/).
 
 ## The compliance pack (RFC-0008)
 

@@ -11,9 +11,11 @@ this cost disappear; it means you are the one who sees it.
 
 ## Per day, per block
 
-Following tip costs at least one request per block produced, for every column that needs one. On a
-chain producing 345,600 blocks a day (Arbitrum's rate), a nest serving `block_timestamp` pays roughly
-that many extra requests a day, on top of its `eth_getLogs` polling, for as long as it runs.
+Following tip costs requests on every poll, whether or not a block carried an event: a tip call,
+and when a window commits, a reorg check, a checkpoint and a `finalized` probe. On a chain producing
+345,600 blocks a day (Arbitrum's rate), a cursor polling every two seconds paid roughly one header per
+block for as long as it ran. Since 3.11 the default poll interval is the chain's block time, never
+under 2 s, and an idle poll skips the reorg check.
 
 ## `block_timestamps` is the reason
 
@@ -21,6 +23,11 @@ A timestamp lives in the block header, not in the log `eth_getLogs` returns, so 
 [`block_timestamp`](/docs/reference/config/#block_timestamps) costs one extra `eth_getBlockByNumber`
 per distinct block. That cost does not end when backfill does - a nest at tip pays it again on every
 new block, indefinitely.
+
+**Since 3.11, only on a node that does not say.** Current execution clients put `blockTimestamp` on
+every log, and nuthatch now takes the timestamp from there, fetching a header only for a block whose
+logs lack it. The same 20,000-block Sepolia backfill paid 4,444 `eth_getBlockByNumber` on 3.9.0 and
+34 after, and sealed byte-identical segments.
 
 Turning it off is only an option if nothing that reads your nest ever asks a time-series question.
 It's an init-time choice, not a flag you can flip later: dropping the column afterward is a breaking
@@ -80,7 +87,10 @@ Two practical consequences, neither of them a recommendation to change a default
 
 Tracked as [RFC-0040](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0040-the-freshness-dial.md),
 which argues for letting an operator trade freshness for money rather than paying a production-sized
-bill for a dashboard nobody reads hourly. Design only - nothing is being built this year.
+bill for a dashboard nobody reads hourly. It shipped in 3.5.0 as two `nuthatch dev` flags:
+`--poll-interval <DURATION>` sets how long a caught-up cursor waits before asking for the tip again,
+and `--finality-only` caps the cursor at the chain's finality boundary so nothing it indexes can be
+reorged. `/ready` reports both in its `freshness` object.
 
 ## What that costs against a priced endpoint
 
@@ -108,6 +118,12 @@ polling and every other RPC method a nest calls, so it's a floor, not a full bil
 A nest sitting at tip, answering nobody, still costs on the order of **~$100/month** against a paid
 provider. That figure is this computation, not a measurement - the reference deployment itself paid
 nothing for it, because it runs against a free endpoint.
+
+Measured against a paid endpoint on 2026-09-06 ([#1173](https://github.com/nightswatchhq/nuthatch/issues/1173)),
+a nest at tip on Arbitrum spent about 9,900 CU a minute, roughly $185 a month, and the computation
+above had the attribution wrong: headers are bought only for blocks that produced a kept row, and 95
+of that day's 345,600 blocks did. The header per block was the poll loop's own. At
+`--poll-interval 5m` the same nest spends on the order of a hundred CU a minute for the same rows.
 
 This isn't a recommendation to turn `block_timestamps` off. It's a real, inherent cost of following
 tip with timestamps on, and whether to pay it is a decision made against your own consumers, not a

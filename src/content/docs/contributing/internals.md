@@ -8,7 +8,7 @@ This is the long version, for people who need to know *why* it is safe rather th
 follows one log entry from an RPC response to a row someone queries, then covers what each component
 refuses to do, which is usually the more interesting half.
 
-Line counts are given as a sense of weight, not a metric. The binary is about 40,000 lines of Rust.
+Line counts are given as a sense of weight, not a metric. The crate's `src/` alone is about 140,000 lines of Rust.
 
 ## The shape of it
 
@@ -75,7 +75,8 @@ re-decoded - that would change answers under consumers who already have them.
 
 ## The hot store - `store.rs`
 
-redb, embedded, holding the mutable tip. Four tables: `entities`, `meta`, `blocks`, `outbox`.
+redb, embedded, holding the mutable tip. Five tables: `entities`, `meta`, `blocks`,
+`checkpoint_hashes`, `outbox`.
 
 Entities are keyed `{block:012}-{log_index:06}`, zero-padded so lexicographic iteration is
 chain-ordered - which makes "everything above block N" a range scan rather than a filter, and that is
@@ -89,7 +90,8 @@ the comment was a claim about the code that the code did not honour. It now says
 ## Sealing - `seal.rs`
 
 Once a range is final, each table's rows in that range are written to their own content-addressed
-Parquet segment - `{table}-{hash}.parquet` - catalogued in a manifest, and then pruned from hot.
+Parquet segment - `{table}-{hash}.parquet`, or `segments/<hash>.parquet` in a runtime's shared store -
+catalogued in a manifest, and then pruned from hot.
 
 **Finality is per chain, not a constant.** `chains.rs` carries the policy as data:
 
@@ -150,6 +152,13 @@ involved.
 **Analytical SQL** is an embedded DuckDB that **attaches the sealed segments read-only**. The
 ingestion path never writes DuckDB. For `/sql`, hot rows are scanned into per-table temp tables and
 `UNION ALL`'d into each table's view.
+
+Since the engine trait (`engine.rs`), `analytics.rs` keeps every policy decision - the read-only
+gates, the allowlist walk, the deadline - and DuckDB sits behind it in `engine_duck.rs`. A
+`shadow-burrmill` feature, off in release builds, runs
+[Burrmill](https://github.com/nightswatchhq/burrmill) beside DuckDB on every statement and logs each
+difference while DuckDB's answer is served; it is the gate for
+[replacing DuckDB](/blog/replacing-duckdb-after-all).
 
 The union is exact **without deduplication**, and that is structural rather than careful: cold
 includes only segments at or below `sealed_through`, hot only rows above it. The two sets cannot

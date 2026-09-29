@@ -45,11 +45,11 @@ default:
 <root>/index/<name>/latest          # the one movable pointer
 ```
 
-**S3 / object store.** Any S3-compatible bucket (MinIO, S3, R2) - the fleet path. Build with the feature
-flag; configure via the standard `AWS_*` env (including `AWS_ENDPOINT` for self-hosted MinIO):
+**S3 / object store.** Any S3-compatible bucket (MinIO, S3, R2) - the fleet path. The released binary
+and image carry it (the `object-store` feature is on by default); configure via the standard `AWS_*`
+env (including `AWS_ENDPOINT` for self-hosted MinIO):
 
 ```sh
-cargo build --features object-store
 nuthatch nest publish my.bundle --registry s3://nests/prod --as horizon@1.2.0
 ```
 

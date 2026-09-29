@@ -45,14 +45,17 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
   `abi`, `chains`, `factory` (dynamic child discovery), `indexer` (the loop), `progress`.
 - **Storage**: `store` (redb hot store), `seal` (Parquet segments), `blob` + `distribution` +
   `registry` (content-addressed bundles and the nest registry).
-- **Derivation & query**: `views` (authored SQL), `recipes`, `analytics` (IVM balances), `serve`
-  (the HTTP surface), `sql_errors` (errors-as-prompts), `transform` (the WASIp2 component runtime).
+- **Derivation & query**: `views` (the DBSP IVM core, e.g. balances), `entities` (authored
+  incremental entities), `recipes`, `analytics` (read-only SQL over hot ∪ sealed, and authored SQL
+  views), `engine` + `engine_duck` (the engine trait, with DuckDB behind it), `serve` (the HTTP
+  surface), `sql_errors` (errors-as-prompts), `transform` (the WASIp2 component runtime).
 - **Meaning & agents**: `semantic` (the governed semantic layer), `mcp`, `skill` (the generated
   CLI reference), `metadata`.
 - **Compliance**: `labels`, `lists`, `screen`, `flags`, `velocity`, `exposure`, `alerts`,
   `webhooks`, `pack`, `audit`.
-- **Lifecycle & ops**: `config`, `project` (init/add/scaffolding), `lifecycle` (diff/upgrade),
-  `runtime`, `metrics`, `bench`, `check`, `cli`, `starlark_config` (legacy, retired).
+- **Lifecycle & ops**: `config`, `project` (init/add/scaffolding), `lifecycle` (the
+  compatible-vs-breaking classifier), `migrate`, `prune`, `runtime`, `metrics`, `bench`, `check`,
+  `cli`.
 
 ## Where to start reading
 

@@ -15,9 +15,9 @@ makes `init --from` and `nest load` safe.
 ```toml
 [nest]
 name = "usdc"                 # nest name (also the runtime mount name)
-chain = "mainnet"             # mainnet | arbitrum-one | base | bsc | polygon | gnosis | optimism
+chain = "mainnet"             # mainnet | arbitrum-one | base | bsc | polygon | gnosis | optimism | monad | robinhood
 chain_id = 1
-rpc_urls = ["https://…"]      # tried in order, with failover
+rpc_urls = ["https://…"]      # round-robin, with failover
 schema_version = 1            # managed by nuthatch
 block_timestamps = true       # default; set at init, not editable afterwards - see below
 ```
@@ -64,17 +64,21 @@ registry build.
 
 ### Any other EVM chain
 
-Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis and Optimism are **built in** - keyless
-public endpoints, a tuned `eth_getLogs` window and chain-appropriate finality. `init` probes
-Ethereum, Arbitrum One and Base by bytecode when you omit `--chain`; name the others explicitly
-with `--chain polygon`. Public endpoints are measured, not assumed - and a measurement is a
-snapshot, not a property, so run `nuthatch doctor --rpc <url>` before trusting a long backfill to
-any of them.
+Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis, Optimism, Monad and Robinhood Chain are
+**built in** - keyless public endpoints, a tuned `eth_getLogs` window and chain-appropriate finality.
+`init` probes all nine by bytecode when you omit `--chain`. Public endpoints are measured, not
+assumed - and a measurement is a snapshot, not a property, so run `nuthatch doctor --rpc <url>`
+before trusting a long backfill to any of them.
 
-**Any other EVM chain works too** - World Chain, Base Sepolia, your own devnet - it just has to be
-configured by hand. `dev`, `sql`, `bench`, and `dev` are chain-agnostic; `init` and `add` are
-not, since ABI resolution is chain-gated. So the recipe is: write `nuthatch.toml` yourself, vendor
-the ABI, and run.
+**Any other EVM chain works too** - World Chain, Base Sepolia, your own devnet. Name it and say where
+it lives, and `init` reads the chain id from the endpoint:
+
+```sh
+nuthatch init 0xADDR --chain world-chain --rpc https://your-endpoint.example
+```
+
+If Sourcify has no ABI for the contract, pass `--explorer <blockscout-root>` or `--abi <file>`. Writing
+`nuthatch.toml` by hand works just as well:
 
 ```toml
 [nest]
@@ -150,6 +154,7 @@ velocity_window = 7200            # window in BLOCKS (default 7200 ≈ 24h of 12
 [[alerts]]                        # route annotations to webhook sinks
 kinds = ["sanction_hit", "threshold_flag"]
 url = "https://…"
+format = "raw"                    # optional: "raw" (default) | "discord"
 ```
 
 All three are opt-in: absent means no screening, no flags, no alerts, zero cost. Alert delivery is
@@ -165,13 +170,20 @@ table = "usdc__transfer"
 where = "value_dec > 1000000"     # optional SQL predicate (note the key is `where`)
 url = "https://…"
 batch_max = 100                   # optional rows-per-POST cap
-finality = "sealed"               # "sealed" (default, and the only mode today); "tip" is planned
+finality = "sealed"               # "sealed" (default, and the only mode today); "tip" is refused
 since = "registration"            # "registration" (default) | "genesis" | a block number
 secret = "…"                      # optional; adds X-Nuthatch-Signature: sha256=<hex> (HMAC)
 ```
 
 `since = "registration"` means a `--seal-direct` backfill won't fire history at your endpoint. See
 [Webhooks](/docs/build/webhooks/).
+
+### Contract calls and IPFS documents
+
+`[[calls]]` pins an `eth_call` read to a block and needs an archive endpoint, given to `dev` with
+`--state-rpc`. `[[ipfs]]` resolves documents a nest names and proves each against its CID; `dev --ipfs`
+names the gateways. Both are covered field by field in
+[Contract calls and IPFS documents](/docs/build/contract-calls/).
 
 ## `entities.toml`
 

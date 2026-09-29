@@ -23,7 +23,7 @@ const rows = [
   <!-- 1. HERO -->
   <section class="hero">
     <div class="wrap">
-      <p class="hero-eyebrow rise rise-1"><span class="tag">v3.8.5 · MIT OR Apache-2.0</span></p>
+      <p class="hero-eyebrow rise rise-1"><span class="tag">v3.12.1 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
         Nuthatch is a self-hosted blockchain indexer in one Rust binary. From contract
@@ -138,7 +138,7 @@ const rows = [
       <div class="doors-grid">
         <div class="door">
           <span class="door-k">App backends</span>
-          <p>POST /sql, like a database that fills itself.</p>
+          <p>GET /sql, like a database that fills itself.</p>
         </div>
         <div class="door">
           <span class="door-k">Analysts</span>
@@ -205,12 +205,12 @@ const rows = [
       <div class="teaser-inner">
         <div>
           <p class="section-label">Worked example</p>
-          <h2 class="teaser-h">A subgraph, rebuilt as a nest.</h2>
+          <h2 class="teaser-h">From contract to nest.</h2>
           <p class="teaser-copy">
-            A real Graph Horizon subgraph rebuilt as a Nuthatch nest - multiple contracts on
-            Arbitrum One, folded delegation state, authored views and maintained entities, parity-checked. It runs
-            today. GraphQL for subgraph-shaped clients shipped in 3.7.0 only as a partial read surface,
-            and is parked.
+            USDC on Ethereum mainnet, indexed from its contract address: raw event tables queryable
+            over read-only SQL, then an authored view or a maintained entity on top. It runs today.
+            GraphQL for subgraph-shaped clients shipped in 3.7.0 only as a partial read surface, is
+            parked, and since 3.10.0 is served only by a build with <code>--features graph</code>.
           </p>
         </div>
         <a class="btn btn-ghost teaser-btn" href="/example">See the example →</a>

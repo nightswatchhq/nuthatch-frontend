@@ -1,7 +1,7 @@
 #!/bin/sh
 # Nuthatch installer.
 #
-# Downloads the prebuilt static binary for your platform from the latest GitHub release, verifies
+# Downloads the prebuilt binary for your platform from the latest GitHub release, verifies
 # its SHA-256 checksum, and installs it. No compiler needed - you never build from source, so the
 # rustc toolchain on your machine is irrelevant.
 #

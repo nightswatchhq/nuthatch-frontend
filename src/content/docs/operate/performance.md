@@ -67,7 +67,9 @@ since 2.7.0 the top-level halves descend concurrently rather than serially, redu
 very long ranges. The header work itself remains.
 
 They are now **demand-driven**: a nest that never asks a time-series question does not pay. Drop the
-column at scaffold time with `init --no-timestamps`.
+column at scaffold time with `init --no-timestamps`. Since 3.11 the timestamp is taken from the log's
+own `blockTimestamp` wherever the node supplies it, and a header is fetched only for a block whose logs
+lack it: the same 20,000-block Sepolia backfill paid 4,444 `eth_getBlockByNumber` on 3.9.0 and 34 after.
 
 This is an **init-time** decision, deliberately not a flag you can flip: changing it later is a
 breaking schema change and a full re-index. Blocks give you ordering; only timestamps give you time.
@@ -107,7 +109,7 @@ Measured peaks: ≈37 MB for a single contract, ≈58 MB across a three-contract
 of the budget. The 320 MB in the OBIB run above is a full-throttle backfill, which is the expensive
 case, not the steady state.
 
-## Query speed, and the engine we did not switch to
+## Query speed, and the engine question
 
 Analytical queries run on DuckDB, attaching sealed Parquet segments read-only alongside the hot tip.
 
@@ -124,9 +126,13 @@ matters (a signed 128-bit aggregate over a string-typed `uint256` column):
 Each size was run twice with the engine order reversed, because whichever goes first warms the page
 cache. Results were **identical** at every size, in both orders - correctness was never the question.
 
-What failed the gate is that the gap **widens with segment size**, and segments only grow. So DuckDB
-stays in both modes. The destination is unmet, not repudiated: measure-then-switch worked, and the
-measurement said don't.
+What failed the gate is that the gap **widens with segment size**, and segments only grow. So in
+August DuckDB stayed in both modes: measure-then-switch worked, and the measurement said don't.
+
+In September that was reversed. DuckDB will be replaced by
+[Burrmill](https://github.com/nightswatchhq/burrmill), a Rust engine built on DataFusion, once it has
+answered beside DuckDB on live nests for a release without an unexplained difference. Until then
+DuckDB serves every query. See [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
 
 ## Measuring your own
 

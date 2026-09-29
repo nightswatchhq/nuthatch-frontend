@@ -191,7 +191,7 @@ Restoring is putting the directory back and starting the binary. No schema migra
 state to reconcile.
 
 Worth knowing what is precious and what is not: `nuthatch.toml`, `abis/`, `views/` and `checks/` are
-authored and must be kept. `nuthatch.redb`, `segments/` and `.duckdb/` are derived - losing them costs
+authored and must be kept. `nuthatch.redb` and `segments/` are derived - losing them costs
 a re-backfill, not data you cannot recover.
 
 ## 8. Know your upgrade path before you need it

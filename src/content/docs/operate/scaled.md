@@ -9,8 +9,10 @@ Everything else in these docs is **embedded mode**: one binary, no external serv
 first.
 
 Scaled mode is a different deployment for a different problem - **one operator running many nests
-across many machines**. It is opt-in at build time (`--features postgres-store`), so the published
-binary carries no database driver and embedded mode stays a single file with nothing beside it.
+across many machines**. It is opt-in at build time (`--features postgres-store`), so the default
+published binary carries no database driver and embedded mode stays a single file with nothing beside
+it. Each release also ships the scaled build as a separate `nuthatch-scaled-*` tarball and a
+`ghcr.io/nightswatchhq/nuthatch:<version>-scaled` image.
 
 ## When to reach for it
 
@@ -31,7 +33,7 @@ The same crates, run three ways. A role flag, never a fork.
 | Role | Command | Owns |
 |---|---|---|
 | **Control plane** | `nuthatch control --db <postgres>` | *desired state* - what should run |
-| **Writer** | `nuthatch dev --dir <nest>` | cursors it holds a **lease** on; ingests, decodes, seals |
+| **Writer** | `nuthatch worker --control-db <postgres> --hot-store <postgres> --chains <chain>` | cursors it holds a **lease** on; ingests, decodes, seals |
 | **Query-FE** | `nuthatch serve --dir <nest> --hot-store <postgres>` | nothing - serves from shared state |
 
 ```sh
