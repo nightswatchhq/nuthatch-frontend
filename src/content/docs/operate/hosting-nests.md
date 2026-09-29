@@ -79,10 +79,11 @@ nuthatch dev --dir /srv/runtime --listen 0.0.0.0:8288 --registry /srv/registry
   nothing could ever be mounted into it. `--no-admin` removes the routes everywhere.
 
 Every admin call below takes the token as `Authorization: Bearer <token>` (or `?token=<token>`);
-the examples set `-H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN"` once in a shell alias:
+the examples set it once in a shell alias, with the `Content-Type: application/json` every JSON body needs
+(without it the API answers `415`):
 
 ```sh
-alias nh='curl -s -H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN"'
+alias nh='curl -s -H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN" -H "Content-Type: application/json"'
 ```
 
 ## 3. Price a nest before you mount it

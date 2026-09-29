@@ -123,7 +123,7 @@ Every FE node resolves an endpoint through the control plane, not through the re
 
 ```sh
 curl -XPUT localhost:8290/nests/usdc/pin \
-  -d '{"version":"1.3.0","bundle_hash":"0x…"}'
+  -H 'Content-Type: application/json' -d '{"version":"1.3.0","bundle_hash":"0x…"}'
 ```
 
 If each node read `latest` for itself, then during an upgrade one node would serve the new schema
@@ -144,7 +144,7 @@ Private RPC URLs and API keys live in the control plane, keyed by nest:
 
 ```sh
 curl -XPUT localhost:8290/nests/usdc/secrets \
-  -d '{"key":"rpc_url","value":"https://private…"}'
+  -H 'Content-Type: application/json' -d '{"key":"rpc_url","value":"https://private…"}'
 ```
 
 A writer receives only the secrets of the nests it is actually assigned. The interface is

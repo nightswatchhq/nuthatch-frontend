@@ -78,7 +78,7 @@ never an error between:
 
 ```sh
 curl -XPOST localhost:8288/_admin/move/usdc -H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN" \
-  -d '{"nid":"4a71…"}'
+  -H 'Content-Type: application/json' -d '{"nid":"4a71…"}'
 ```
 
 It is a job, readable at `GET /_admin/mounts/usdc`. A move keeps its chain, and it does not classify

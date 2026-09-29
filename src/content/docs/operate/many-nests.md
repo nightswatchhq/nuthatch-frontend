@@ -84,7 +84,7 @@ arrive, pause, change version and leave over the admin API. Before 0.7.0, adding
 meant editing config and restarting, which stops every *co-tenant* nest too.
 
 ```sh
-curl -XPOST   localhost:8288/_admin/nests -d '{"name":"usdc","nid":"9f2c…"}'   # 202, a job
+curl -XPOST   localhost:8288/_admin/nests -H 'Content-Type: application/json' -d '{"name":"usdc","nid":"9f2c…"}'   # 202, a job
 curl          localhost:8288/_admin/mounts/usdc                            # until "phase": "live"
 curl -XDELETE localhost:8288/_admin/nests/usdc
 ```
