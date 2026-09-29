@@ -214,6 +214,7 @@ segments and the hot tail. It does not re-index from RPC. Do not start an entity
 [runtime]
 name = "my-runtime"
 max_rss_mb = 2048             # optional per-cursor RAM ceiling (default 2048)
+suspended = ["usdc"]          # runtime state: mounts suspended over the admin API (3.13.0)
 
 [[chains]]
 chain = "mainnet"
@@ -227,8 +228,12 @@ nid = "<64-hex-nest-identity>"
 sql = "allowlist"              # open | deny | allowlist
 ```
 
-`mounts.toml` is runtime state. `nuthatch migrate` writes it from a pre-2.0 directory and a live
-runtime keeps it current after an admin mount or unmount. See [Run a runtime](/docs/operate/many-nests/)
+`[runtime]` and `[[chains]]` are authored: with no `[[mounts]]` at all they are a valid runtime that
+starts empty and takes its nests over the admin API (3.13.0; without the admin API an empty runtime is
+refused). `[[mounts]]` and `suspended` are runtime state: `nuthatch migrate` writes them from a pre-2.0
+directory and a live runtime keeps them current after an admin mount, unmount, suspend or move. A
+suspended mount keeps its record and data but is neither indexed nor served (it answers `503`) until
+resumed. See [Run a runtime](/docs/operate/many-nests/)
 for the full multichain shape and the named-query allowlist.
 
 ## A note on `nest.star`

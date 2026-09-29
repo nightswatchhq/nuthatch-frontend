@@ -5,7 +5,7 @@ order: 9
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be
-published to and pulled from *by name* - with private nests behind auth, backed by a plain directory or
+published to and pulled from *by name* or *by identity* - with private nests behind auth, backed by a plain directory or
 any S3-compatible bucket.
 
 > **Decoupled, and never mandatory.** The registry is not part of the nuthatch binary and is never
@@ -32,6 +32,34 @@ exactly as safe as a hash-pinned file load).
 
 ```sh
 nuthatch nest load horizon@1.2.0 --registry <path|s3://bucket/prefix>
+```
+
+## Address a nest by its identity
+
+Every published bundle is also indexed by its **NID**, the identity its data is stored under
+(`nuthatch nest nid --dir <nest>` prints it, and `nest publish` prints it too). A NID is all a host needs:
+
+```sh
+nuthatch nest load 9f2c… --registry <path|s3://bucket/prefix>
+```
+
+A name and a version are labels someone chose and can move; a NID is computed from the nest itself.
+So the registry's NID index is checked rather than trusted: the pulled bundle's own manifest must compute
+to the NID asked for, or it is refused, naming both. For the same reason a nest name shaped like a NID
+(64 hex characters) is refused at publish, so a reference is never ambiguous.
+
+A **runtime** started with `--registry` uses exactly this. A live mount naming a NID the runtime does not
+hold fetches it by NID, verifies it and installs it at `data/<nid>/` before mounting, and a refused mount
+removes it again. See [Host nests for others](/docs/operate/hosting-nests/).
+
+```sh
+nuthatch dev --dir my-runtime --registry s3://nests/prod
+```
+
+Layout, beside the name index:
+
+```text
+<root>/nids/<nid>                   # the hash of the bundle that computes to this NID
 ```
 
 ## Backends

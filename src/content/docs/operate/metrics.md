@@ -18,6 +18,8 @@ Process-level gauges:
 | `nuthatch_tip_lag_blocks` | The gap between the two - your "are we keeping up" number. |
 | `nuthatch_sealed_through` | The highest block sealed to Parquet (trails finality, by design). |
 | `nuthatch_rss_bytes` | The process's resident set - watch it against the budget. |
+| `nuthatch_hot_store_bytes` | Bytes of every nest's hot store (redb) on disk, summed. |
+| `nuthatch_sealed_segments_bytes` | Bytes of sealed Parquet segments on disk, each segment store counted once - the disk the runtime's history actually uses. |
 | `nuthatch_last_poll_unixtime` | When the tip was last polled (a frozen value means a stalled poller). |
 | `nuthatch_alert_outbox_depth` | Undelivered webhook/alert rows in the durable outbox. |
 
@@ -37,6 +39,14 @@ With [many nests in one runtime](/docs/operate/many-nests/), the process-level s
 number, so each nest also gets labelled per-nest counterparts: `nuthatch_nest_last_block`,
 `nuthatch_nest_sealed_through`, `nuthatch_nest_rows_decoded_total`,
 `nuthatch_nest_rows_sealed_total`, and `nuthatch_nest_reorgs_total`.
+
+Storage per nest, since 3.13.0: `nuthatch_nest_hot_store_bytes` is that nest's own hot store, and
+`nuthatch_nest_sealed_segments_bytes` the sealed segments its manifest names. Segments are
+content-addressed and shared, so a segment two datasets both contain counts under both nests and the sum
+over nests can exceed the disk used; the unlabelled `nuthatch_sealed_segments_bytes` counts each store
+once. Before 3.13.0 that total counted a runtime's shared store once per nest. A mount sharing another's
+dataset has no storage series of its own. This is what a host meters by; see
+[Host nests for others](/docs/operate/hosting-nests/).
 
 Health series (RFC-0026), which is where you look when *part* of a runtime is unwell:
 

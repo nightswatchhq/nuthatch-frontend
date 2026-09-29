@@ -72,10 +72,11 @@ entity circuit.
   directory instead.
 - **`nuthatch nest load <bundle|url|dir>`** - verify a bundle (manifest format, every file's hash,
   and that the regenerated decode registry matches) and install it as a runnable nest. `--expect`
-  asserts the hash; `--registry` resolves a `name[@version]` reference instead.
+  asserts the hash; `--registry` resolves a `name[@version]` reference instead, or a NID, whose
+  bundle must compute to that NID.
 - **`nuthatch nest publish <bundle> --registry <store>`** - publish under `name@version`, advancing
-  `latest`.
-- **`nuthatch nest nid`** - print the NID the nest's data is stored under (`data/<nid>/`), without
+  `latest`, and index it by NID; prints the hash and the NID.
+- **`nuthatch nest nid --dir <nest>`** - print the NID the nest's data is stored under (`data/<nid>/`), without
   running it.
 - **`nuthatch nest rename-alias <old> <new>`** - re-key a contract alias in `nuthatch.toml`, the ABI
   file and `semantic.toml`.
@@ -88,8 +89,9 @@ entity circuit.
   Lists by default; `--yes` deletes.
 
 - **`nuthatch dev`** - run many nests behind one listener; `--fail-fast` exits on the first
-  fault instead of quarantining it (RFC-0026). See
-  [Run a runtime](/docs/operate/many-nests/).
+  fault instead of quarantining it (RFC-0026); `--registry <store>` lets a live mount fetch a NID the
+  runtime does not hold. See [Run a runtime](/docs/operate/many-nests/) and
+  [Host nests for others](/docs/operate/hosting-nests/).
 
 ## Offchain data (RFC-0045)
 

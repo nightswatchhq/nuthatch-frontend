@@ -98,6 +98,14 @@ Tagline: "Be your own indexer."
   `[[chains]]` in `mounts.toml`, with one isolated cursor per chain (its own tip, finality, and reorg
   boundary) and a per-cursor footprint budget. Multichain is a capability, not a mandate - one chain
   per runtime stays valid and is the default, and a cursor is never multiplexed across two chains.
+- The runtime owns the nest lifecycle (3.13.0): a runtime may start with chains declared and nothing
+  mounted. `POST /_admin/nests {name, nid}` mounts a nest identity as a job (202, then `GET
+  /_admin/mounts/<name>` through accepted, fetching, joining, live or failed), fetching it from
+  `--registry` by NID when the runtime does not hold it and verifying it as `nest load` does.
+  `?dry_run=true` reports its backfill, per-block RPC work and footprint and the refusal a real mount
+  would give; `/_admin/suspend` and `/_admin/resume` pause a mount behind a named 503;
+  `/_admin/move` switches a name to a new NID in one step with no gap; `?reclaim=true` on an unmount
+  frees the disk. Per-nest storage is on `/metrics`. Guide: /docs/operate/hosting-nests/.
 - Derive-first contract reads (RFC-0023, tiers 1-3): `nuthatch recipe add total_supply|balances|
   holder_count|reserves` derives what a subgraph pays an archive node to `eth_call` for, from the
   events already indexed - no archive node, no eth_call. `nuthatch metadata fetch` calls once and

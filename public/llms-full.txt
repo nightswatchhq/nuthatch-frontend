@@ -100,6 +100,11 @@ obstacle has been the operational weight of the tooling, which is an engineering
     than one chain in one runtime, with one isolated cursor per chain (own tip, finality, reorg
     boundary) and a per-cursor footprint budget. It is a capability, not a mandate - one chain per
     runtime is the default, and a cursor is never multiplexed across two chains.
+    Since 3.13.0 the runtime owns the nest lifecycle: it may start with nothing mounted, and a caller
+    hands it a NID over the admin API (`POST /_admin/nests`), which it fetches from `--registry`,
+    verifies, installs, catches up and serves, as a job readable at `GET /_admin/mounts/<name>`.
+    Mounts can be priced first (`?dry_run=true`), suspended and resumed, moved to a new NID with no
+    gap (`/_admin/move`), and unmounted with their disk reclaimed. Guide: /docs/operate/hosting-nests/.
 11. Derive-first contract reads (RFC-0023, tiers 1-3): `nuthatch recipe add total_supply|balances|
     holder_count|reserves` derives from indexed events what a subgraph pays an archive node to
     `eth_call` for - no archive node, no eth_call. `nuthatch metadata fetch` calls once and caches

@@ -50,8 +50,9 @@ nid = "9f2c…"                # which nest identity it serves
 sql = "open"                 # how much SQL this mount exposes - see Security
 ```
 
-`mounts.toml` is **runtime state, not authored config**: `nuthatch migrate` writes it and the runtime
-keeps it in step. You do not hand-write it.
+The `[runtime]` block and the `[[chains]]` are yours to write: they are all an empty runtime needs to
+start. The `[[mounts]]` records are **runtime state**: the admin API and `nuthatch migrate` write them
+and the runtime keeps them in step, so you do not hand-write those.
 
 A nest cannot tell it is co-hosted: its config, storage, and routes are identical to a solo `dev`.
 
@@ -77,31 +78,42 @@ The backfill flags you know from `dev` apply to every mounted nest: `--backfill 
 
 ## Mount and unmount without a restart
 
-Since **0.7.0** the mounted set is changeable while it runs. Before that, adding or removing a nest
-meant editing config and restarting - which stops every *co-tenant* nest too, so a configuration
-change had a wider blast radius than an actual fault.
+Since **0.7.0** the mounted set is changeable while it runs, and since **3.13.0** the runtime owns the
+whole lifecycle: a runtime may start with chains declared and **nothing mounted**, and every nest can
+arrive, pause, change version and leave over the admin API. Before 0.7.0, adding or removing a nest
+meant editing config and restarting, which stops every *co-tenant* nest too.
 
 ```sh
-curl -XPOST   localhost:8288/_admin/nests -d '{"name":"my-nest"}'
-curl -XDELETE localhost:8288/_admin/nests/my-nest
+curl -XPOST   localhost:8288/_admin/nests -d '{"name":"usdc","nid":"9f2c…"}'   # 202, a job
+curl          localhost:8288/_admin/mounts/usdc                            # until "phase": "live"
+curl -XDELETE localhost:8288/_admin/nests/usdc
 ```
 
-Both are gated by the admin token when bound off-localhost, and `--no-admin` removes them entirely.
+Started with `--registry`, the runtime fetches a NID it does not hold, verifies it as `nest load` does
+and installs it at `data/<nid>/` first. All of these routes are gated by the admin token when bound
+off-localhost, and `--no-admin` removes them entirely. The full guide, with suspend, move, dry runs and
+reclaiming disk, is [Host nests for others](/docs/operate/hosting-nests/).
 
 What the runtime guarantees:
 
 - **A mount is admitted, not assumed.** It is refused with `507` if it would breach the cursor's RAM
-  budget (the response carries the projected and ceiling figures), and `409` for a name already mounted
-  or a chain this runtime has no cursor for. Every refusal is decided before a store is opened or a block
-  is fetched, so a rejected mount leaves nothing behind.
+  budget (the reason carries the projected and ceiling figures), and `409` for a name already mounted
+  or a chain this runtime does not declare. `?dry_run=true` answers the same question without mounting.
+  A refused mount leaves nothing behind, including a nest it fetched to find out.
 - **It catches up before it joins.** A cursor advances from the *slowest* of its live nests, so a nest
   spliced in while far behind would drag every co-tenant back through history. A new nest backfills
-  alongside the cursor and joins once it is level.
+  alongside the cursor and joins once it is level. The first nest onto a chain starts that chain's
+  cursor, exactly as boot would.
 - **An unmount is a drain.** The cursor finishes its current window and releases the nest's store
-  before the routes are removed - not the other way round.
-- **The set is persisted** to `mounts.toml`, so a restart comes back with what you last asked for. At
-  runtime nuthatch owns that list; use `--no-admin` if you manage the file with configuration
-  management.
+  before the routes are removed - not the other way round. The dataset stays on disk, so a remount is
+  free; `?reclaim=true` removes it once no mount names it.
+- **A suspend keeps its place.** A suspended mount answers `503`, holds no store and no cursor slot,
+  and resumes from where it stopped.
+- **A move has no gap.** `POST /_admin/move/<name>` switches a name to a new NID in one step after the
+  new nest has caught up.
+- **The set is persisted** to `mounts.toml`, and mount jobs to `mount-jobs.json`, so a restart comes
+  back with what you last asked for and resumes what was in flight. At runtime nuthatch owns those
+  files; use `--no-admin` if you manage `mounts.toml` with configuration management.
 
 ## When one nest goes wrong
 

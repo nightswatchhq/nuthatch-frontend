@@ -75,15 +75,39 @@ not, and answer them with 404.
 - `GET /_admin/` - the built-in dashboard; `GET /_admin/events` streams live activity (SSE).
   Off-localhost both require the admin token; `--no-admin` removes them. See
   [Serving & the admin UI](/docs/operate/serving/).
-- `POST /_admin/nests` *(runtime only)* - mount a nest into a running runtime. `DELETE
-  /_admin/nests/{name}` unmounts it. These mutate runtime state, require the admin token when
-  remote, and disappear with `--no-admin`.
+- The **runtime lifecycle routes** below mutate runtime state: they require the admin token when
+  bound off-localhost and disappear with `--no-admin`.
 - `GET /nests` *(runtime only)* - the roster of mounted nests: name, chain, registry hash, table
   count, footprint, plus each nest's **live health** (`indexing` or `quarantined`, with the reason
   and the next re-admission attempt). The health half is merged per request, not cached at boot, so
   a quarantined nest reports what is true now.
 - `GET /ready` *(runtime root)* - runtime-wide readiness, for a supervisor to poll. Each nest also
   answers its own `GET /<name>/ready`, so one sick nest is diagnosable without guessing.
+
+## Runtime lifecycle (admin)
+
+A runtime (`nuthatch dev --dir` over a `mounts.toml`) is driven by these routes. `<name>` is a mount's
+route key: `usdc`, or `acme/usdc` in a multi-tenant runtime. The walkthrough is
+[Host nests for others](/docs/operate/hosting-nests/).
+
+| Route | Does | Answers |
+|---|---|---|
+| `POST /_admin/nests` `{"name", "nid"}` | Mount a NID under a name, as a job; fetched from `--registry` if not held | `202` and the job; `200` if already live with that NID; `409` for another NID |
+| `POST /_admin/nests?wait=true` | The same, answering when finished | `200`, or `400` / `404` / `409` / `507` |
+| `POST /_admin/nests?dry_run=true` | Price and check a mount, mounting nothing | `200` and a report with `refusal_status` |
+| `GET /_admin/mounts` | Every mount the runtime knows, with its phase | `200` `{"mounts": [...]}` |
+| `GET /_admin/mounts/<name>` | One mount's job | `200`, or `404` |
+| `POST /_admin/suspend/<name>` | Take a mount off its cursor, keep its data, answer `503` in its place | `200`; `404` if not mounted |
+| `POST /_admin/resume/<name>` | Resume a suspended mount, as a job (`?wait=true` accepted) | `202`; `404` if not suspended |
+| `POST /_admin/move/<name>` `{"nid"}` | Switch a live name to a new NID in one step, as a job (`?wait=true` accepted) | `202`; `400` for a malformed NID; `409` while a job for the name is running |
+| `DELETE /_admin/nests/<name>` | Unmount (drain, then remove routes); `?reclaim=true` also frees the dataset | `200` `{"unmounted", "reclaim"?}` |
+| `DELETE /_admin/datasets/<nid>` | Free a dataset unmounted earlier | `200` reclaimed, `409` kept, `404` absent |
+
+A job is `{"name", "nid", "phase", "reason"?, "since_unixtime"}`, with `phase` one of `accepted`,
+`fetching`, `joining`, `live`, `failed`. Reading a job never waits on a mount in progress; unfinished
+jobs resume after a restart. Mount refusals: `400` malformed NID, `404` NID not held and no
+`--registry`, `409` name taken, chain not declared or its cursor dead, `507` over the cursor's RAM
+ceiling. On the job route each ends the job `failed` with the same reason.
 
 The normal operator upgrade path is [staging a successor and running `nuthatch migrate`](/docs/operate/upgrades/).
 It classifies schema compatibility before changing a mount; it does not silently put a second public

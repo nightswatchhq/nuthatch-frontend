@@ -69,6 +69,22 @@ Add `--allow-breaking` once the consumers are ready, or mount the new version un
 and migrate them across on their own clock. **The data is safe either way** - this is about queries,
 not bytes.
 
+## Repoint a name over the admin API
+
+A runtime driven over its admin API changes a name's version without a restart or a file edit. A new
+version is a new NID, published to the registry; moving the name to it catches the new nest up beside the
+old one and then switches the name's routes in one step, so readers see the old nest, then the new, and
+never an error between:
+
+```sh
+curl -XPOST localhost:8288/_admin/move/usdc -H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN" \
+  -d '{"nid":"4a71…"}'
+```
+
+It is a job, readable at `GET /_admin/mounts/usdc`. A move keeps its chain, and it does not classify
+compatibility the way `nuthatch migrate` does: it serves the new identity under the old name. See
+[Host nests for others](/docs/operate/hosting-nests/).
+
 ## Why an edit usually costs nothing
 
 A nest's identity is a hash of its authored inputs, so *any* edit changes it. Without more, that would
