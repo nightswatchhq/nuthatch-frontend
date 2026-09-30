@@ -87,7 +87,7 @@ not, and answer them with 404.
 ## Runtime lifecycle (admin)
 
 A runtime (`nuthatch dev --dir` over a `mounts.toml`) is driven by these routes. `<name>` is a mount's
-route key: `usdc`, or `acme/usdc` in a multi-tenant runtime. The walkthrough is
+route key: `usdc` for the default tenant, `acme/usdc` for any other, fixed for the life of the mount. The walkthrough is
 [Host nests for others](/docs/operate/hosting-nests/).
 
 | Route | Does | Answers |
@@ -96,6 +96,7 @@ route key: `usdc`, or `acme/usdc` in a multi-tenant runtime. The walkthrough is
 | `POST /_admin/nests?wait=true` | The same, answering when finished | `200`, or `400` / `404` / `409` / `507` |
 | `POST /_admin/nests?dry_run=true` | Price and check a mount, mounting nothing | `200` and a report with `refusal_status` |
 | `GET /_admin/mounts` | Every mount the runtime knows, with its phase | `200` `{"mounts": [...]}` |
+| `GET /metrics` | The runtime's Prometheus exposition, per-nest series labelled `{nest}` | `200`, even with nothing mounted |
 | `GET /_admin/mounts/<name>` | One mount's job | `200`, or `404` |
 | `POST /_admin/suspend/<name>` | Take a mount off its cursor, keep its data, answer `503` in its place | `200`; `404` if not mounted |
 | `POST /_admin/resume/<name>` | Resume a suspended mount, as a job (`?wait=true` accepted) | `202`; `404` if not suspended |
@@ -105,7 +106,7 @@ route key: `usdc`, or `acme/usdc` in a multi-tenant runtime. The walkthrough is
 
 A job is `{"name", "nid", "phase", "reason"?, "since_unixtime"}`, with `phase` one of `accepted`,
 `fetching`, `joining`, `live`, `failed`, or `suspended` while paused. Reading a job never waits on a mount in progress; unfinished
-jobs resume after a restart. Mount refusals: `400` malformed NID, `404` NID not held and no
+jobs resume after a restart. Mount refusals: `400` malformed NID or a name boot would refuse, `404` NID not held and no
 `--registry`, `409` name taken, chain not declared or its cursor dead, `507` over the cursor's RAM
 ceiling. On the job route each ends the job `failed` with the same reason.
 

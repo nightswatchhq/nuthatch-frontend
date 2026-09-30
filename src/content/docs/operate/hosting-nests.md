@@ -11,7 +11,8 @@ script instead of by editing files and restarting.
 
 The whole contract fits in a sentence: **you hand the runtime a nest identity (NID), and the runtime
 fetches it, verifies it, stores it, indexes it and serves it.** Nothing on your side unpacks bundles,
-runs schema tools or starts processes. Everything below is available since **3.13.0**.
+runs schema tools or starts processes. Everything below is available since **3.13.0**; run **3.13.1** or later, which fixes restarts
+during moves and suspensions, validates names, and serves `/metrics` at the runtime root.
 
 What stays outside the runtime, by design: who your callers are, what they may do, what they pay, and
 how the process is supervised. nuthatch sees a tenant as an opaque label and knows nothing else about
@@ -139,6 +140,12 @@ nh localhost:8288/_admin/mounts          # {"mounts": [...]} - every mount the r
 | `failed` | Refused or broken; `reason` says why. |
 | `suspended` | Paused by the operator: off its cursor, answering `503`, until resumed. |
 
+**`live` means indexing and serving, not caught up.** A mount onto a chain that already has a cursor
+catches up beside it before it goes live. The first mount onto a chain starts the cursor and backfills
+inside it, so it is `live` while history is still arriving. `/<name>/ready` gives the distance:
+`lag_blocks` is how far behind the tip the nest is, and `ready` stays `true` while it catches up, since
+readiness means serving and advancing. Treat a nest as caught up when `lag_blocks` is small.
+
 Reading a job never waits on a mount in progress. Jobs are written to `mount-jobs.json` in the
 runtime directory: after a restart an unfinished job resumes, and a failed one stays readable until
 the name is mounted again or unmounted.
@@ -151,9 +158,9 @@ script; a platform should poll.
 
 | Status | Why |
 |---|---|
-| `400` | A malformed NID. |
+| `400` | A malformed NID, or a name the runtime would not accept (see step 5). |
 | `401` | No token, or the wrong one. |
-| `404` | The runtime does not hold the NID and was started without `--registry`. |
+| `404` | The runtime does not hold the NID and was started without `--registry`. With `--registry`, a NID the registry lacks ends the job `failed` instead, its reason naming the NID. |
 | `409` | The name is taken, the nest's chain is not declared, or that chain's cursor has died (restart the runtime). |
 | `507` | The mount would breach the chain cursor's RAM ceiling; the reason carries projected and ceiling MB. |
 
@@ -175,12 +182,14 @@ nh -XPOST localhost:8288/_admin/nests -d '{"name":"globex/usdc","nid":"9f2c…"}
 Both mounts serve **one dataset**, indexed once. The tenant is a label nuthatch refcounts and knows
 nothing else about: it never authenticates it, limits it or bills it.
 
-:::caution[Route shape is decided at boot]
-Routes are `/<alias>/` while the mount table holds one tenant and `/<tenant>/<alias>/` once it holds
-two or more. A live mount does not reshape the routes already served, but the next restart applies the
-rule to all of them. If you host more than one party, mount everything as `tenant/alias` from the start
-and route your gateway by the name you mounted.
-:::
+**A mount's route depends on its own tenant alone** (3.13.1): the default tenant's mounts serve by
+alias, `/usdc/`, and every other tenant's as `/acme/usdc/`. Adding or removing another tenant, and
+restarting, never moves a route.
+
+A name is `alias` or `tenant/alias`, each part letters, digits, `_` and `-`, at most 64 characters. An
+alias may not end in `__moving`, which a move uses for the nest it stages, and the default tenant is
+never spelled out: mount `usdc`, not `default/usdc`. Any other name is refused with `400` before
+anything is written.
 
 ## 6. Pause and resume
 
@@ -236,7 +245,8 @@ references. Segments a live nest may still be reading are left for `nuthatch pru
 
 ## 9. Meter it
 
-`/metrics` breaks the runtime down per mount, labelled `{nest="<name>"}`:
+The runtime serves `/metrics` at its root, before anything is mounted, broken down per mount with the
+label `{nest="<name>"}`:
 
 | Series | Use |
 |---|---|
