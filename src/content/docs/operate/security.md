@@ -142,9 +142,11 @@ runs. Unpinned, your fleet is exactly as trustworthy as your registry.
 
 ## Secrets
 
-**`nest bundle` packs `nuthatch.toml` verbatim.** It does not redact anything, so a keyed RPC URL or a
-webhook `secret` written into that file ends up in the bundle, and in every copy of it you publish.
-Keep credentials out of the file you bundle.
+**`nest bundle` packs `nuthatch.toml` verbatim.** It cannot redact anything without changing the nest's
+identity, so since 3.13.3 it refuses a file that holds a webhook `secret`, or an RPC, webhook or alert
+URL that looks keyed (userinfo, a key-named query parameter, or a long token in the path), and names
+each one with the URL redacted. `--allow-secrets` bundles anyway. The check is a heuristic and will not
+recognise every key, so keep credentials out of the file you bundle.
 
 - **Embedded**: pass private endpoints at run time with `--rpc` and `--state-rpc` rather than writing
   them into `rpc_urls`. If a secret has to live in `nuthatch.toml` for a local nest, keep the

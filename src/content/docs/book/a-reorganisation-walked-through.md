@@ -58,6 +58,14 @@ sense. It is the only honest behaviour once the external finality assumption has
 The operator must investigate the chain source, finality configuration and recovery procedure
 instead of allowing a plausible but inconsistent index to keep serving.
 
+Detection is not instantaneous. The cursor learns that the chain changed when a reorg check runs, and
+until then it answers from what it last indexed, as it does for an ordinary reorg near the tip. A check
+runs when a poll sees the tip move; a fork that keeps the tip height is re-checked at most every twelve
+seconds while idle, and a failing RPC delays it further, so there is no fixed bound. Measured once
+against a forked chain at a one-second poll interval, the sealed rows of the abandoned branch were served
+for about half a second before the halt. No read-time setting removes the window, because below the
+seal the discarded rows are the sealed ones. A finality depth the chain honours is the only protection.
+
 The same line applies to direct sealing. That fast backfill path only processes a range already
 behind the finality boundary. Its performance comes from avoiding hot writes, not from relaxing the
 definition of permanent history.
