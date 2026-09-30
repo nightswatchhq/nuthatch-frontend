@@ -89,9 +89,10 @@ rejected or missing credential gives a clear _"this nest is private, or your reg
 rejected"_, never a silent empty result, and never mistaken for "not found".
 
 > **Two kinds of credential - don't conflate them.** *Registry auth* fetches a private *bundle*. *Nest
-> runtime secrets* - a private RPC URL, an enricher's API key - are a different thing: they're injected
-> per-nest at mount time and are **never** baked into a content-addressed bundle (that would both leak
-> the secret and break addressing).
+> runtime secrets* - a private RPC URL, an enricher's API key - are a different thing: they belong
+> outside the bundle, passed at run time. Bundling does not strip them for you: `nuthatch.toml` goes
+> into the bundle verbatim, so anything written there is published with it. Keep credentials out of
+> the file before you bundle.
 
 ## See also
 

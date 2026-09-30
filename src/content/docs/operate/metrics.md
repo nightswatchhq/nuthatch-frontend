@@ -35,8 +35,9 @@ Process-level counters:
 | `nuthatch_sql_rejections_total` | Queries refused by the guards (timeout, interrupt, bad SQL). |
 | `nuthatch_rpc_requests_total` | Upstream RPC calls made. |
 
-With [many nests in one runtime](/docs/operate/many-nests/), the process-level series blend every mounted nest into one
-number, so each nest also gets labelled per-nest counterparts: `nuthatch_nest_last_block`,
+With [many nests in one runtime](/docs/operate/many-nests/), the height and poll gauges above
+(`nuthatch_tip_height`, `nuthatch_last_block`, `nuthatch_last_poll_unixtime`) are solo-runtime only
+and do not describe any one nest; alert on the labelled per-nest series instead: `nuthatch_nest_last_block`,
 `nuthatch_nest_sealed_through`, `nuthatch_nest_rows_decoded_total`,
 `nuthatch_nest_rows_sealed_total`, and `nuthatch_nest_reorgs_total`.
 

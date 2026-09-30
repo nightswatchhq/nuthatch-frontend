@@ -63,8 +63,8 @@ deliberate choices (RFC-0016):
   without executing it, so an agent iterates on shape cheaply and runs `sql` once.
 - **Results are shaped for context windows.** The bridge caps rows (default 200) and returns
   compact tables, not JSON walls.
-- **Answers carry provenance.** Every result is stamped with the block range and content-addressed
-  segments it came from - an agent can cite a figure, and `verify-a-number` (a built-in prompt)
+- **Answers carry provenance.** A `sql` result ends with the block it is current to, the sealed
+  watermark, the source and the registry hash, so an agent can cite a figure, and `verify-a-number` (a built-in prompt)
   re-derives one from scratch.
 
 The tool-by-tool surface - plus the resources and the built-in prompts - is in the

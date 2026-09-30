@@ -25,10 +25,12 @@ same inputs at the same block always produce the same output, on any machine, on
   re-decoded).
 - **Entity derivation** - incremental views over decoded events (DBSP/IVM), or pure WASM components.
 - **Contract state** - where nuthatch *derives* a read (see [Recipes](/docs/build/recipes/)) it's pure
-  SQL over indexed events, no fetch at all. The only value it fetches today is a token's *immutable*
-  metadata (`decimals`/`symbol`/`name`), pulled once and cached - constants that never change, so
-  re-execution is stable. Block-pinned fetching of *mutable* state (EIP-1898, a pure function of
-  `(code, storage, block, calldata)`) is a deferred design (RFC-0024), not in the data path today.
+  SQL over indexed events, no fetch at all. Token metadata (`decimals`/`symbol`/`name`) is
+  pulled once and cached, since it never changes. Mutable state comes only through declared
+  [`[[calls]]`](/docs/build/contract-calls/), each an `eth_call` pinned to a specific block
+  (EIP-1898), sampled every N blocks or triggered by a row, so its answer is a pure function of `(code, storage, block,
+  calldata)` and re-execution against an archive endpoint returns the same value. A general
+  execution engine for arbitrary state (RFC-0024) remains a deferred design.
 
 ## LLMs generate code, never data
 

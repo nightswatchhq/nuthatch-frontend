@@ -164,8 +164,9 @@ The union is exact **without deduplication**, and that is structural rather than
 includes only segments at or below `sealed_through`, hot only rows above it. The two sets cannot
 overlap, even during the brief window between sealing and pruning.
 
-Results carry **provenance** - the block range and the content-addressed segment hashes they were
-computed from - so a number can be cited and re-derived.
+Results carry **provenance**: the `as_of` and `sealed_through` watermarks, the nest's `nid` and
+`registry_hash`, and each referenced entity's watermark, so a number can be cited and re-derived. It
+names the dataset and the cut, not the individual segments.
 
 `/sql` is a genuine analytical surface exposed to callers, so it is guarded: a 30-second timeout, a
 50,000-row cap, a 64 MiB result ceiling, 2 concurrent analytical queries, a 16 KiB query-length limit,

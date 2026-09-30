@@ -183,7 +183,7 @@ Both mounts serve **one dataset**, indexed once. The tenant is a label nuthatch 
 nothing else about: it never authenticates it, limits it or bills it.
 
 **A mount's route depends on its own tenant alone** (3.13.1): the default tenant's mounts serve by
-alias, `/usdc/`, and every other tenant's as `/acme/usdc/`. Adding or removing another tenant, and
+alias, under `/usdc`, and every other tenant's under `/acme/usdc`. Adding or removing another tenant, and
 restarting, never moves a route.
 
 A name is `alias` or `tenant/alias`, each part letters, digits, `_` and `-`, at most 64 characters. An
@@ -217,7 +217,7 @@ nh -XPOST localhost:8288/_admin/move/usdc -d '{"nid":"4a71…"}'    # 202, a job
 ```
 
 The runtime mounts the new NID beside the old one, catches it up, and then switches the name's routes in
-**one step**. A reader polling `/usdc/` sees the old nest until that step and the new nest after it,
+**one step**. A reader polling `/usdc` sees the old nest until that step and the new nest after it,
 and never an error in between. The old nest is then taken off its cursor. A move keeps its chain; a
 move whose new nest is refused leaves the old one serving and removes anything it fetched.
 

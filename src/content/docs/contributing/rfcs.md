@@ -97,7 +97,7 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0038 Subgraph parity** *(Implemented; all 5 slices, v2.6.0)* - parameterised calls (arguments
   drawn from the triggering row) and top-level calls decoded with no node required, measured against
   a live Uniswap V3 port: 343 swaps row-for-row identical to the gateway, 219 pools with no misses.
-- **0039 The recorded tape** *(Proposed; design only)* - record RPC once and replay it from disk, so
+- **0039 The recorded tape** *(Implemented, #785)* - `bench backfill --record` / `--replay`: record RPC once and replay it from disk, so
   a storage-path multiplier can be measured without the endpoint in it.
 - **0040 The freshness dial** *(Accepted)* - trade staleness for money: `--poll-interval` and
   `--finality-only` shipped in v3.5.0.

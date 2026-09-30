@@ -171,7 +171,7 @@ where = "value_dec > 1000000"     # optional SQL predicate (note the key is `whe
 url = "https://…"
 batch_max = 100                   # optional rows-per-POST cap
 finality = "sealed"               # "sealed" (default, and the only mode today); "tip" is refused
-since = "registration"            # "registration" (default) | "genesis" | a block number
+since = "registration"            # "registration" (default) | "genesis" | a block number, quoted: "26091000"
 secret = "…"                      # optional; adds X-Nuthatch-Signature: sha256=<hex> (HMAC)
 ```
 

@@ -142,11 +142,13 @@ runs. Unpinned, your fleet is exactly as trustworthy as your registry.
 
 ## Secrets
 
-Private RPC URLs and webhook HMAC secrets never enter a published bundle - baking a credential into a
-content-addressed artifact would leak it *and* break addressing.
+**`nest bundle` packs `nuthatch.toml` verbatim.** It does not redact anything, so a keyed RPC URL or a
+webhook `secret` written into that file ends up in the bundle, and in every copy of it you publish.
+Keep credentials out of the file you bundle.
 
-- **Embedded**: they live in the nest's `nuthatch.toml`. Keep the directory `0700`, owned by the
-  service user.
+- **Embedded**: pass private endpoints at run time with `--rpc` and `--state-rpc` rather than writing
+  them into `rpc_urls`. If a secret has to live in `nuthatch.toml` for a local nest, keep the
+  directory `0700`, owned by the service user, and do not bundle that copy.
 - **Scaled**: they live in the control plane and are injected per nest, per worker, scoped to the
   cursors that worker actually holds. The interface is **write-only** - you can list which keys exist
   and never read a value back. Rotating one changes no bundle hash, so it neither invalidates segment

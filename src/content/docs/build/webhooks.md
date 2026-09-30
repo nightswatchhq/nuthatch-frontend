@@ -18,7 +18,7 @@ where = "value_dec > 1000000"      # optional SQL predicate - note the key is `w
 url = "https://your-service/hooks/usdc"
 # batch_max = 100                  # optional rows-per-POST cap (default 50)
 # finality = "sealed"              # "sealed" (default, and the only mode today); "tip" is planned
-# since = "registration"           # "registration" (default) | "genesis" | a block number
+# since = "registration"           # "registration" (default) | "genesis" | a block number, quoted: "26091000"
 # secret = "…"                     # optional HMAC-SHA256 secret → X-Nuthatch-Signature header
 ```
 
@@ -33,8 +33,9 @@ delivered before finality could be un-emitted by a reorg, forcing you to chase i
 consumer side. By firing only past finality, nuthatch delivers rows that will never roll back.
 
 > The tradeoff is latency: a webhook trails the tip by the chain's finality distance. If you need
-> tip-latency reads, query the [live HTTP surface](/docs/operate/serving/) or subscribe over the
-> [MCP](/docs/ai/mcp/) instead - those see the hot store; webhooks are for durable downstream delivery.
+> tip-latency reads, poll the [live HTTP surface](/docs/operate/serving/) or the
+> [MCP](/docs/ai/mcp/) tools instead. Those see the hot store; webhooks are for durable downstream
+> delivery. The MCP has no subscriptions.
 
 ## At-least-once, host-owned
 

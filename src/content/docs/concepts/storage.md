@@ -48,8 +48,9 @@ the hot→cold seam without the caller knowing where the row lives.
 ## Big integers
 
 Values wider than 64 bits (a `uint256`) are stored as an exact decimal string, with a derived
-`{col}_dec` DECIMAL column for numeric use. A value over 38 digits exceeds DECIMAL(38,0) - cast it to
-`DOUBLE` or `HUGEINT` in SQL when you need arithmetic. See [The SQL surface](/docs/reference/sql/).
+`{col}_dec` DECIMAL column for numeric use. A value over 38 digits exceeds DECIMAL(38,0), and neither
+cast rescues it exactly: `HUGEINT` is signed 128-bit and overflows at the same order, and `DOUBLE`
+loses precision past about 15 digits. See [The SQL surface](/docs/reference/sql/).
 
 ## Next
 

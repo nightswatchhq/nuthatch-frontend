@@ -175,8 +175,9 @@ looks like "the data just stopped being interesting". In a runtime, add `nuthatc
 `nuthatch_cursor_live`, because a *partly* unwell runtime still answers `/health` on the whole. Full
 list in [metrics](/docs/operate/metrics/).
 
-`/ready` is the honest liveness signal for a load balancer: it answers *is this nest caught up*, and
-reports `stalled` when every endpoint in the pool is refusing a window.
+`/ready` is the honest liveness signal for a load balancer: it answers *is this nest serving and making
+progress*, and reports `stalled` when every endpoint in the pool is refusing a window. A nest still
+backfilling is ready, so if "caught up" is what you need, add a `lag_blocks` threshold on top.
 
 ## 7. Back it up
 
@@ -206,8 +207,10 @@ Two different axes, and conflating them is the usual confusion:
   [upgrades](/docs/operate/upgrades/).
 
 Verify parity rather than assuming it: note a few row counts before, re-run them after. Query
-responses carry a `provenance` block whose `registry_hash` fingerprints the decode and schema, so an
-unchanged hash across an upgrade is proof the nest still produces the same answers.
+responses carry a `provenance` block whose `registry_hash` fingerprints the decode and schema. An
+unchanged hash across an upgrade says the rows are decoded the same way; it says nothing about
+authored views or entities, which can change without moving it. Parity of answers is the row counts
+and query results you compare at a fixed watermark.
 
 ## 9. Prove it, do not assume it
 

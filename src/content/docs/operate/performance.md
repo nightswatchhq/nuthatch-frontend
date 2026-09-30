@@ -37,8 +37,10 @@ harness was fixed made the ratios invalid.
 Fresh public-RPC measurements did not settle the question. One run put seal-direct at **0.92x** the
 hot-store path, contradicting both the architecture and a **5.2x** run measured hours earlier at the
 same commit lineage. Another session varied by **3.8x inside one arm**. Those numbers describe the
-endpoint, machine contention, and workload as well as the code. A deterministic replay rig is being
-built before another storage-path multiplier is published.
+endpoint, machine contention, and workload as well as the code. That is why the bench can take the
+network out: `nuthatch bench backfill --record <tape>` records every RPC call a run makes, and
+`--replay <tape>` runs the same range from disk. No storage-path multiplier is published here until
+it has been re-measured that way.
 
 The invariant remains tested: hot-store, seal-direct, and pipelined paths produce byte-identical
 sealed segments for the same inputs. That is a correctness claim, not a throughput claim.

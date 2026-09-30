@@ -39,6 +39,11 @@ and so on. Leave it out and the alias is the contract name from the ABI in snake
 (`DelegationManager` becomes `delegation_manager`), falling back to `c0` only when the ABI names
 nothing usable.
 
+USDC is a proxy, and `init` says so: its current implementation was deployed at block 18,921,498,
+years after the proxy, and events before that block may use earlier implementations' ABIs, which this
+scaffold does not decode. That is fine for a first query. Before you trust historical supply or
+balances from it, vendor the earlier implementations' ABIs too.
+
 ## 3. Run it
 
 `dev` backfills from the deployment block, follows the tip, decodes every declared event, and serves an

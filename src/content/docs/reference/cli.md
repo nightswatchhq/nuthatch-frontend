@@ -11,7 +11,8 @@ own metadata and drift-gated in CI) ships in the repo as
 If a flag isn't there, it doesn't exist. This page is the guided tour: use it to understand the
 workflow, then use the generated reference when you need the exact spelling of an option.
 
-Every command that operates on a nest takes `--dir` (default `.`).
+Almost every command that operates on a nest takes `--dir` (default `.`). The exception is
+`nest bundle`, which takes the directory as a positional argument: `nuthatch nest bundle <dir>`.
 
 ## The two commands
 

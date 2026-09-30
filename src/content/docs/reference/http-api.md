@@ -13,7 +13,7 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 
 - `GET /` - the index summary: contract(s), chain, rows indexed, last and sealed block.
 - `GET /health` - liveness; returns `ok`.
-- `GET /ready` - readiness (caught up enough to serve).
+- `GET /ready` - readiness: serving and making progress, not stalled. It is **not** "caught up"; check `lag_blocks` for that.
 - `GET /metrics` - Prometheus text. See [Metrics & footprint](/docs/operate/metrics/).
 - `GET /nest` - the nest's identity: name, chain, content-addressed registry hash.
 - `GET /shape` - which capabilities this nest can actually answer for (balances, flags, exposure,
@@ -33,8 +33,8 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   A query cut off by the timeout is answered with 504, one that spills more than the analytics spill
   cap to temporary storage (`analytics.max_temp_size`, 2 GB by default) with 507, and a malformed one
   with 400. Results
-  carry a **provenance stamp** - the block range and content-addressed segments the answer came
-  from - so a figure can be cited against immutable data. See
+  carry a **provenance stamp**: `as_of`, `sealed_through`, `source`, `nid` and `registry_hash`,
+  so a figure can be cited against a fixed watermark. It does not list the segments read. See
   [The SQL surface](/docs/reference/sql/).
 - `GET /explain?q=…` - validate a query **without executing it**: binds every table, column, and
   type and returns `{valid: true}` or an error with a fix hint. Cheaper than `/sql`; agents use it
