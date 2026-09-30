@@ -70,10 +70,10 @@ const meets = [
     <div class="wrap">
       <header class="head narrow">
         <p class="section-label">Nuthatch &amp; The Graph</p>
-        <h1>Different jobs, same data</h1>
+        <h1>Nuthatch complements The Graph</h1>
         <p class="lede">
-          Nuthatch gets read, now and then, as a competitor to The Graph. It is not one, and the
-          reason is structural rather than diplomatic. The Graph is a network: a market in which
+          Nuthatch complements The Graph rather than replacing it, and the reason is structural
+          rather than diplomatic. The Graph is a network: a market in which
           indexers serve subgraphs, consumers pay query fees, and the protocol arbitrates who did
           the work honestly. Nuthatch is a binary. It turns a contract address into an indexed API
           on whichever machine you happen to be sitting at. One is a place to buy indexed data. The
@@ -83,6 +83,20 @@ const meets = [
 
       <div class="split">
         <article class="argument">
+          <h2>Checked against the network</h2>
+          <p>
+            At Arbitrum One block 510,395,917 (30 September 2026), a Nuthatch nest built only from
+            on-chain events reported 14,415 active allocations on The Graph's SubgraphService. The
+            Graph Network subgraph reports the same 14,415 allocations at that block, matched by
+            allocation ID with none missing on either side.
+          </p>
+          <p>
+            <a href="https://www.lodestar-dashboard.com" rel="noopener">Lodestar</a>, an analytics
+            dashboard for The Graph Protocol on Arbitrum One, runs on nests: it serves live panels
+            from self-hosted Nuthatch nests instead of The Graph gateway.
+            <a href="/stories">How it runs</a>.
+          </p>
+
           <h2>The self-hosting argument</h2>
           <p>
             Saying that Nuthatch competes with The Graph is a little like saying that graph-node
@@ -126,10 +140,10 @@ const meets = [
 
           <h2>What comes next</h2>
           <p>
-            One piece of work points that way. A hosted nests data service, some of it
-            community-driven, so that a team which does not want to operate a box can still buy a
-            nest through the protocol rather than from a private vendor. It has no date, because the roadmap promises order rather than dates, and it makes a nest
-            a better citizen of the network, not a way around it. The GraphQL read surface is parked:
+            Nightswatch does not run a hosted nest service. GraphOps plans to offer hosted nests on
+            its own platform, running the same binary as anyone else, so that a team which does not
+            want to operate a box can still have a nest run for it. There is no date for it yet. The
+            GraphQL read surface is parked:
             an analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for
             one field it cannot answer.
           </p>

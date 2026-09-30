@@ -6,6 +6,10 @@ author: "cargopete"
 tags: ["nuthatch", "hackathon", "hosting", "the-graph", "arc", "sepolia"]
 ---
 
+> **Retired, 2026-09-29.** Nightswatch no longer hosts nests, so the offer below is withdrawn, and
+> the Arcaidia nests it describes were stopped that day. GraphOps plans to offer hosted nests on its own platform, running the same binary as
+> anyone else; there is no date for it yet. This post is kept as a record of what it was.
+
 *If you are building at a hackathon and an indexing quota is between you and your demo, send us a
 message. We will build the nest from your contracts, test it, and host it on our own box for the
 duration, with no key, no quota and no bill. This post is what that meant in practice today, so you

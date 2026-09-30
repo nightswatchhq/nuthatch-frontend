@@ -277,18 +277,16 @@ segments - no trusted execution environments and no zero-knowledge proofs.
 
 ## Comparison, stated as facts
 
-- The Graph: a decentralized network, or a heavy self-host (graph-node plus Postgres plus
-  IPFS). Imperative AssemblyScript handlers; GraphQL; open source. Per-query fees apply on the
-  network.
-- Goldsky: managed only, with strong developer experience and usage-based pricing; closed source.
-- Ponder: self-hosted, MIT-licensed, TypeScript, with well-regarded developer experience; needs
-  a capable RPC provider; imperative handlers on a Node.js runtime. Ponder is a good tool; if
-  you want TypeScript, use it.
-- Subsquid: self-hosted, Apache-2.0, TypeScript; imperative handlers reading from an archive
-  (its network or your own) plus Postgres; GraphQL out. A good tool too.
-- Nuthatch: runs on your hardware, one-binary install, no mandatory third-party data API,
-  deterministic and re-executable, declarative entities via IVM, a built-in MCP server, MIT OR Apache-2.0,
-  and free.
+| | Needs a subgraph | Needs handler code | Data comes from | What you run | Query with |
+|---|---|---|---|---|---|
+| **The Graph** | yes | yes (AssemblyScript) | indexers on the network | nothing, or graph-node + Postgres + IPFS | GraphQL |
+| **Ponder** | no | yes (TypeScript) | your RPC endpoint | Node.js, plus Postgres in production | SQL, GraphQL |
+| **Nuthatch** | no | no: tables come from the ABI | your RPC endpoint | one binary | SQL, HTTP, MCP |
+
+Like Ponder, Nuthatch reads the chain over JSON-RPC, so it needs an endpoint, and a provider may
+charge for one. The public endpoints it bundles are for trying it out, not for keeping it running.
+It complements The Graph rather than replacing it: a subgraph serves an application from a network
+of indexers, while a nest puts a contract's history in a database on your own machine.
 
 ## Worked example (/example)
 

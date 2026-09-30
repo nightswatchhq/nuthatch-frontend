@@ -7,6 +7,10 @@ tags: ["nuthatch", "hosting", "platform", "usdc"]
 draft: false
 ---
 
+> **Retired, 2026-09-29.** Nightswatch no longer hosts nests, and the service this post describes
+> has closed. GraphOps plans to offer hosted nests on its own platform, running the same binary as
+> anyone else; there is no date for it yet. This post is kept as a record of what it was.
+
 > **Updated, 2026-09-24, later still.** There are now three plans, Free, Builder at 29 USDC and Pro
 > at 79 USDC, in place of Free and a $20 Paid, priced by how often a nest checks for new blocks;
 > [the plans section](#three-plans-priced-by-freshness) says why. The platform runs nuthatch 3.11,

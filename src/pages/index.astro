@@ -6,17 +6,12 @@ import Pipeline from '../components/Pipeline.astro';
 
 const GH = 'https://github.com/nightswatchhq/nuthatch';
 
-// Comparison rows. mark: 'yes' | 'no' | 'part' | text-only via `text`.
-const cols = ['Nuthatch', 'The Graph', 'Goldsky', 'Ponder', 'Subsquid'];
+// Comparison rows, kept identical to the README's table.
+const cols = ['Needs a subgraph', 'Needs handler code', 'Data comes from', 'What you run', 'Query with'];
 const rows = [
-  { f: 'Runs on your hardware',        c: [ ['yes'], ['part','Heavy self-host'], ['no','Managed only'], ['yes'], ['yes'] ] },
-  { f: 'One-binary install',           c: [ ['yes'], ['no','node + PG + IPFS'], ['no'], ['no','Node.js runtime'], ['no','Archive + PG'] ] },
-  { f: 'No mandatory third-party API', c: [ ['yes'], ['part','If self-hosted'], ['no','Required'], ['part','Needs an RPC'], ['part','Archive network'] ] },
-  { f: 'Deterministic / re-executable',c: [ ['yes'], ['part','PoI'], ['no'], ['no','Imperative'], ['no','Imperative'] ] },
-  { f: 'Declarative entities (IVM)',   c: [ ['yes'], ['no','AssemblyScript'], ['no'], ['no','TypeScript'], ['no','TypeScript'] ] },
-  { f: 'Built-in MCP server',          c: [ ['yes'], ['no'], ['no'], ['no'], ['no'] ] },
-  { f: 'Licence',                      c: [ ['t','MIT / Apache-2.0'], ['t','Open source'], ['t','Closed'], ['t','MIT'], ['t','Apache-2.0'] ] },
-  { f: 'Price',                        c: [ ['t','Free'], ['t','Per-query fees'], ['t','Usage-based'], ['t','Free'], ['t','Free'] ] },
+  { p: 'The Graph', us: false, c: ['yes', 'yes (AssemblyScript)', 'indexers on the network', 'nothing, or graph-node + Postgres + IPFS', 'GraphQL'] },
+  { p: 'Ponder',    us: false, c: ['no', 'yes (TypeScript)', 'your RPC endpoint', 'Node.js, plus Postgres in production', 'SQL, GraphQL'] },
+  { p: 'Nuthatch',  us: true,  c: ['no', 'no: tables come from the ABI', 'your RPC endpoint', 'one binary', 'SQL, HTTP, MCP'] },
 ];
 ---
 <Layout path="/">
@@ -26,9 +21,8 @@ const rows = [
       <p class="hero-eyebrow rise rise-1"><span class="tag">v3.13.2 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
-        Nuthatch is a self-hosted blockchain indexer in one Rust binary. From contract
-        address to live indexed API in under two minutes. No services to rent, no APIs to
-        trust, nothing phoning home.
+        Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres,
+        no subgraph to write, and an MCP server built in.
       </p>
 
       <div class="hero-cta rise rise-3">
@@ -79,8 +73,8 @@ const rows = [
           <p>Contract address to live indexed API. Timed from <code>init</code> to first query.</p>
         </div>
         <div class="card proof-card">
-          <div class="proof-stat">0 third parties</div>
-          <p>No gateway, no metered API, no tokens, no telemetry. Your node, your data, your box.</p>
+          <div class="proof-stat">0 telemetry</div>
+          <p>No gateway, no tokens, no account, nothing phoning home. It reads from an RPC endpoint you choose, which can be your own node.</p>
         </div>
       </div>
     </div>
@@ -165,34 +159,24 @@ const rows = [
           <thead>
             <tr>
               <th scope="col" class="ct-feature"></th>
-              {cols.map((c, i) => <th scope="col" class={i === 0 ? 'ct-us' : ''}>{c}</th>)}
+              {cols.map((c) => <th scope="col">{c}</th>)}
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr>
-                <th scope="row" class="ct-feature">{r.f}</th>
-                {r.c.map((cell, i) => {
-                  const kind = cell[0];
-                  const note = cell[1];
-                  return (
-                    <td class={i === 0 ? 'ct-us' : ''}>
-                      {kind === 'yes' && <span class="ct-mark ct-yes" aria-label="yes">✓</span>}
-                      {kind === 'no' && <span class="ct-mark ct-no" aria-label="no">-</span>}
-                      {kind === 'part' && <span class="ct-mark ct-part" aria-label="partial">~</span>}
-                      {kind === 't' && <span class="ct-text">{note}</span>}
-                      {note && kind !== 't' && <span class="ct-note">{note}</span>}
-                    </td>
-                  );
-                })}
+                <th scope="row" class={r.us ? 'ct-feature ct-us' : 'ct-feature'}>{r.p}</th>
+                {r.c.map((cell) => <td class={r.us ? 'ct-us' : ''}><span class="ct-text">{cell}</span></td>)}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <p class="compare-foot">
-        Ponder is excellent. If you want TypeScript, use it. The Graph, Goldsky, and Subsquid are
-        good tools too; this table states facts, not a verdict.
+        Like Ponder, Nuthatch reads the chain over JSON-RPC, so it needs an endpoint, and a provider may
+        charge for one. The public endpoints it bundles are for trying it out, not for keeping it running.
+        It complements The Graph rather than replacing it: a subgraph serves an application from a network
+        of indexers, while a nest puts a contract's history in a database on your own machine.
       </p>
     </div>
   </section>
@@ -317,12 +301,7 @@ const rows = [
   .ct-feature { color: var(--text); font-weight: 500; width: 32%; }
   .ct-us { background: var(--pale-blue-bg); }
   thead .ct-us { color: var(--accent-ink); font-weight: 600; }
-  .ct-mark { font-weight: 600; }
-  .ct-yes { color: var(--ok); }
-  .ct-no { color: var(--text-faint); }
-  .ct-part { color: var(--warn); }
   .ct-text { color: var(--text); }
-  .ct-note { display: block; font-size: 0.75rem; color: var(--text-faint); margin-top: 0.15rem; }
   .compare-foot { margin-top: 1.2rem; font-size: 0.85rem; color: var(--text-faint); }
 
   /* TEASER */
