@@ -30,7 +30,9 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
   `{block:012}-{logindex:06}`.
 - `GET /sql?q=…&max_rows=N` - read-only SQL over the live tip ∪ sealed history (SELECT/WITH only).
   Guarded: 30 s timeout, row cap (50,000 max; `max_rows` asks for less), 64 MiB result-byte cap, 2 concurrent.
-  A query cut off by the timeout is answered with 504, a malformed one with 400. Results
+  A query cut off by the timeout is answered with 504, one that spills more than the analytics spill
+  cap to temporary storage (`analytics.max_temp_size`, 2 GB by default) with 507, and a malformed one
+  with 400. Results
   carry a **provenance stamp** - the block range and content-addressed segments the answer came
   from - so a figure can be cited against immutable data. See
   [The SQL surface](/docs/reference/sql/).

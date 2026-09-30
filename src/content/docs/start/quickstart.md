@@ -109,6 +109,11 @@ They are **not** fine for real work, and it's better to hear that here than at 3
   `eth_getLogs` calls. Expect a free endpoint to throttle you long before that finishes.
 - **No archive guarantees.** Many free endpoints prune old state, so a backfill from a 2020 deploy
   block can fail partway.
+- **On Arbitrum, `arb1.arbitrum.io` sends no timestamps on its logs.** Every block's timestamp then
+  costs a header, and it takes header batches of about ten, so while it is anywhere in the pool
+  (primary or `--rpc-fallback`) every header batch goes out at ten. A backfill through it runs at a
+  few times chain speed. For history, use a keyed Arbitrum endpoint *in place of* `arb1`, not beside
+  it; `init` and `dev` say this too.
 
 Use your own endpoint for anything you care about - your own node, or a paid provider:
 
