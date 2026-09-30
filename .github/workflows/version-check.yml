@@ -59,3 +59,12 @@ jobs:
       - name: advertised version matches current release
         shell: bash
         run: ./scripts/version-check.sh "${{ steps.release.outputs.version }}"
+
+      # #41: the same release, so the version the site names and the commands it teaches agents are
+      # judged against one tag. Resolves every `nuthatch ...` in public/llms*.txt against that tag's
+      # clap-generated cli-reference.md.
+      - name: agent-facing commands exist in the current release
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: ./scripts/command-check.sh "$VERSION"
