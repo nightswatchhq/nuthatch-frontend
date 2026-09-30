@@ -39,12 +39,12 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:3.13.0 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:3.13.1 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`3.13.0-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`3.13.1-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source
