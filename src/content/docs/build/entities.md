@@ -27,7 +27,7 @@ max_rows = 100000
 ```
 
 ```sql
-SELECT indexer, SUM(CAST(tokensRewards AS DECIMAL(38,0))) AS tokens_rewards
+SELECT indexer, SUM(tokensRewards) AS tokens_rewards
 FROM service__indexing_rewards_collected
 GROUP BY indexer
 ```
@@ -43,6 +43,22 @@ The compiler accepts deterministic projection and filtering, exact arithmetic, o
 `ORDER BY`, `LIMIT`, window functions, outer joins, `DISTINCT`, recursive queries and percentile or
 other holistic aggregates. Unsupported SQL belongs in a view. It remains useful there, and the refusal
 is intentional rather than a missing parser feature.
+
+Every decoded integer, a `uint24` as much as a `uint256`, is read as an exact 128-bit integer. A stored
+value too large for that faults the entity rather than wrapping or truncating, even in a row a `WHERE`
+would discard, because each row is converted before it is filtered.
+
+## What `check` tells you
+
+`nuthatch check` lowers and binds each entity exactly as `dev` starts it (since 3.13.3), so the two
+agree: SQL the compiler refuses, a table or column the nest does not have, and a name that shadows a
+decoded table all fail `check`. It also refuses an expression that fails on every row whatever the
+data, such as `fee + '1'`, `WHERE fee` on an integer, or `SUM` of an address, and a stored value too
+large for 128 bits, in sealed history or the hot tail. What depends on the data, a `CASE` that takes a
+failing branch on some rows for instance, is left to runtime, where the entity faults loudly.
+
+An entity with no rows yet is an empty relation of its declared types, so a view over it binds on a
+fresh nest, and `check` validates such views the same way.
 
 ## What it buys
 

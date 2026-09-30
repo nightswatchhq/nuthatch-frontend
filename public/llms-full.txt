@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v3.13.2** - a promise about stability (no CLI flag, HTTP route, config key or
+own indexer." Status: **v3.13.3** - a promise about stability (no CLI flag, HTTP route, config key or
 generated column renamed or removed without a major bump; upgrades stay a binary swap with
 no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
@@ -194,7 +194,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v3.13.2 is the current release,
+against a real provider - the event count matching Sentio's own README. v3.13.3 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -214,7 +214,7 @@ reversing the August "Keeping DuckDB" post; RFC-0013's gate had found DataFusion
 DuckDB's latency). An engine trait and a shadow session, in which Burrmill answers beside DuckDB and
 DuckDB's answer is served, are on main behind a feature off in release builds; cutover waits on a
 release cycle of real traffic with zero unexplained differences. Every release to date, including
-v3.13.2, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
+v3.13.3, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
 Burrmill;
 streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP egress for
 transform worlds (`kv` grant ships today); wildcard indexing.
@@ -294,7 +294,7 @@ The page at https://www.nuthatch-indexer.com/example indexes USDC on Ethereum ma
 contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev` backfills from the
 deployment block and follows the tip, every declared event becomes a table (`usdc__transfer`) with
 provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v3.13.2.
+between an authored view and a maintained entity. It is the current, executable path on v3.13.3.
 Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
@@ -308,7 +308,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`GET /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v3.13.2: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
+v3.13.3: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
 the read surface shipped in 3.7.0 is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
@@ -356,7 +356,7 @@ promised - order is.
   scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
   (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); proven, typed IPFS documents at
   scale (RFC-0037 slices 5 to 8); offchain price snapshots (RFC-0045 stage 2); the 3.11.0 RPC
-  economies; v3.13.2 the current release with prebuilt binaries and container images;
+  economies; v3.13.3 the current release with prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
 - **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full.
@@ -378,9 +378,9 @@ promised - order is.
 
 ## Install
 
-v3.13.2 is the current release. The installer and `cargo` fetch the latest.
+v3.13.3 is the current release. The installer and `cargo` fetch the latest.
 
-**3.9.0 to 3.13.2.** 3.9.0 adds `nest nid` and `offchain pull`, and offchain snapshots reach authored
+**3.9.0 to 3.13.3.** 3.9.0 adds `nest nid` and `offchain pull`, and offchain snapshots reach authored
 entities. Two configurations 3.8.5 accepted now refuse to start: an entity whose `sql` is inline or
 names a file other than `entities/<name>.sql`, and a contract alias or template name that would put
 its tables inside `offchain__`. An `eth_call` item error is no longer stored as a revert: only an
@@ -392,7 +392,7 @@ dataset. 3.11.0 cuts the RPC bill: timestamps from the logs (4,444 header reads 
 20,000-block Sepolia backfill, byte-identical segments), the chain's block time as the default poll
 interval, and `--rpc-fallback`. 3.12.0 changes nothing in the published binaries; its work is behind
 the off-by-default `folds` feature. 3.12.1 executes each `/sql` statement once rather than twice, and
-answers a query cut off by the time budget with 504 rather than 400. 3.12.2 moves Wasmtime past two security advisories, holds a nest mounted on a running runtime to the rules boot enforces, lets a runtime start with nothing mounted, and reads a provider's wrapped revert and block-range cap correctly. 3.13.0 lets a runtime run its own nests: handed a NID, it fetches the nest from a registry, verifies and indexes it as a job readable over the admin API, and can dry-run, suspend, resume, move and reclaim it; `/metrics` reports storage per nest, and the runtime-wide sealed total no longer counts a shared store once per nest. 3.13.1 fixes what an end-to-end run of that admin API found against a real chain: names and a restart mid-move that left a runtime unable to start, a move that broke a dataset two tenants shared, and identical mounts reported as failed; routes are now keyed per mount, so a mount of a single non-default tenant serves at `/<tenant>/<alias>/`, and `/metrics` is served at the runtime root. 3.13.2 fixes what a hardening pass found: Arbitrum timestamps stored as 0 through `arb1.arbitrum.io` (now fetched as headers, in batches of ten that `arb1` takes, so a backfill through keyless `arb1` runs at a few times chain speed), an analytics spill cap DuckDB did not enforce (now enforced, 2 GB by default, off a tmpfs `/tmp`), authored entity columns reaching SQL as text, and misspelt `nuthatch.toml` keys silently ignored (now a warning, a `check` failure, and a suggestion). Each is a binary swap and a
+answers a query cut off by the time budget with 504 rather than 400. 3.12.2 moves Wasmtime past two security advisories, holds a nest mounted on a running runtime to the rules boot enforces, lets a runtime start with nothing mounted, and reads a provider's wrapped revert and block-range cap correctly. 3.13.0 lets a runtime run its own nests: handed a NID, it fetches the nest from a registry, verifies and indexes it as a job readable over the admin API, and can dry-run, suspend, resume, move and reclaim it; `/metrics` reports storage per nest, and the runtime-wide sealed total no longer counts a shared store once per nest. 3.13.1 fixes what an end-to-end run of that admin API found against a real chain: names and a restart mid-move that left a runtime unable to start, a move that broke a dataset two tenants shared, and identical mounts reported as failed; routes are now keyed per mount, so a mount of a single non-default tenant serves at `/<tenant>/<alias>/`, and `/metrics` is served at the runtime root. 3.13.3 makes `nuthatch check` lower and bind each entity as `dev` starts it, so the two agree; makes every entity `port-emit` writes startable; makes `nest bundle` refuse to publish credentials; stops log lines keeping an RPC URL's password; and makes a restart, an idle entity fault and a finality violation report truthfully. 3.13.2 fixes what a hardening pass found: Arbitrum timestamps stored as 0 through `arb1.arbitrum.io` (now fetched as headers, in batches of ten that `arb1` takes, so a backfill through keyless `arb1` runs at a few times chain speed), an analytics spill cap DuckDB did not enforce (now enforced, 2 GB by default, off a tmpfs `/tmp`), authored entity columns reaching SQL as text, and misspelt `nuthatch.toml` keys silently ignored (now a warning, a `check` failure, and a suggestion). Each is a binary swap and a
 restart, apart from the 3.9.0 refusals and the 3.10.0 GraphQL routes, and from 3.13.0 a script that mounts over the admin API adds `?wait=true`.
 
 **3.8.0 makes an `[[ipfs]]` nest over megabyte documents fit to deploy.** It was built for Edge &

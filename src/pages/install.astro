@@ -6,7 +6,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v3.13.2: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
+  description="Install Nuthatch v3.13.3: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
@@ -19,7 +19,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       </p>
 
       <p class="prerelease-note">
-          <strong>v3.13.2 is out</strong>, the result of a hardening pass: Arbitrum timestamps are right through <code>arb1.arbitrum.io</code> (fetched as headers, so a backfill through that keyless endpoint runs at a few times chain speed; a keyed RPC avoids it), the analytics spill cap is enforced and off a tmpfs <code>/tmp</code>, authored entity columns reach SQL typed, and a misspelt <code>nuthatch.toml</code> key fails <code>nuthatch check</code> with a suggestion. 3.13.1 before it fixed what an end-to-end run of 3.13.0's runtime admin API found against a real chain: names and a restart mid-move that left a runtime unable to start, a move that broke a dataset two tenants shared, and identical mounts reported as failed. Anyone hosting nests should take it. Since 3.13.0 a runtime runs its own nests: hand it a NID over the admin API and
+          <strong>v3.13.3 is out</strong>: <code>nuthatch check</code> now agrees with <code>dev</code> about incremental entities, every entity <code>port-emit</code> writes can start, <code>nest bundle</code> refuses to publish credentials, log lines no longer keep an RPC URL's password, and a restart, an entity fault and a finality violation all report truthfully on a quiet chain. Anyone who authors entities or ports a subgraph should take it. 3.13.2 before it was a hardening pass: Arbitrum timestamps are right through <code>arb1.arbitrum.io</code> (fetched as headers, so a backfill through that keyless endpoint runs at a few times chain speed; a keyed RPC avoids it), the analytics spill cap is enforced and off a tmpfs <code>/tmp</code>, authored entity columns reach SQL typed, and a misspelt <code>nuthatch.toml</code> key fails <code>nuthatch check</code> with a suggestion. 3.13.1 before it fixed what an end-to-end run of 3.13.0's runtime admin API found against a real chain: names and a restart mid-move that left a runtime unable to start, a move that broke a dataset two tenants shared, and identical mounts reported as failed. Anyone hosting nests should take it. Since 3.13.0 a runtime runs its own nests: hand it a NID over the admin API and
           it fetches the nest from a registry, verifies and indexes it, and can dry-run, suspend, move and
           reclaim it (<a href="/docs/operate/hosting-nests">Host nests for others</a>). 3.12.2 before it moved
           Wasmtime past two security advisories and let a runtime start with nothing mounted. Of the five
@@ -69,12 +69,12 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nightswatchhq/nuthatch:3.13.2' prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nightswatchhq/nuthatch:3.13.3' prompt={true} />
       <p class="note">
         The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
         <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
-        <code>:3.13.2</code> and <code>:latest</code> are the embedded build; pin the version for anything
-        you care about. <code>:3.13.2-scaled</code> carries the Postgres driver and the <code>worker</code>,
+        <code>:3.13.3</code> and <code>:latest</code> are the embedded build; pin the version for anything
+        you care about. <code>:3.13.3-scaled</code> carries the Postgres driver and the <code>worker</code>,
         <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only.
         The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
