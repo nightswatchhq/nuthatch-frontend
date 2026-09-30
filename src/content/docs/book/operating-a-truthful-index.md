@@ -35,13 +35,16 @@ without telling you.
 `nuthatch doctor --rpc <url>` asks an endpoint three questions before a backfill trusts it: the
 widest `eth_getLogs` range it will serve, the largest JSON-RPC batch it accepts, and whether it has
 archive depth. Each of those limits otherwise surfaces mid-backfill as a retry loop that looks
-exactly like slowness, which is the worst way to learn it. Point it at the nest with `--dir` and it
-probes with the full declared contract filter the nest will actually issue, rather than an empty
-one or the first contract in the file.
+exactly like slowness, which is the worst way to learn it. Run it as `nuthatch doctor --dir <nest>`,
+without `--rpc`, and it probes the nest's own endpoints with the full declared contract filter the
+nest will actually issue, rather than an empty one or the first contract in the file. With an
+explicit `--rpc`, pass `--address` too; otherwise the probe is range-only, and doctor says so.
 
-Read its window figure as a **floor**, not a ceiling. A probe with no address filter measures the
-provider's raw block-range capacity; every measurement on record has address-filtered limits coming
-in *under* that, so the number is a conservative lower bound on what a real nest sustains.
+It prints two window figures, and they mean different things. `up to N blocks` is what the endpoint
+served. `recommend --window M` is what to set: from an address-filtered probe it is half the measured
+limit, and from a range-only probe it is capped at 320, because a probe without an address cannot see
+the result-count limit a real nest meets. Read the recommendation as a starting point that holds, and
+re-probe with `--address` for a figure that reflects both limits.
 
 The part worth building a habit around is the second probe. Nuthatch ships measured endpoints for
 its built-in chains, and one of them was measured on a Tuesday and had silently lost archive depth by
@@ -52,8 +55,10 @@ backfill rather than trusting a number somebody wrote down once.
 
 ## Observe the pipeline, not just the server
 
-Metrics make the stages visible. `nuthatch_tip_lag_blocks` tells you whether the cursor keeps up.
-`nuthatch_last_poll_unixtime` reveals a poller that has frozen. Per-nest health tells you whether a
+Metrics make the stages visible. For a single nest, `nuthatch_tip_lag_blocks` tells you whether the
+cursor keeps up and `nuthatch_last_poll_unixtime` reveals a poller that has frozen. A runtime hosting
+several datasets reports per nest instead: `nuthatch_nest_tip_lag_blocks{nest="…"}`, with each nest's
+poll time and stall state on its own `/<name>/ready`. Per-nest health tells you whether a
 part of a shared runtime has been quarantined. `nuthatch_cursor_live` identifies the chain cursor
 that has died even if another chain in the same process remains busy. RSS and query rejection
 counters show whether the node is protecting itself as intended.

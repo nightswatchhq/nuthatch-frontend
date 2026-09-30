@@ -33,8 +33,9 @@ accounted for, not merely rows received.
 
 For the transfer log, the registry looks at the emitting address and topic zero, identifies the
 `Transfer(address,address,uint256)` decoder from the vendored ABI, and decodes indexed and data
-fields into a typed row. It also supplies the implicit chain columns: block number, transaction
-hash, transaction index, log index, address and, where configured, the block timestamp.
+fields into a typed row. It also supplies the implicit chain columns: block number, block hash,
+transaction hash, log index, address and, where configured, the block timestamp. There is no
+transaction index column; order within a block is the log index, which is block-wide.
 
 No schema inference happens at this point. The table layout was generated from the nest's inputs.
 An unknown event is not invited to become a new column because it happened to look interesting.

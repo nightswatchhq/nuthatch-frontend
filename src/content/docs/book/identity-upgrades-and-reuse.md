@@ -8,7 +8,10 @@ Software versioning is often an agreement among humans: this release is called 2
 are the changes we say it contains. That remains valuable, but it is not sufficient for deciding
 whether two indexer packages decode the same data. Nuthatch uses content identity for that question.
 
-The nest identity, or NID, is the SHA-256 hash of the canonical authored manifest. Change a
+The nest identity, or NID, is the SHA-256 hash of the canonical authored manifest, taken with the
+manifest's generator version replaced by a fixed placeholder and behind a `nuthatch-nid-v1` domain
+prefix, so a new nuthatch binary does not by itself make a new nest; the plain manifest hash, version
+included, is the separate bundle hash `nuthatch nest bundle` prints. Change a
 contract selection, pinned ABI, event configuration or authored view, and the NID changes. The
 runtime stores data by that identity under `data/<nid>/`; a mount maps an operator-facing alias and
 tenant to it. An alias may change without changing data. Two tenants may mount the same NID without

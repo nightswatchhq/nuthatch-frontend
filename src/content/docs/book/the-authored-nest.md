@@ -49,9 +49,11 @@ schema upgrades unnecessarily dangerous.
 
 ## Content identity
 
-Nuthatch packages authored inputs into a canonical manifest and hashes that manifest with SHA-256.
-The resulting nest identity, or NID, identifies what was authored, not which directory happens to
-contain it and not who mounted it. Two copies of the same inputs have the same identity. A one-byte
+Nuthatch packages authored inputs into a canonical manifest. Hashed as it stands, with SHA-256, that
+manifest gives the **bundle hash**, which also covers the version of nuthatch that wrote it. The nest
+identity, or NID, is hashed from the same manifest with that version replaced by a fixed placeholder
+and a domain prefix in front, so upgrading the binary alone never moves a nest's identity. The NID
+identifies what was authored, not which directory happens to contain it and not who mounted it. Two copies of the same inputs have the same identity. A one-byte
 change in an ABI, configuration or view creates a new identity.
 
 That is deliberately strict. The hash is not a version label chosen at a meeting. It is a statement
