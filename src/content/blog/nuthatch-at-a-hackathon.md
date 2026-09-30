@@ -125,7 +125,12 @@ a rate limit on you.
 
 One limit worth knowing before the demo: **the API sets no CORS headers**. A browser page on another
 origin cannot call it directly. Call it from your server side and hand the rows to the page, which is
-where an API key would have lived in any case. A tunnel from the laptop works for a week-long demo,
+where an API key would have lived in any case.
+
+> **Updated, 2026-10-01.** That limit is gone. Since 3.8.0, `nuthatch dev` and `nuthatch serve` take
+> `--cors <ORIGIN>` (repeatable, or `*`), and a page on that origin can call the nest directly. Checked
+> against 3.13.3: an allowed origin gets `access-control-allow-origin` back, any other origin does not.
+> Off by default, so a nest you have not opted in still sends no CORS headers. A tunnel from the laptop works for a week-long demo,
 with the obvious caveat that the laptop has to stay open.
 
 ## Where the subgraph still wins
