@@ -24,8 +24,9 @@ cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
 
 ## 2. Scaffold a nest from an address
 
-`init` detects the chain, resolves the ABI (Sourcify first, then an Etherscan-class API), vendors it
-locally, and generates the schema, views, and AI surface - no API key required.
+`init` detects the chain, resolves the ABI (Sourcify first, then a keyless Blockscout, then Etherscan
+if `ETHERSCAN_API_KEY` is set), vendors it locally, and generates the schema, views, and AI surface -
+no API key required for a verified contract.
 
 ```sh
 nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc --chain mainnet
@@ -34,8 +35,14 @@ nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc --chain ma
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `views/`, `llms.txt`.
 
 `--alias` is the table prefix, so this contract's events land in `usdc__transfer`, `usdc__approval`,
-and so on. Leave it out and the contract is called `c0`, giving you `c0__transfer` - which works
-identically, just reads worse in a query.
+and so on. Leave it out and the alias is the contract name from the ABI in snake_case
+(`DelegationManager` becomes `delegation_manager`), falling back to `c0` only when the ABI names
+nothing usable.
+
+USDC is a proxy, and `init` says so: its current implementation was deployed at block 18,921,498,
+years after the proxy, and events before that block may use earlier implementations' ABIs, which this
+scaffold does not decode. That is fine for a first query. Before you trust historical supply or
+balances from it, vendor the earlier implementations' ABIs too.
 
 ## 3. Run it
 
@@ -44,7 +51,7 @@ HTTP API - all in one process.
 
 ```sh
 nuthatch dev
-# ✓ indexing USDC on mainnet - serving http://127.0.0.1:8288
+# ... API live on http://127.0.0.1:8288  (try GET /  and  /metrics)
 ```
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with
@@ -107,6 +114,11 @@ They are **not** fine for real work, and it's better to hear that here than at 3
   `eth_getLogs` calls. Expect a free endpoint to throttle you long before that finishes.
 - **No archive guarantees.** Many free endpoints prune old state, so a backfill from a 2020 deploy
   block can fail partway.
+- **On Arbitrum, `arb1.arbitrum.io` sends no timestamps on its logs.** Every block's timestamp then
+  costs a header, and it takes header batches of about ten, so while it is anywhere in the pool
+  (primary or `--rpc-fallback`) every header batch goes out at ten. A backfill through it runs at a
+  few times chain speed. For history, use a keyed Arbitrum endpoint *in place of* `arb1`, not beside
+  it; `init` and `dev` say this too.
 
 Use your own endpoint for anything you care about - your own node, or a paid provider:
 
@@ -116,7 +128,9 @@ nuthatch dev --rpc https://your-endpoint.example/arbitrum   # or set rpc_urls in
 ```
 
 `--rpc` is repeatable and nuthatch round-robins across the pool with per-endpoint health tracking, so
-listing two or three gets you failover as well as throughput. Every endpoint in a pool must be on the
+listing two or three gets you failover as well as throughput. To keep a paid key behind the free
+endpoints instead, give it to `dev --rpc-fallback`: it is asked only while every other endpoint is
+failing, so it bills only for what they could not answer. Every endpoint in a pool must be on the
 **same chain** - nuthatch verifies this at startup and refuses a mixed pool, since indexing against
 the wrong chain corrupts state silently.
 

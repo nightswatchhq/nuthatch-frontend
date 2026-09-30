@@ -15,9 +15,12 @@ incrementally: a new transfer is a +1 delta, a reorg is the *same* transfer re-f
 retraction). Backfill and tip run the identical circuit.
 
 This is the differentiator. You never hand-write "on transfer, load balance, add, save." You declare the
-answer, and reorgs, backfills, and tip-following all fall out of the same statement. Authored SQL views
-(see [Authored SQL views](/docs/build/views/)) and [recipes](/docs/build/recipes/) live here - the happy
-path needs zero user-written components.
+answer, and reorgs, backfills, and tip-following all fall out of the same statement. Your own
+maintained relations are [incremental entities](/docs/build/entities/), declared in `entities.toml`.
+
+[Authored SQL views](/docs/build/views/) and [recipes](/docs/build/recipes/) are declarative too, but
+not incremental: they are named queries evaluated when a reader asks, over hot and sealed data. Between
+them, the happy path needs zero user-written components.
 
 ## Imperative (the escape hatch)
 

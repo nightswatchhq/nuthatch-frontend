@@ -5,8 +5,7 @@ order: 2
 ---
 
 Every nest `init` scaffolds includes an `llms.txt` - a one-page, plain-text index of the project
-written for coding agents. An agent that lands in the directory (or fetches the file from a served
-nest) learns in one read what this thing is, what data it holds, and how to query it - without
+written for coding agents. An agent that lands in the directory learns in one read what this thing is, what data it holds, and how to query it - without
 crawling the source.
 
 ## What's in it

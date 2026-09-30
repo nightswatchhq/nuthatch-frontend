@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Mark from '../components/Mark.astro';
+---
+
+<Layout
+  path="/platform"
+  title="Platform - Nuthatch"
+  description="Hosted Nuthatch is coming soon. In the meantime, run nuthatch yourself."
+>
+  <section class="page platform-page">
+    <div class="wrap narrow">
+      <Mark size={56} />
+      <h1>Coming soon...</h1>
+      <p class="lead">In the meantime, <a href="/install">run nuthatch yourself</a>.</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .platform-page {
+    min-height: 60vh;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+  .platform-page :global(svg) { margin: 0 auto 1.5rem; }
+</style>

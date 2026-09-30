@@ -6,39 +6,41 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
 <Layout
   path="/install"
   title="Install Nuthatch"
-  description="Install Nuthatch v3.8.5: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, or build from source with cargo. Authored incremental entities, provenance-attested release artifacts, portable nests and fault quarantine."
+  description="Install Nuthatch v3.13.2: a one-line installer or prebuilt binaries for macOS (Apple Silicon) and Linux x86_64, container images, or build from source with cargo. Provenance-attested release artifacts, nine built-in chains, portable nests and fault quarantine."
 >
   <section class="page">
     <div class="wrap narrow">
       <p class="section-label">Install</p>
       <h1>Get Nuthatch running.</h1>
       <p class="lede">
-        Embedded mode is a single static binary with no external services. Pick whichever
+        Embedded mode is a single binary with no external services. Pick whichever
         route you trust. Every one lands you at the same place: <code>nuthatch init</code>,
         then <code>nuthatch dev</code>.
       </p>
 
       <p class="prerelease-note">
-          <strong>v3.8.5 is out</strong>, the last of six releases since 3.7.0. 3.8.0 makes an
-          <code>[[ipfs]]</code> nest over megabyte documents fit to deploy: every document a nest names
-          resolves behind the cursor, is proven against its CID however many blocks it spans, and can be
-          exploded into typed rows with <code>[ipfs.rows]</code>, and a seal cut is now also bounded by
-          bytes. It adds <code>--cors</code> on <code>dev</code> and <code>serve</code>,
-          <code>--explorer</code> on <code>init</code> and <code>add</code>, <code>init --from-subgraph</code>
-          over a local <code>subgraph.yaml</code>, and a <code>doctor</code> that finds its own probe
-          address. 3.8.1 and 3.8.2 fix document backfills slowed by an empty file or a slow gateway, and
-          list the documents given up on at <code>/ipfs/gave-up</code>. 3.8.3 keys a runtime nest's
-          metrics and health by its route, and <code>emit dune</code> translates the authored views whose
-          DuneSQL is exact. 3.8.4 refuses to start a store whose data no longer matches what
-          <code>nuthatch.toml</code> covers, and 3.8.5 fixes a <code>/sql</code> panic on wide scaled
-          decimals and sealed velocity seeds that were silently skipped. For an events-only nest it is a
-          binary swap and a restart. A nest that has indexed top-level calls re-indexes on 3.8.0, and once
-          a nest with <code>[[calls]]</code>, <code>[[ipfs]]</code> or <code>[extract]</code> has started
-          on 3.8, 3.7.0 refuses it.
+          <strong>v3.13.2 is out</strong>, the result of a hardening pass: Arbitrum timestamps are right through <code>arb1.arbitrum.io</code> (fetched as headers, so a backfill through that keyless endpoint runs at a few times chain speed; a keyed RPC avoids it), the analytics spill cap is enforced and off a tmpfs <code>/tmp</code>, authored entity columns reach SQL typed, and a misspelt <code>nuthatch.toml</code> key fails <code>nuthatch check</code> with a suggestion. 3.13.1 before it fixed what an end-to-end run of 3.13.0's runtime admin API found against a real chain: names and a restart mid-move that left a runtime unable to start, a move that broke a dataset two tenants shared, and identical mounts reported as failed. Anyone hosting nests should take it. Since 3.13.0 a runtime runs its own nests: hand it a NID over the admin API and
+          it fetches the nest from a registry, verifies and indexes it, and can dry-run, suspend, move and
+          reclaim it (<a href="/docs/operate/hosting-nests">Host nests for others</a>). 3.12.2 before it moved
+          Wasmtime past two security advisories and let a runtime start with nothing mounted. Of the five
+          releases before those, 3.9.0 adds
+          <code>nest nid</code>, which prints the identity a nest's data is stored under, and <code>offchain pull</code>, a one-shot fetch that seals a JSON price feed as
+          a snapshot authored entities can read. 3.11.0 takes block timestamps from the logs instead of a
+          header per block, stops idle polls paying for a reorg check, sets the default poll interval to
+          the chain's block time (12 s on mainnet, where it was 2 s everywhere), and adds
+          <code>--rpc-fallback</code> for an endpoint asked only while the others fail. 3.12.0 changes
+          nothing in the published binaries. 3.12.1 runs each <code>/sql</code> statement once rather than
+          twice, and answers a query cut off by the time budget with 504 rather than 400. For most nests it
+          is a binary swap and a restart; a script that mounts over the admin API adds <code>?wait=true</code>,
+          because from 3.13.0 a mount answers 202 while it runs. Three things to read first: from 3.10.0 the GraphQL routes exist
+          only in a build with <code>--features graph</code>, so the published binaries answer them with
+          404; since 3.9.0 an entity's SQL must live in <code>entities/&lt;name&gt;.sql</code>; and an
+          <code>eth_call</code> error that is not a revert now stalls the nest rather than being stored as a
+          null, so a nest calling through a pruned node wants an archive endpoint.
         </p>
 
       <h2 class="ih">Shell script</h2>
-      <p>Detects your platform, downloads the matching static binary from the latest GitHub release, verifies its SHA-256 checksum, and puts it on your <code>PATH</code>. Covers macOS Apple Silicon and Linux x86_64; other targets fall back to <code>cargo</code>.</p>
+      <p>Detects your platform, downloads the matching binary from the latest GitHub release, verifies its SHA-256 checksum, and installs it to <code>~/.local/bin</code> (override with <code>NUTHATCH_INSTALL_DIR</code>). Covers macOS Apple Silicon and Linux x86_64; other targets fall back to <code>cargo</code>. The Linux binary is dynamically linked and needs glibc 2.34 or newer and libstdc++ from GCC 11 or newer: Debian 12, Ubuntu 22.04, RHEL 9 and Amazon Linux 2023 all qualify.</p>
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="note">
         Piping to a shell asks for trust. Read it first:
@@ -51,7 +53,9 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       <CopyBlock command="cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" />
       <p class="note">
         Or grab a tarball and its <code>.sha256</code> yourself from the
-        <a href="https://github.com/nightswatchhq/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>.
+        <a href="https://github.com/nightswatchhq/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>:
+        <code>nuthatch-aarch64-apple-darwin.tar.gz</code>, <code>nuthatch-x86_64-unknown-linux-gnu.tar.gz</code>,
+        or <code>nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz</code> for scaled mode.
       </p>
 
       <h2 class="ih">Homebrew <span class="tag">planned</span></h2>
@@ -64,11 +68,14 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command="docker run --rm -v $PWD/nest:/nest ghcr.io/nightswatchhq/nuthatch:latest dev --dir /nest" prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nightswatchhq/nuthatch:3.13.2' prompt={true} />
       <p class="note">
-        <code>:latest</code> is the embedded build. <code>:3.8.5-scaled</code> carries the Postgres
-        driver and the <code>worker</code>, <code>control</code> and <code>serve --hot-store</code>
-        commands. The compose files live in the
+        The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
+        <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
+        <code>:3.13.2</code> and <code>:latest</code> are the embedded build; pin the version for anything
+        you care about. <code>:3.13.2-scaled</code> carries the Postgres driver and the <code>worker</code>,
+        <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only.
+        The compose files live in the
         <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
       </p>
 
@@ -79,10 +86,11 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       <p class="note">
         <code>init</code> resolves each contract's ABI (proxies included), scaffolds a nest, and
         writes a <code>schema.json</code>, an <code>llms.txt</code>, and a Claude Code skill. Pass
-        several addresses to index a multi-contract nest, and <code>--chain arbitrum-one</code> or
-        <code>--chain base</code> for the L2s. <code>dev</code> follows the tip and serves
-        <code>/tables</code>, <code>/table/{'{'}name{'}'}</code>, read-only <code>/sql</code>,
-        balances, <code>/metrics</code>, and MCP on one local endpoint.
+        several addresses to index a multi-contract nest. Omit <code>--chain</code> and <code>init</code>
+        probes all nine built-in chains for the contract's bytecode. <code>dev</code> follows the tip and
+        serves <code>/tables</code>, <code>/table/{'{'}name{'}'}</code>, read-only <code>/sql</code>,
+        balances and <code>/metrics</code> on one local endpoint, which <code>nuthatch mcp</code> bridges
+        to an agent.
       </p>
 
       <hr class="divider ih-div" />

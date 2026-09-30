@@ -51,8 +51,8 @@ Under the hood it's just this - Σ minted minus Σ burned, straight over the tra
 ```sql
 CREATE VIEW usdc_total_supply AS
 SELECT
-    COALESCE(SUM(CASE WHEN lower("from") = '0x0000…0000' THEN TRY_CAST("value" AS HUGEINT) ELSE 0 END), 0)
-  - COALESCE(SUM(CASE WHEN lower("to")   = '0x0000…0000' THEN TRY_CAST("value" AS HUGEINT) ELSE 0 END), 0)
+    COALESCE(SUM(CASE WHEN lower("from") = '0x0000000000000000000000000000000000000000' THEN TRY_CAST("value" AS HUGEINT) ELSE 0 END), 0)
+  - COALESCE(SUM(CASE WHEN lower("to")   = '0x0000000000000000000000000000000000000000' THEN TRY_CAST("value" AS HUGEINT) ELSE 0 END), 0)
     AS total_supply
 FROM "usdc__transfer";
 ```

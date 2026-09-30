@@ -92,9 +92,9 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 
 ## `/sql` returns 503 or times out
 
-- **503 "server busy"** - the analytical gate is saturated (2 concurrent). It's node
-  self-protection: retry, don't raise the cap.
-- **30 s timeout** - the query is too heavy. Add a `WHERE`/`LIMIT`, aggregate with `GROUP BY`, or
+- **503 "server busy"** - the analytical gate is saturated (2 concurrent, after a 250 ms wait). It's
+  node self-protection: retry, don't raise the cap.
+- **504, 30 s timeout** - the query is too heavy. Add a `WHERE`/`LIMIT`, aggregate with `GROUP BY`, or
   validate cheaply with [`/explain`](/docs/reference/http-api/) first.
 - **Binder and parse errors come back with a fix hint** derived from the real schema: an unknown
   table suggests the nearest real one, `from`/`to` suggests double-quoting, `sum(value)` suggests
@@ -117,8 +117,8 @@ semantics are worse than none, so `dev` warns loudly.
 
 ## ABI won't resolve at `init`
 
-`init` tries Sourcify, then Etherscan-class APIs. If both miss (an unverified contract), pass the ABI
-directly:
+`init` tries Sourcify, then keyless Blockscout, then Etherscan if `ETHERSCAN_API_KEY` is set. If all
+miss (an unverified contract), pass the ABI directly:
 
 ```sh
 nuthatch init 0xAddr --abi path/to/abi.json

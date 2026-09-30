@@ -9,8 +9,10 @@ Everything else in these docs is **embedded mode**: one binary, no external serv
 first.
 
 Scaled mode is a different deployment for a different problem - **one operator running many nests
-across many machines**. It is opt-in at build time (`--features postgres-store`), so the published
-binary carries no database driver and embedded mode stays a single file with nothing beside it.
+across many machines**. It is opt-in at build time (`--features postgres-store`), so the default
+published binary carries no database driver and embedded mode stays a single file with nothing beside
+it. Each release also ships the scaled build as a separate `nuthatch-scaled-*` tarball and a
+`ghcr.io/nightswatchhq/nuthatch:<version>-scaled` image.
 
 ## When to reach for it
 
@@ -31,7 +33,7 @@ The same crates, run three ways. A role flag, never a fork.
 | Role | Command | Owns |
 |---|---|---|
 | **Control plane** | `nuthatch control --db <postgres>` | *desired state* - what should run |
-| **Writer** | `nuthatch dev --dir <nest>` | cursors it holds a **lease** on; ingests, decodes, seals |
+| **Writer** | `nuthatch worker --control-db <postgres> --hot-store <postgres> --chains <chain>` | cursors it holds a **lease** on; ingests, decodes, seals |
 | **Query-FE** | `nuthatch serve --dir <nest> --hot-store <postgres>` | nothing - serves from shared state |
 
 ```sh
@@ -121,7 +123,7 @@ Every FE node resolves an endpoint through the control plane, not through the re
 
 ```sh
 curl -XPUT localhost:8290/nests/usdc/pin \
-  -d '{"version":"1.3.0","bundle_hash":"0x…"}'
+  -H 'Content-Type: application/json' -d '{"version":"1.3.0","bundle_hash":"0x…"}'
 ```
 
 If each node read `latest` for itself, then during an upgrade one node would serve the new schema
@@ -142,7 +144,7 @@ Private RPC URLs and API keys live in the control plane, keyed by nest:
 
 ```sh
 curl -XPUT localhost:8290/nests/usdc/secrets \
-  -d '{"key":"rpc_url","value":"https://private…"}'
+  -H 'Content-Type: application/json' -d '{"key":"rpc_url","value":"https://private…"}'
 ```
 
 A writer receives only the secrets of the nests it is actually assigned. The interface is

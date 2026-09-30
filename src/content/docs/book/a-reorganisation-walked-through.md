@@ -64,8 +64,8 @@ definition of permanent history.
 
 ## What to look for in practice
 
-`nuthatch_reorgs_total` records ordinary detected reorgs. The health and readiness surfaces expose
-the last indexed and sealed watermarks. A sudden tip lag accompanied by reorg growth calls for a
+`nuthatch_reorgs_total` records ordinary detected reorgs. `/ready` exposes the last indexed and
+sealed watermarks (`last_block`, `sealed_through`); `/health` is bare liveness and says only `ok`. A sudden tip lag accompanied by reorg growth calls for a
 look at the source and chain conditions. A finality violation is a hard incident, not a counter to
 wave away.
 

@@ -9,7 +9,7 @@ mapping.
 
 ## ABIs
 
-At `init`, nuthatch resolves the contract's ABI - **Sourcify first, then an Etherscan-class API** - and
+At `init`, nuthatch resolves the contract's ABI - **Sourcify first, then keyless Blockscout, then Etherscan if `ETHERSCAN_API_KEY` is set** - and
 **vendors it** into `abis/`. From then on the ABI is a local file; nuthatch never re-fetches it at
 runtime. A `DecodeRegistry` is built from the vendored ABIs at startup: `topic0` → event decoder,
 filtered by contract address.
@@ -44,7 +44,9 @@ Every table also carries the same implicit columns, before the event's own field
 
 Decoded fields keep their Solidity types. Wide integers (`uint256`, and anything over 64 bits) are
 stored as an exact decimal string, with a derived `{col}_dec` DECIMAL column for numeric use. A value
-over 38 digits exceeds `DECIMAL(38,0)` - cast to `DOUBLE` or `HUGEINT` in SQL when you need arithmetic.
+over 38 digits exceeds `DECIMAL(38,0)`, and there is no exact substitute in SQL: `HUGEINT` is signed
+128-bit, so it overflows at the same order of magnitude, and `DOUBLE` holds any size but loses
+precision past about 15 digits. Keep the decimal string when exactness matters.
 See [The SQL surface](/docs/reference/sql/).
 
 ## Regenerating

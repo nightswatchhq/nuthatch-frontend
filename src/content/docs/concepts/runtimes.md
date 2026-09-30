@@ -41,7 +41,7 @@ cursor; another chain's data is left byte-identical.
 
 ```toml
 # mounts.toml - multichain form: declare each chain's RPC, nests carry their own chain.
-# Written by `nuthatch migrate` and kept in step by the runtime; you do not hand-write it.
+# [runtime] and [[chains]] are yours; [[mounts]] are written by the admin API or `nuthatch migrate`.
 [runtime]
 name = "my-runtime"
 
@@ -75,11 +75,21 @@ The footprint budget is **per active-chain cursor: ≤2 GB RAM**. A single-chain
 independently - a cursor whose *projected* footprint would exceed it is refused before it starts. Density
 is RAM-bounded, not free.
 
+## When a cursor starts and stops
+
+A cursor exists while its chain has something to follow. A runtime may start with chains declared and
+nothing mounted: the first nest mounted onto a chain starts that chain's cursor, exactly as boot would,
+and only then dials its RPC. A cursor whose nests have all been unmounted or suspended idles rather than
+stopping, so the next mount onto that chain rejoins it. See
+[Host nests for others](/docs/operate/hosting-nests/).
+
 ## Failure boundaries
 
 Each cursor is one observable failure boundary. One chain stalling or reorging cannot harm another
-chain's nests; the runtime fate-shares its serving with *every* cursor, so a dead cursor fails the whole
-runtime loudly rather than serving stale data as if healthy.
+chain's nests. A cursor that dies is **quarantined**: its nests keep serving what they had and report
+themselves unhealthy, its siblings keep indexing, and a mount onto that chain is refused until restart.
+The runtime exits, non-zero, only when every cursor has died, since nothing will advance again and a
+restart is the only thing that can help.
 
 ## Next
 

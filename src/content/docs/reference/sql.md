@@ -59,15 +59,18 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
 - **Deterministic and finality-aware.** Sealed segments are immutable; only the hot tip can change
   under a reorg, and the union converges with it.
 - **Guarded:** a 30-second timeout, a 50,000-row cap, a 64 MiB result-byte ceiling, 2 concurrent
-  analytical queries, and a 16 KiB limit on the query text itself. A rejection is the node protecting itself - narrow the query
+  analytical queries, and a 16 KiB limit on the query text itself. On `/sql` a query cut off by the
+  timeout is answered with 504 (400 before 3.12.1). A rejection is the node protecting itself - narrow the query
   rather than fighting the guard. Validate cheaply first with `explain`.
-- **Provenance-stamped.** Results carry the block range and the content-addressed segment hashes
-  they were computed from, so a number can be cited against immutable data and re-derived by
-  anyone.
+- **Provenance-stamped.** Results carry `as_of` (the block the answer is current to),
+  `sealed_through`, `source`, the nest's `nid` and its `registry_hash`, plus each entity's own
+  watermark when the query read one, so a number can be cited against a fixed watermark and
+  re-derived by anyone. A separate `tip_unavailable` flag says when the hot tail could not be read.
+  The stamp does not list the individual segments read.
 
 ```sql
 -- the shape of a typical answer
-SELECT date_trunc('day', to_timestamp(block_timestamp)) AS day,
+SELECT date_trunc('day', TIMESTAMP '1970-01-01' + block_timestamp * INTERVAL '1 second') AS day,
        count(*)                                          AS transfers,
        sum(value_dec) / 1e6                              AS volume_usdc
 FROM usdc__transfer

@@ -33,6 +33,7 @@ events = ["Transfer", "Approval"]  # empty = index every event the ABI defines
 | `chain` | The chain name, e.g. `mainnet`, `arbitrum-one`, `base`. |
 | `chain_id` | The chain id, e.g. `1`, `42161`, `8453`. |
 | `rpc_urls` | RPC endpoints, tried in order with round-robin failover. Point at your own node. |
+| `block_timestamps` | Whether rows carry `block_timestamp` (default `true`). Set at `init`; see [`block_timestamps`](/docs/reference/config/#block_timestamps). |
 
 ## `[[contracts]]`
 
@@ -57,6 +58,8 @@ One block per contract. Repeat it to index many contracts in one nest.
 - `[[templates]]` + `[[factories]]` - index dynamically discovered children. See [Factories](/docs/build/factories/).
 - `[screening]` + `[flags]` + `[[alerts]]` - the compliance pack. See [Compliance pack](/docs/build/compliance/).
 - `[[webhooks]]` - POST sealed rows to a URL. See [Webhooks](/docs/build/webhooks/).
+- `[[calls]]` + `[[ipfs]]` - pinned contract reads and verified IPFS documents. See [Contract calls and
+  IPFS documents](/docs/build/contract-calls/).
 - `entities.toml` - bounded keyed relations maintained as blocks arrive. See [Authored incremental
   entities](/docs/build/entities/).
 

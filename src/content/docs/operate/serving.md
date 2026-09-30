@@ -26,13 +26,14 @@ The full route list is in the [HTTP API reference](/docs/reference/http-api/).
 `/sql` is guarded so a bad query can't take the node down - these are self-protection, not knobs to
 raise:
 
-- **30-second timeout** per query. A runaway is interrupted, not left to spin.
+- **30-second timeout** per query. A runaway is interrupted, not left to spin, and answered `504`.
 - **50,000-row cap** per result (requests can ask for less via `max_rows`; the MCP bridge asks for
   much less so an agent's context isn't flooded).
 - **64 MiB result-byte cap** per query. A row cap bounds count, not width - a wide-cell `SELECT` would
   otherwise materialise unbounded Rust-side (outside DuckDB's memory limit); this keeps a query inside
   the footprint budget. Hitting it flags the result truncated, same as the row cap.
-- **2 concurrent analytical queries.** A third gets a `503` - retry, don't remove the gate.
+- **2 concurrent analytical queries.** A third waits up to 250 ms for a permit, then gets a `503` -
+  retry, don't remove the gate.
 - **2,000,000 unsealed rows** scanned per query. Every `/sql` call parses the whole unsealed tip into
   memory, so on a deep-finality chain with a busy contract this is the largest RAM risk the process
   carries - and in a runtime it is a co-tenant's problem too, because the budget is per cursor. Past the

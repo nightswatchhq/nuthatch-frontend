@@ -52,7 +52,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nightswatchhq/nuthatch:3.8.5
+  ghcr.io/nightswatchhq/nuthatch:3.13.2
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
@@ -97,8 +97,9 @@ Two things worth deciding deliberately:
   `127.0.0.1` and do not set the token.
 
 `/health` and `/ready` are unauthenticated by design so a load balancer can probe them. `/ready`
-answers the question that actually matters for a load balancer - *is this nest caught up?* - and
-reports `stalled` when every endpoint in the pool is refusing a window.
+answers *is this nest serving and making progress?*, and reports `stalled` when every endpoint in the
+pool is refusing a window. It is not a catch-up check: a nest mid-backfill, hundreds of blocks behind,
+is ready. If a caller must only see a nest near the tip, gate on `lag_blocks` as well.
 
 ## Back it up
 

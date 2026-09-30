@@ -6,7 +6,9 @@ order: 6
 
 Nuthatch is not automatically a drop-in GraphQL replacement. It indexes deterministic on-chain event
 data and exposes it as read-only SQL over HTTP. That is enough to make a useful fallback for many
-subgraph reads, provided the boundary is made explicit before an outage.
+subgraph reads, provided the boundary is made explicit before an outage. Since 3.10.0 the GraphQL
+routes exist only in a build with `--features graph`; the release binaries and images answer them
+with `404`.
 
 The useful question is not “can we replace this entire subgraph?” It is: **which reads cannot afford to
 disappear, and are they derivable from chain logs?**
@@ -20,8 +22,9 @@ entities and fields it uses, then identify how its mappings create them.
 |---|---|---|
 | Contract events | Good fit | Index the contracts and write a SQL view for the query shape. |
 | Deterministic transforms of events | Good fit | Express them as a view or a first-party recipe. |
-| Contract state via `eth_call` | Not current parity | Keep the subgraph for that field, or redesign around event-derived state. |
-| IPFS or another off-chain fetch | Not current parity | State the omission explicitly; do not call the result a full port. |
+| Contract state via `eth_call` | Supported, pinned | Derive it with a [recipe](/docs/build/recipes/) where possible; otherwise declare a pinned [`[[calls]]`](/docs/build/contract-calls/) read and run with `--state-rpc` against an archive node. |
+| IPFS documents | Supported, verified | Declare an [`[[ipfs]]`](/docs/build/contract-calls/#ipfs---documents-verified) side table; a body that does not hash to its CID yields no row. |
+| Another off-chain fetch | Not current parity | State the omission explicitly; do not call the result a full port. |
 | Bespoke off-chain state or external APIs | Not a Nuthatch fallback | Keep the existing service or build a separate bounded adapter. |
 
 This classification is the work. It is far cheaper to say “token metadata is outside this fallback” in

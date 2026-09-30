@@ -1,6 +1,6 @@
 ---
 title: "7. The runtime"
-description: "Mounts, tenants, one cursor per chain, and how the same model extends to scaled mode."
+description: "Mounts, tenants, one cursor per chain, the nest lifecycle, and how the same model extends to scaled mode."
 order: 8
 ---
 
@@ -46,6 +46,40 @@ The shared cursor pays for chain polling once. It does not make storage, decode 
 queries free. The runtime keeps those costs visible so density does not become a pleasant-sounding
 route to an out-of-memory kill.
 
+## The runtime owns the lifecycle
+
+A runtime that could only be changed by editing a file and restarting would make every change as wide
+as a fault: restarting to add one nest stops all the others. So the set of mounts is changed while the
+process runs, through an admin API, and since 3.13.0 the runtime does the whole of it. A caller hands it
+a NID and a name. The runtime fetches the bundle from a registry if it does not hold it, checks that the
+bundle's own manifest computes to that NID, installs it, lets it catch up and then serves it. Nothing
+outside the process has to unpack, verify or arrange anything.
+
+A mount that fetches and backfills can take far longer than a caller will hold an HTTP request open, so
+it is a job rather than a call. The job moves through accepted, fetching, joining and then live or
+failed (or reads suspended while an operator has paused it), and it is written to disk, so a restart in the middle picks it up again instead of forgetting
+it. The record of a job lives beside the runtime's lock rather than behind it: asking how a mount is
+going must never wait for the mount it is asking about.
+
+Joining is the delicate step. A cursor advances from the slowest of its live nests, so a nest spliced in
+far behind would drag every neighbour back through history. The newcomer therefore catches up on its own,
+beside the cursor, and joins at a window boundary once it is level. The first nest on a chain has no
+neighbours to spare, so it starts that chain's cursor exactly as boot would. The last nest to leave does
+not stop the cursor; an empty cursor idles, because the next mount onto that chain should find it there.
+
+Pausing is a different thing from leaving. A suspended mount comes off its cursor and gives up its store,
+but keeps its data, its record and its name, and its routes answer that it is suspended rather than that
+it has vanished. Resuming is an ordinary mount of the recorded identity, which catches up from where it
+stopped.
+
+Changing a name's version is where a naive design shows a gap. A new version of a nest is a new NID, so
+the name has to be repointed, and a reader must see the old nest and then the new one with no error in
+between. The runtime mounts the new identity under a staging name and lets it catch up. It then takes the
+old nest off the cursor, tells the cursor to know the staged nest by the real name, and swaps the whole
+composition of routes in one step. Until that swap a reader is served by the old nest's stored data;
+after it, by the new. The swap is a single atomic replacement of the routing table, so there is no
+moment at which the name is served by neither.
+
 ## When one process is not enough
 
 Scaled mode moves cursor ownership into a control plane backed by Postgres. Workers register,
@@ -58,6 +92,6 @@ The data model remains recognisable: mounts identify datasets, cursors follow ch
 reversible and sealed data is durable. Scaled mode changes who is allowed to perform the cursor
 work, not what the chain data means.
 
-For configuration and practical commands, see [run many nests](/docs/operate/many-nests/) and
-[scaled mode](/docs/operate/scaled/). The final chapter is about operating the whole arrangement
+For configuration and practical commands, see [run many nests](/docs/operate/many-nests/),
+[host nests for others](/docs/operate/hosting-nests/) and [scaled mode](/docs/operate/scaled/). The final chapter is about operating the whole arrangement
 without taking a green health endpoint as proof of truth.

@@ -48,7 +48,8 @@ Three read-only resources an MCP client can attach as context:
 
 ## Prompts
 
-Three server-side prompts encode the known-good workflows:
+Three server-side prompts encode the known-good workflows. `investigate-address` is advertised only
+where compliance is configured, like the tools it names:
 
 - `profile-contract` - an activity overview of the indexed contract(s), starting from `schema`.
 - `investigate-address` (`address`) - balances, exposure, flags, and screening for one address.

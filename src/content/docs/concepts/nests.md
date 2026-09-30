@@ -33,7 +33,7 @@ don't copy it.
 ```text
 my-nest/
   nuthatch.toml        # the [nest] header + [[contracts]] - the sources layer
-  abis/                # vendored ABIs (Sourcify → Etherscan), never re-fetched at runtime
+  abis/                # vendored ABIs (Sourcify → Blockscout → Etherscan), never re-fetched at runtime
   schema.json          # generated: the decoded tables + columns
   views/               # authored SQL derivations (a commented starter to uncomment)
   semantic.toml        # the meaning layer
@@ -48,8 +48,9 @@ Only the *authored inputs* are part of a nest's identity - the hot store and sea
 ## Decoding
 
 Decode is deterministic Rust, keyed by `topic0`, with contract-ABI priority and a generic fallback.
-ABIs are acquired at `init` (Sourcify first, then an Etherscan-class API) and cached locally - nuthatch
-never phones home for them at runtime. Every declared event of every contract becomes a table
+ABIs are acquired at `init` (Sourcify first, then keyless Blockscout, then Etherscan if
+`ETHERSCAN_API_KEY` is set) and cached locally - nuthatch never phones home for them at runtime.
+Every declared event of every contract becomes a table
 `{alias}__{event}` with implicit columns (`block_number`, `block_hash`, `block_timestamp`, `tx_hash`,
 `log_index`, `address`, `_seq`) alongside the decoded fields. See [ABIs, events &amp; tables](/docs/build/tables/).
 

@@ -5,7 +5,7 @@ order: 9
 ---
 
 A nest is a content-addressed bundle (`nest bundle`). The **registry** gives that bundle a home to be
-published to and pulled from *by name* - with private nests behind auth, backed by a plain directory or
+published to and pulled from *by name* or *by identity* - with private nests behind auth, backed by a plain directory or
 any S3-compatible bucket.
 
 > **Decoupled, and never mandatory.** The registry is not part of the nuthatch binary and is never
@@ -34,6 +34,34 @@ exactly as safe as a hash-pinned file load).
 nuthatch nest load horizon@1.2.0 --registry <path|s3://bucket/prefix>
 ```
 
+## Address a nest by its identity
+
+Every published bundle is also indexed by its **NID**, the identity its data is stored under
+(`nuthatch nest nid --dir <nest>` prints it, and `nest publish` prints it too). A NID is all a host needs:
+
+```sh
+nuthatch nest load 9f2c… --registry <path|s3://bucket/prefix>
+```
+
+A name and a version are labels someone chose and can move; a NID is computed from the nest itself.
+So the registry's NID index is checked rather than trusted: the pulled bundle's own manifest must compute
+to the NID asked for, or it is refused, naming both. For the same reason a nest name shaped like a NID
+(64 hex characters) is refused at publish, so a reference is never ambiguous.
+
+A **runtime** started with `--registry` uses exactly this. A live mount naming a NID the runtime does not
+hold fetches it by NID, verifies it and installs it at `data/<nid>/` before mounting, and a refused mount
+removes it again. See [Host nests for others](/docs/operate/hosting-nests/).
+
+```sh
+nuthatch dev --dir my-runtime --registry s3://nests/prod
+```
+
+Layout, beside the name index:
+
+```text
+<root>/nids/<nid>                   # the hash of the bundle that computes to this NID
+```
+
 ## Backends
 
 **Filesystem (default).** A directory *is* a registry - zero extra dependencies, the self-hosted-first
@@ -45,11 +73,11 @@ default:
 <root>/index/<name>/latest          # the one movable pointer
 ```
 
-**S3 / object store.** Any S3-compatible bucket (MinIO, S3, R2) - the fleet path. Build with the feature
-flag; configure via the standard `AWS_*` env (including `AWS_ENDPOINT` for self-hosted MinIO):
+**S3 / object store.** Any S3-compatible bucket (MinIO, S3, R2) - the fleet path. The released binary
+and image carry it (the `object-store` feature is on by default); configure via the standard `AWS_*`
+env (including `AWS_ENDPOINT` for self-hosted MinIO):
 
 ```sh
-cargo build --features object-store
 nuthatch nest publish my.bundle --registry s3://nests/prod --as horizon@1.2.0
 ```
 
@@ -61,9 +89,10 @@ rejected or missing credential gives a clear _"this nest is private, or your reg
 rejected"_, never a silent empty result, and never mistaken for "not found".
 
 > **Two kinds of credential - don't conflate them.** *Registry auth* fetches a private *bundle*. *Nest
-> runtime secrets* - a private RPC URL, an enricher's API key - are a different thing: they're injected
-> per-nest at mount time and are **never** baked into a content-addressed bundle (that would both leak
-> the secret and break addressing).
+> runtime secrets* - a private RPC URL, an enricher's API key - are a different thing: they belong
+> outside the bundle, passed at run time. Bundling does not strip them for you: `nuthatch.toml` goes
+> into the bundle verbatim, so anything written there is published with it. Keep credentials out of
+> the file before you bundle.
 
 ## See also
 

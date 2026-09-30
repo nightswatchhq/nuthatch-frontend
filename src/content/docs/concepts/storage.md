@@ -17,8 +17,9 @@ lands. Entity point-reads (`/entity/{id}`) hit it directly.
 ## Cold: content-addressed Parquet
 
 Once a block range passes finality (a conservative depth), its rows are **sealed** to an immutable,
-**content-addressed** (`sha256`) Snappy **Parquet** segment under `segments/`, catalogued in
-`manifest.json` with block bounds and row count. A monotonic `sealed_through` watermark advances so each
+**content-addressed** (`sha256`) zstd **Parquet** segment under `segments/`, catalogued in
+`manifest.json` with block bounds and row count. Segments sealed before 3.7.0 are Snappy; a nest
+holding both serves across the seam. A monotonic `sealed_through` watermark advances so each
 range seals exactly once, and the sealed rows are then pruned from the hot store.
 
 Because a segment's identity is a hash over its bytes, the same range always produces the same segment -
@@ -36,14 +37,20 @@ segments **read-only** and unions them with the hot tip - so a query spans all o
 hot and cold. DuckDB is single-writer by design: only the ingestion thread writes; queries attach
 read-only. Never design around concurrent DuckDB writers.
 
+DuckDB is due to be replaced by [Burrmill](https://github.com/nightswatchhq/burrmill), a Rust engine
+on DataFusion, once it has answered beside DuckDB on live nests for a release without an unexplained
+difference. The storage tiers do not change; only the engine reading them does. See
+[Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
+
 A point-read for a pruned id transparently falls back to the cold path, so `/entity/{id}` works across
 the hot→cold seam without the caller knowing where the row lives.
 
 ## Big integers
 
 Values wider than 64 bits (a `uint256`) are stored as an exact decimal string, with a derived
-`{col}_dec` DECIMAL column for numeric use. A value over 38 digits exceeds DECIMAL(38,0) - cast it to
-`DOUBLE` or `HUGEINT` in SQL when you need arithmetic. See [The SQL surface](/docs/reference/sql/).
+`{col}_dec` DECIMAL column for numeric use. A value over 38 digits exceeds DECIMAL(38,0), and neither
+cast rescues it exactly: `HUGEINT` is signed 128-bit and overflows at the same order, and `DOUBLE`
+loses precision past about 15 digits. See [The SQL surface](/docs/reference/sql/).
 
 ## Next
 

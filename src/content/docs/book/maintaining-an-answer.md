@@ -35,8 +35,11 @@ that shape. `ORDER BY`, `LIMIT`, window functions, outer joins, `DISTINCT`, perc
 queries do not belong in the first safe subset. They remain valid questions for views.
 
 The row bound is equally important. A maintained answer is state retained at the cursor, alongside
-the chain's hot data. `max_rows` participates in admission rather than being a hopeful comment. If a
-relation would grow past it, the entity faults and the nest is quarantined. An answer that has stopped
+the chain's hot data. `max_rows` participates in admission rather than being a hopeful comment, and
+it bounds more than the answer: it caps the **live input rows** the circuit retains, summed across its
+input relations, including while it seeds on restart. A `count(*)` grouped into a handful of rows can
+still retain thousands of inputs, so size `max_rows` for the inputs, not only the result. Past it, the
+entity faults and the nest is quarantined. An answer that has stopped
 being maintained must not continue to be served as current.
 
 ## The lifecycle is still one circuit

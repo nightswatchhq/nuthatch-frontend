@@ -11,9 +11,9 @@ const DS_CONTRACT = 'https://arbiscan.io/address/0x647D1Fd14AF2DE3947522B74F1de5
 const meets = [
   {
     k: '01 · Horizon data service',
-    tag: 'live',
+    tag: 'paused',
     h: 'Nuthatch is a Graph Horizon data service',
-    p: 'A nest behind a paid, TAP-gated route on Arbitrum One. A provider advertises a nest identity, a query mode and an endpoint on chain, so a consumer buys a reproducible dataset rather than a server that says it does SQL. The first offering is an index of Horizon itself, and one bounded payment has settled.',
+    p: 'A nest behind a paid, TAP-gated route on Arbitrum One. A provider advertises a nest identity, a query mode and an endpoint on chain, so a consumer buys a reproducible dataset rather than a server that says it does SQL. The first offering was an index of Horizon itself, and one bounded payment settled before the service was paused on 2026-09-12.',
     links: [
       { href: '/blog/nuthatch-data-service-on-graph-horizon', text: 'the write-up' },
       { href: DS_REPO, text: 'nuthatch-ds', ext: true },
@@ -21,12 +21,11 @@ const meets = [
     ],
   },
   {
-    k: '02 · Worked example',
+    k: '02 · Subgraph rebuilt',
     tag: 'shipped',
     h: 'A Graph subgraph, rebuilt as a nest',
-    p: 'The example this site walks through is a real Graph Horizon subgraph reproduced as a nest and checked field by field against the gateway. A public dashboard serves two of its panels from that nest today, next to the panels the gateway still serves.',
+    p: 'The horizon-nest is a real Graph Horizon subgraph reproduced as a nest and checked field by field against the gateway. A public dashboard serves panels from Nuthatch nests today, next to the panels the gateway still serves.',
     links: [
-      { href: '/example', text: 'the example' },
       { href: '/stories', text: 'the story' },
       { href: HORIZON_NEST, text: 'horizon-nest', ext: true },
     ],
@@ -90,7 +89,7 @@ const meets = [
             does. Anyone has always been free to run their own graph-node, Postgres and IPFS and
             index their own subgraph on their own hardware, and nobody has ever called that a rival
             protocol. It is the protocol's own software, self-hosted. Nuthatch is the same shape
-            with the operational weight taken out: one static binary, an embedded store, no Docker,
+            with the operational weight taken out: one binary, an embedded store, no Docker,
             nothing to rent. A team that runs a nest for the contracts it wrote is not a lost
             customer of the network, any more than a team running its own graph-node is. Most of
             them were never going to buy that index from anyone.
@@ -118,7 +117,7 @@ const meets = [
             same bytes, which is a strong property for one operator and a different property from
             a decentralised one. It does not speak full GraphQL: since 3.7.0 it carries a partial read surface for
             subgraph-shaped clients, exact for event-shaped fields and a named refusal for the rest,
-            and it is <a href="/roadmap">parked</a>. Contract reads and IPFS documents are pinned and verified rather than fetched
+            and it is <a href="/roadmap">parked</a>; since 3.10.0 only a build with <code>--features graph</code> serves it. Contract reads and IPFS documents are pinned and verified rather than fetched
             freely, so a subgraph that leans on either needs its query surface reviewed rather than
             assumed. And it does not pretend to serve a hundred thousand subgraphs to strangers
             from one box. If your application reads from protocols you do not own, across chains

@@ -4,7 +4,7 @@ description: "Install the nuthatch binary - curl | sh, cargo install, or a prebu
 order: 2
 ---
 
-nuthatch is **one static binary**. No Postgres, no Docker, no IPFS, no account - install it and
+nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
 you're done.
 
 ## The one-liner
@@ -14,14 +14,21 @@ curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 ```
 
 The script detects your platform, downloads the matching release binary, verifies its checksum, and
-puts `nuthatch` on your `PATH`. It's short and
+installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It's short and
 [readable on GitHub](https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh) -
 audit it first if `curl | sh` makes you itch.
 
 Prebuilt binaries cover **macOS (Apple Silicon)** and **Linux x86_64**. Intel Mac is deliberately not
-built. Checksums ship with every release. Every v3 artifact also has a GitHub build-provenance
-attestation, which establishes the producing repository and workflow rather than merely the integrity
-of bytes in transit:
+built. Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
+`nuthatch-x86_64-unknown-linux-gnu.tar.gz` and, for [scaled mode](/docs/operate/scaled/),
+`nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each with a `.sha256` beside it.
+
+The Linux binary is dynamically linked and needs **glibc 2.34 or newer** and **libstdc++ from GCC 11
+or newer**, the latter because it embeds DuckDB. Debian 12, Ubuntu 22.04, RHEL 9 and Amazon Linux 2023
+clear both.
+
+Every v3 artifact also has a GitHub build-provenance attestation, which establishes the producing
+repository and workflow rather than merely the integrity of bytes in transit:
 
 ```sh
 gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatchhq/nuthatch
@@ -32,12 +39,13 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:3.8.5 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:3.13.2 --version
 ```
 
-`linux/amd64` only for now. The image carries the **same binary attached to the GitHub Release**, so
-the two cannot drift. Scaled mode needs the `-scaled` tag: the default image is the embedded build and
-carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
+`:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
+only for now. The image carries the **same binary attached to the GitHub Release**, so the two cannot
+drift. Scaled mode needs the `-scaled` tag (`3.13.2-scaled`): the default image is the embedded build
+and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source
 

@@ -27,7 +27,7 @@ max_rows = 100000
 ```
 
 ```sql
-SELECT indexer, SUM(tokensRewards) AS tokens_rewards
+SELECT indexer, SUM(CAST(tokensRewards AS DECIMAL(38,0))) AS tokens_rewards
 FROM service__indexing_rewards_collected
 GROUP BY indexer
 ```
