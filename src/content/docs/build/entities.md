@@ -52,10 +52,12 @@ would discard, because each row is converted before it is filtered.
 
 `nuthatch check` lowers and binds each entity exactly as `dev` starts it (since 3.13.3), so the two
 agree: SQL the compiler refuses, a table or column the nest does not have, and a name that shadows a
-decoded table all fail `check`. It also refuses an expression that fails on every row whatever the
-data, such as `fee + '1'`, `WHERE fee` on an integer, or `SUM` of an address, and a stored value too
-large for 128 bits, in sealed history or the hot tail. What depends on the data, a `CASE` that takes a
-failing branch on some rows for instance, is left to runtime, where the entity faults loudly.
+decoded table all fail `check`. It also refuses an expression built directly from columns and literals
+that must fail on every row, such as `fee + '1'`, `WHERE fee` on an integer, or `SUM` of an address, and
+a stored value too large for 128 bits, in sealed history and, when no running nuthatch holds the store,
+the hot tail. The expression check is deliberately partial: a refusal is always right, but it does not
+look inside `CASE` or `COALESCE`, so some expressions that always fail still pass it. Those, and
+anything that depends on the data, fault at runtime, loudly.
 
 An entity with no rows yet is an empty relation of its declared types, so a view over it binds on a
 fresh nest, and `check` validates such views the same way.
