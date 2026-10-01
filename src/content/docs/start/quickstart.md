@@ -56,8 +56,7 @@ nuthatch dev --backfill 300
 
 `--backfill 300` starts 300 blocks behind the tip, about an hour of mainnet, so there are rows within
 seconds. Without the flag `dev` backfills from the contract's deployment block. For USDC that is 20
-million blocks, which the bundled public endpoints will not serve in useful time and which wants your
-own archive-capable RPC. When a from-deployment backfill is long, `init` prints a
+million blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
 `nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with

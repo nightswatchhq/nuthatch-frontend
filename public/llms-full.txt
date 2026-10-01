@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v4.0.0**, the stable line - a promise about stability (from 4.0.0 to the last
+own indexer." Status: **v4.0.1**, the stable line - a promise about stability (from 4.0.0 to the last
 4.x release a config keeps working with the same meaning, a data directory upgrades in place with no
 re-index or migration command, and no HTTP route, response field, generated table or column, or MCP
 tool is removed, renamed or retyped; upgrade only, and the off-by-default cargo features and the SQL
@@ -196,7 +196,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v4.0.0 is the current release,
+against a real provider - the event count matching Sentio's own README. v4.0.1 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -216,7 +216,7 @@ reversing the August "Keeping DuckDB" post; RFC-0013's gate had found DataFusion
 DuckDB's latency). An engine trait and a shadow session, in which Burrmill answers beside DuckDB and
 DuckDB's answer is served, are on main behind a feature off in release builds; cutover waits on a
 release cycle of real traffic with zero unexplained differences. Every release to date, including
-v4.0.0, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
+v4.0.1, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
 Burrmill;
 streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP egress for
 transform worlds (`kv` grant ships today); wildcard indexing.
@@ -297,7 +297,7 @@ contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev -
 the last 300 blocks and follows the tip (plain `nuthatch dev` backfills from the deployment block,
 which for USDC wants your own archive-capable RPC), every declared event becomes a table (`usdc__transfer`) with
 provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v4.0.0.
+between an authored view and a maintained entity. It is the current, executable path on v4.0.1.
 Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
@@ -311,7 +311,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`GET /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v4.0.0: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
+v4.0.1: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
 the read surface shipped in 3.7.0 is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
@@ -359,7 +359,7 @@ promised - order is.
   scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
   (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); proven, typed IPFS documents at
   scale (RFC-0037 slices 5 to 8); offchain price snapshots (RFC-0045 stage 2); the 3.11.0 RPC
-  economies; v4.0.0 the current release with prebuilt binaries and container images;
+  economies; v4.0.1 the current release with prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
 - **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full.
@@ -381,7 +381,11 @@ promised - order is.
 
 ## Install
 
-v4.0.0 is the current release. The installer and `cargo` fetch the latest.
+v4.0.1 is the current release. The installer and `cargo` fetch the latest.
+
+**4.0.1 changes the mainnet defaults.** A new Ethereum mainnet nest gets `mainnet.gateway.tenderly.co` and
+`rpc.mevblocker.io`, replacing two public endpoints that could not serve a backfill. An existing nest
+keeps the endpoints in its `nuthatch.toml`; `--rpc` overrides them at runtime.
 
 **4.0.0 is the stable line.** It is 3.13.3 plus three small fixes, and the major version is a promise
 about later releases rather than a claim about what changed. Upgrading from 3.13.3 is a binary swap:
