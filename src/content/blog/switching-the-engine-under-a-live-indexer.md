@@ -1,7 +1,7 @@
 ---
 title: "Switching the SQL engine under a live indexer"
 date: "2026-10-01"
-description: "Five days ago we said Burrmill would replace DuckDB only after a release cycle of shadow traffic with no unexplained difference. We are not waiting for that. Burrmill will serve first and DuckDB will check behind it for a month. This is the operator's log of the switch, written as it happens, with the regressions listed before anyone finds them."
+description: "Five days ago we said Burrmill would replace DuckDB only after a release cycle of shadow traffic with no unexplained difference. We did not wait for that. Four nests were served by Burrmill by the evening of 1 October, judged against the live subgraphs and not against DuckDB. This is the operator's log of the switch, written as it happens, with the regressions listed before anyone finds them."
 author: "cargopete"
 tags: ["nuthatch", "burrmill", "duckdb", "datafusion", "operations", "sql", "rust"]
 ---
@@ -14,6 +14,11 @@ leaves the binary.** That post gets a banner pointing here, and its body stays a
 
 This post is the log of the switch. It is dated, it will grow an entry at each roll, and it lists
 what gets worse before it lists what gets better.
+
+> **Changed again, 1 October, afternoon.** The month of checking described below is not happening
+> either. The nests are judged against The Graph's live subgraphs, which is what their readers
+> compare them with, and DuckDB is being removed as soon as every nest runs without it. The
+> sections above the log are left as they were written that morning; the log says what was done.
 
 ## The shadow log was empty, and that told us nothing
 
@@ -221,8 +226,101 @@ The QoS nest has the same problem: the first record of its replay is a hash join
 of a 448 MB pool. nuthatch#1619 gives Burrmill its own limit, so DuckDB can stay at 512 MB beside
 it, and lets an operator raise the wall. Both nests wait for it.
 
-*Entries follow as each nest rolls: the QoS nest and allocations once nuthatch#1619 is in, and the
-hosted platform's image last because it is many nests at once.*
+**1 October, afternoon. The judge changes.** The plan above has DuckDB checking behind Burrmill for
+a month. That makes DuckDB the standard, and DuckDB is the engine with the wrapping `HUGEINT`, the
+timestamp comparison that goes NULL, and no ICU. What a nest has to agree with is the subgraph its
+readers already trust. nuthatch has carried a script for that since the allocations nest was built:
+it asks the network subgraph and the nest the same questions at one pinned block and prints what
+differs. **From here a nest is rolled on that comparison, taken before and after, and DuckDB is not
+consulted.** A difference between the two engines remains a lead worth reading. It is no longer a
+verdict.
+
+**1 October, 15:08 UTC. GNS is back on Burrmill, alone.** The tie-break went out to Lodestar at
+14:55. GNS was off Burrmill for three and a half hours over a query that was ambiguous on both
+engines.
+
+**1 October, 15:44 UTC. The allocations nest is served by Burrmill, at the third attempt.** Three
+things about this one, and only the last is a success.
+
+Every replay we had run for this nest used a copy whose views were rewritten on 24 September, on a
+branch that was never pushed. Production's views still used `ASOF JOIN`, `LATERAL` and list lambdas,
+and six of them do not define on Burrmill at all. Sixteen clean replays had tested a nest that did
+not exist. The seven commits were rebased onto the nest's main, each rewritten view was compared
+whole against its original on DuckDB (23 of 23 equal, the largest 1,678,525 rows), and the views
+went onto the nest before the engine changed, so that the two changes could be told apart.
+
+The comparison against the subgraph, at block 510,658,602, was run three times: DuckDB with the
+original views, DuckDB with the rewrites, Burrmill with the rewrites. **All three print the same
+thing.** That thing is not a clean bill: rewards agree for 203 of 203 epochs, and there are seven
+epochs whose query fees the nest books to the neighbouring epoch. Each group sums to the subgraph's
+figure to the wei, and it was true before today. It is a fault in the views and it is now written
+down, which is one use of comparing against the right thing.
+
+The roll itself failed twice. On the first attempt a drop-in that sorts after ours put the SQL
+permits back to four; nuthatch's memory gate correctly refused four statements at 2 GB each, and
+the nest restarted every fifteen seconds for fourteen and a half minutes while the script waited
+patiently for it to become ready. On the second the roll worked and the script undid it, because
+`journalctl | grep -q` under `pipefail` reports failure when `grep` has found what it wanted and
+stopped reading. The scripts now check what systemd will actually hand the process before stopping
+anything, and give up after three restarts.
+
+What it costs: the nest ran four permits at 256 MB on DuckDB and runs two at 2 GB on Burrmill, with
+eight analytics threads. At 1 GB Burrmill refuses 12 or 13 of the dashboard's statements, and at
+768 MB 18. On a copy, through `/sql`, DuckDB answered 112 statements a second at four clients and
+Burrmill with two permits answered 26 and turned 19 away as busy. **About two and a half times
+DuckDB's time for each statement, with eight times the memory allowed to each.**
+
+**1 October, 18:46 UTC. The QoS nest is served by Burrmill.** This is the nest whose replay answered
+5 of 23 views. Seven faults stood between that and a roll, all ours: a missing `unhex`; `DATE +
+integer` turning the days into nanoseconds past the year 2262; `TRY` covering only its outermost
+cast; `unnest` marking every column as overflowed for the refusal rule above; and three plans. A
+hash join built its table on whichever input the query named first, which here was the one with
+74 million rows: killed at 60 GB, and 30 seconds with a 4 MB build once it picks the smaller side.
+A `QUALIFY k = min(k) OVER (...)` sorted the whole input: 600 seconds, then 40. A
+`count(DISTINCT (a, b, c))` kept each row as a boxed struct: over 500 seconds for one day, then 4.
+
+Lodestar's eight statements against that nest now agree with DuckDB to 3 parts in 10^15, which is
+floating-point summation order. **They take about 4.5 seconds where DuckDB took 0.7.** DuckDB reads
+the one day the statement asks for; Burrmill reads every segment, because the date range arrives
+through a join and is not pushed down to the scan. That is the next piece of engine work. Reading a
+whole view on that nest still fails at 512 MB.
+
+**1 October, evening. What is left.** Two nests are still on DuckDB: the read-only archive of the
+legacy staking contract and the data-services nest. Neither has been replayed. In the code, DuckDB
+is now the engine you have to ask for: with Burrmill as the default, 2,112 of nuthatch's tests pass
+and 8 fail. Three of the eight were real gaps (no `typeof`; a maintained relation losing its column
+types; an empty answer losing its column names) and are closed. The rest test DuckDB's own
+settings. The crate leaves `Cargo.toml` when both remaining nests have moved and that suite is
+green without it.
+
+**2 October. DuckDB is out of the tree, and not yet out of a release.** nuthatch#1626 takes
+`duckdb` out of `Cargo.toml`: 80 files, 971 lines added and 22,639 removed. It is a pull request and not a release: the two nests above stay on
+the binaries they have until they have been replayed, and DIPS, which still runs `checked`, needs
+one line of its unit changed before it can take the build, because a binary with no DuckDB refuses
+to start for a unit that asks for it.
+
+The `checked` mode this post introduced on the morning of 1 October goes with it, having lasted a
+day. So do the shadow mode, `nuthatch emit dune`, and a measurement harness that used DuckDB as its
+reference.
+
+A fourth gap turned up beside the three above. A statement that spills past its cap used to be
+stopped by nuthatch's own watchdog and answered `507`. DataFusion's disk manager now stops it
+first, in under a third of a second, with a message advising the caller to raise a DataFusion setting
+they cannot reach. It is answered `507` again, in nuthatch's words.
+
+**Two tests were passing that should not have been**, and they are the part of this entry worth
+keeping. One required the README to say the Linux binary needs libstdc++ "because it embeds
+DuckDB", and its own comment promised that it would fail on the day DuckDB left. It did not fail.
+It checks that the README makes the claim, the README went on making it, and so the test passed
+on a binary that links no C++ runtime at all. The other exists to push data across the engine's
+internal batch boundary, and its largest case was 5,000 rows: comfortably past DuckDB's 2,048-row
+vector, and comfortably inside DataFusion's 8,192-row batch. For as long as Burrmill had been the
+engine under it, it had tested nothing it was written to test. It now runs at 8,191, 8,192, 8,193
+and 20,000 rows, and passes.
+
+On our 32-core test machine, 1,880 tests pass on default features and 1,989 with the `graph`
+feature, none failing. The Postgres, object-store, Trino and memory-footprint jobs run only in CI,
+and the footprint job has never measured a Burrmill binary before.
 
 ## What would make us go back
 
@@ -234,3 +332,10 @@ hour and stays there until we can. If it records one we cannot fix, DuckDB stays
 this post gets a banner of its own. Removing `duckdb` from `Cargo.toml` is the only step a restart
 cannot undo, and it is the one step we are not hurrying: early November at the soonest, and only
 after a month in which the checker had something to check and found nothing.
+
+*Added 1 October, evening.* That paragraph was written in the morning and three of its four
+sentences did not survive the day. Four nests have been served by Burrmill, DuckDB checks only
+DIPS, and the removal is under way. What still holds is the first condition, with the judge
+changed: a nest that disagrees with its subgraph where it agreed before goes back the same hour,
+for as long as there is a binary with DuckDB in it to go back to. After that the way back is the
+previous release, and the store archive taken at each roll.
