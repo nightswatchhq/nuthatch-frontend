@@ -100,7 +100,8 @@ crossed it were computing with 2^256 - 1, which is a number people write in test
 23 were Burrmill refusing with out-of-memory where DuckDB answered. DataFusion's hash join and final
 aggregate cannot spill, and the ledger views join a great deal. The remedy is not clever: that nest's
 limit goes to about 2 GB. DuckDB did the same work in a quarter of that, and we are not going to
-pretend otherwise.
+pretend otherwise. *Added later on 1 October: 2 GB alone is not enough, and the limit was not the
+variable that mattered. The measurement is in the log below.*
 
 **Planning time on the network endpoint.** Its queries compose about thirty views into plans of
 5,000 to 6,000 logical nodes. The contract suite takes 116 seconds on Burrmill against 32 on DuckDB,
@@ -143,7 +144,45 @@ features and with Burrmill and the `graph` feature on: integration tests 394 and
 none failing, the network contract 21 of 21. The shadow counts what it compares. `checked` mode is
 written and its tests pass. No nest is served by Burrmill yet.
 
-*Entries follow as each nest rolls: DIPS first, then GNS, the QoS nest, allocations, and the hosted
+**1 October, 11:09 UTC. DIPS is served by Burrmill.** The branch merged as nuthatch#1613, and
+`checked` mode as #1615. The nest runs `4.0.0-checked.1`, built from exactly the tree on main. The
+log's first count reads one statement, one agreed, which is the roll script's own `SELECT 1`; the
+figures that matter will be Lodestar's.
+
+It took two attempts, and the first is worth recording. At 11:02 the roll script stopped the nest,
+archived its store, pointed the unit at the new binary and started it. The nest came back on the old
+one. systemd reads a unit's drop-in files in name order and the last to set `ExecStart` wins; our
+runbook named `rpc-311.conf`, and a file added two days earlier, `rpc-graphops.conf`, sorts after
+it. The edit was correct and irrelevant. DIPS was down for one second and went on being served by
+DuckDB, which is the least dramatic way a roll can fail.
+
+What caught it was a line we nearly did not write: the script refuses to report success unless the
+journal says "Burrmill serves every statement" and the log holds a count. Without that check this
+entry would have announced a migration that had not happened. The script now asks systemd which file
+decides, and confirms the running binary after the start.
+
+**1 October. The allocations nest needs threads, not memory.** We said above that its limit would
+go to about 2 GB. We then replayed its 22 views and 81 dashboard statements with Burrmill serving
+and DuckDB checking, sixteen times. No replay produced a differing row. The memory refusals did not
+behave as expected:
+
+| limit | analytics threads | replays | replays with a refusal |
+|---:|---:|---:|---:|
+| 512 MB | 2 | 1 | 1 (22 statements) |
+| 2 GB | 2 | 4 | 4 |
+| 2.5 GB | 2 | 1 | 1 |
+| 3 GB | 2 | 4 | 3 |
+| 2 GB | 8 | 3 | **0** |
+| 3 GB | 8 | 3 | **0** |
+
+At nuthatch's default of two analytics threads, one or two statements are refused on most replays
+whatever the limit, and not the same ones twice. One was refused with the process holding 1.1 GB of
+a 2.5 GB allowance: a repartition buffer was sitting on 657 MB that it could have spilled and was
+never asked to, beside a hash join that cannot spill at all. At eight threads it did not happen in
+six replays. We have not established why, and six is not a proof. That nest will run with 2 GB and
+eight threads, and the checker will say whether six was enough.
+
+*Entries follow as each nest rolls: GNS next, then the QoS nest, allocations, and the hosted
 platform's image last because it is many nests at once.*
 
 ## What would make us go back
