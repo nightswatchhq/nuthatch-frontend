@@ -46,13 +46,19 @@ balances from it, vendor the earlier implementations' ABIs too.
 
 ## 3. Run it
 
-`dev` backfills from the deployment block, follows the tip, decodes every declared event, and serves an
-HTTP API - all in one process.
+`dev` backfills, follows the tip, decodes every declared event, and serves an HTTP API - all in one
+process.
 
 ```sh
-nuthatch dev
+nuthatch dev --backfill 300
 # ... API live on http://127.0.0.1:8288  (try GET /  and  /metrics)
 ```
+
+`--backfill 300` starts 300 blocks behind the tip, about an hour of mainnet, so there are rows within
+seconds. Without the flag `dev` backfills from the contract's deployment block. For USDC that is 20
+million blocks, which the bundled public endpoints will not serve in useful time and which wants your
+own archive-capable RPC. When a from-deployment backfill is long, `init` prints a
+`nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with
 > zero setup, and they are fine for trying it out or following a low-traffic contract. They are shared

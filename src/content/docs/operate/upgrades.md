@@ -7,6 +7,26 @@ order: 10
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
 consumers eat downtime or stale data during the flip.
 
+## The 4.x promise
+
+4.0.0 is the stable line. Coming from 3.13.3 it is a binary swap: no storage migration, config change,
+NID change or re-index. The major version is a promise about later releases, not a claim about what
+changed. From 4.0.0 to the last 4.x release:
+
+- **Config keeps working.** A config that works on a 4.x release works on every later 4.x release,
+  with the same meaning.
+- **Data directories upgrade drop-in.** A later 4.x opens a data directory written by an earlier 4.x
+  in place. No re-index, no re-seal, no migration command.
+- **The HTTP, SQL and MCP surfaces do not break.** No route, response field, generated table or
+  column, or MCP tool is removed, renamed or retyped.
+
+The promise is upgrade only; a downgrade is not covered. A released 4.x only gets patches, features
+wait for the monthly minor (4.1, 4.2), and correctness and security fixes ship immediately. Also not
+covered: the off-by-default cargo features `graph`, `folds`, `counter`, `exex` and `shadow-burrmill`;
+the SQL dialect's functions, which are DuckDB's; segment hashes across `arrow-rs` versions; the admin
+UI's HTML; and the `postgres-store` build's internal schema. The full contract is in the operator
+guide's [stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
+
 ## Upgrading to 3.0.0
 
 This is a binary swap. Stop the service, replace the binary, and start it again. On-disk state is

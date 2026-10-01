@@ -39,12 +39,12 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:3.13.3 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.0.0 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`3.13.3-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`4.0.0-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source
@@ -77,8 +77,12 @@ live, queryable API.
 
 ```sh
 nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48   # USDC - chain auto-detected
-nuthatch dev
+nuthatch dev --backfill 300
 ```
+
+`--backfill 300` starts 300 blocks behind the tip, so there are rows within seconds. Without it `dev`
+backfills from the contract's deployment block, which for a contract with a long history wants your
+own archive-capable RPC.
 
 Nothing phones home: no telemetry, no API token, no gated data service. AI features are BYO-key or
 local models and degrade gracefully offline.
