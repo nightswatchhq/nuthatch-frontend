@@ -161,6 +161,17 @@ journal says "Burrmill serves every statement" and the log holds a count. Withou
 entry would have announced a migration that had not happened. The script now asks systemd which file
 decides, and confirms the running binary after the start.
 
+**1 October, 11:11 UTC. GNS is served by Burrmill.** First attempt, with the corrected script,
+which found the same overriding drop-in there and edited the right one. GNS went from 3.11.0
+straight to the checked build and had never run in shadow, so it is the first nest to meet Burrmill
+with no rehearsal on its own traffic. Its views were compared on both engines on 28 September and
+agreed. We expect one kind of record from it: a view DuckDB refuses for want of ICU and Burrmill
+answers.
+
+The scripts now put the unit back and start it by themselves if anything fails after the nest has
+been stopped. DIPS stayed up through its failed attempt because of the order the steps happened to
+be in, which is not a property to rely on twice.
+
 **1 October. The allocations nest needs threads, not memory.** We said above that its limit would
 go to about 2 GB. We then replayed its 22 views and 81 dashboard statements with Burrmill serving
 and DuckDB checking, sixteen times. No replay produced a differing row. The memory refusals did not
@@ -182,8 +193,14 @@ never asked to, beside a hash join that cannot spill at all. At eight threads it
 six replays. We have not established why, and six is not a proof. That nest will run with 2 GB and
 eight threads, and the checker will say whether six was enough.
 
-*Entries follow as each nest rolls: GNS next, then the QoS nest, allocations, and the hosted
-platform's image last because it is many nests at once.*
+It cannot start that way today. nuthatch refuses any analytics split above 2 GiB, the figure is a
+constant, and there is one limit for every engine, which leaves 1,024 MB for analytics in total.
+The QoS nest has the same problem: the first record of its replay is a hash join refused at 446 MB
+of a 448 MB pool. nuthatch#1619 gives Burrmill its own limit, so DuckDB can stay at 512 MB beside
+it, and lets an operator raise the wall. Both nests wait for it.
+
+*Entries follow as each nest rolls: the QoS nest and allocations once nuthatch#1619 is in, and the
+hosted platform's image last because it is many nests at once.*
 
 ## What would make us go back
 
