@@ -168,6 +168,28 @@ with no rehearsal on its own traffic. Its views were compared on both engines on
 agreed. We expect one kind of record from it: a view DuckDB refuses for want of ICU and Burrmill
 answers.
 
+**1 October, 11:37 UTC. GNS went back to DuckDB, for a reason that turned out not to be Burrmill's.**
+Twenty-six minutes in, the checker had logged five statements whose rows differed, out of 32. All
+five were the same dashboard query with different ids: for each deployment, the subgraph that most
+recently published it, by `created_at`. We put DuckDB back in front, which is one line and a
+restart, and then read the records.
+
+Each differing row had the same deployment and the same version under two different subgraph ids.
+We asked the nest for one of them: two subgraphs, both created at 1715090775. The query says
+"newest first, take one", the two are equally new, and each engine took a different one. Neither
+answer is wrong, because the question does not say which to prefer. It does mean Lodestar's search
+could show either subgraph for such a deployment from one run to the next, on either engine, and
+always could. The query now breaks the tie on the subgraph id.
+
+We did not teach the checker to excuse this shape. It cannot see `created_at` in the rows it
+compares, so a rule that forgave "newest of several" would forgive a real ordering fault that looked
+the same. The fix belongs in the query. GNS returns to Burrmill when that query is deployed.
+
+The lesson is about us and not the engine. DIPS and the allocations nest were replayed on both
+engines before anything moved. GNS was rolled on a comparison three days old. When we then replayed
+the QoS nest before touching it, 5 of its 23 views answered, so it has not been rolled, and will not
+be until that number is 23.
+
 The scripts now put the unit back and start it by themselves if anything fails after the nest has
 been stopped. DIPS stayed up through its failed attempt because of the order the steps happened to
 be in, which is not a property to rely on twice.
