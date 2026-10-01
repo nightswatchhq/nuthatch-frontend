@@ -6,6 +6,13 @@ author: "cargopete"
 tags: ["nuthatch", "duckdb", "datafusion", "burrmill", "benchmarks", "sql", "rust"]
 ---
 
+> **Superseded in part, 2026-10-01.** The order in "How the swap will happen" has changed: Burrmill
+> will serve first and DuckDB will check behind it for a month, instead of the other way round. The
+> reasons, the regressions and the running log are in
+> [Switching the SQL engine under a live indexer](/blog/switching-the-engine-under-a-live-indexer).
+> Kept as written, because a project that quietly edits its old positions is harder to trust than
+> one that dates them.
+
 On 31 August we published [Keeping DuckDB](/blog/keeping-duckdb), which closed a month-long
 investigation with the words "it stays" and a list of conditions under which we would reopen the
 question, the last of them being "not before September 2027 otherwise". It is September 2026, and
