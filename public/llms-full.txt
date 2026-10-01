@@ -2,9 +2,11 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v3.13.3** - a promise about stability (no CLI flag, HTTP route, config key or
-generated column renamed or removed without a major bump; upgrades stay a binary swap with
-no data migration), not a claim of completeness. Licence: MIT OR Apache-2.0.
+own indexer." Status: **v4.0.0**, the stable line - a promise about stability (from 4.0.0 to the last
+4.x release a config keeps working with the same meaning, a data directory upgrades in place with no
+re-index or migration command, and no HTTP route, response field, generated table or column, or MCP
+tool is removed, renamed or retyped; upgrade only, and the off-by-default cargo features and the SQL
+dialect's functions, which are DuckDB's, are not covered), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the binary does
 today from the design targets. Do not present a design target as a present-tense capability,
@@ -194,7 +196,7 @@ correctness-gated to produce byte-identical sealed segments; no storage-path mul
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v3.13.3 is the current release,
+against a real provider - the event count matching Sentio's own README. v4.0.0 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -214,7 +216,7 @@ reversing the August "Keeping DuckDB" post; RFC-0013's gate had found DataFusion
 DuckDB's latency). An engine trait and a shadow session, in which Burrmill answers beside DuckDB and
 DuckDB's answer is served, are on main behind a feature off in release builds; cutover waits on a
 release cycle of real traffic with zero unexplained differences. Every release to date, including
-v3.13.3, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
+v4.0.0, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
 Burrmill;
 streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP egress for
 transform worlds (`kv` grant ships today); wildcard indexing.
@@ -291,10 +293,11 @@ of indexers, while a nest puts a contract's history in a database on your own ma
 ## Worked example (/example)
 
 The page at https://www.nuthatch-indexer.com/example indexes USDC on Ethereum mainnet from its
-contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev` backfills from the
-deployment block and follows the tip, every declared event becomes a table (`usdc__transfer`) with
+contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev --backfill 300` backfills
+the last 300 blocks and follows the tip (plain `nuthatch dev` backfills from the deployment block,
+which for USDC wants your own archive-capable RPC), every declared event becomes a table (`usdc__transfer`) with
 provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v3.13.3.
+between an authored view and a maintained entity. It is the current, executable path on v4.0.0.
 Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
@@ -308,7 +311,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`GET /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v3.13.3: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
+v4.0.0: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
 the read surface shipped in 3.7.0 is partial and parked. The page also names one real production user - Lodestar, a public Graph Protocol dashboard,
@@ -356,7 +359,7 @@ promised - order is.
   scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
   (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); proven, typed IPFS documents at
   scale (RFC-0037 slices 5 to 8); offchain price snapshots (RFC-0045 stage 2); the 3.11.0 RPC
-  economies; v3.13.3 the current release with prebuilt binaries and container images;
+  economies; v4.0.0 the current release with prebuilt binaries and container images;
   a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
   three-contract 23-table nest, 2.8% of 2 GB).
 - **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full.
@@ -378,7 +381,32 @@ promised - order is.
 
 ## Install
 
-v3.13.3 is the current release. The installer and `cargo` fetch the latest.
+v4.0.0 is the current release. The installer and `cargo` fetch the latest.
+
+**4.0.0 is the stable line.** It is 3.13.3 plus three small fixes, and the major version is a promise
+about later releases rather than a claim about what changed. Upgrading from 3.13.3 is a binary swap:
+no storage migration, config change, NID change or re-index. A backfill whose RPC endpoints cannot
+serve its history says so: an endpoint that has pruned the range is named with the remedy (an
+archive-capable RPC via `--rpc` or `rpc_urls`), a backfill stops on the first refusal when every
+endpoint has pruned it, one that makes no progress stops with its cause, and a runtime hosting mounts
+warns with the same text and keeps retrying. `nuthatch sql` and the MCP SQL tool print columns in the
+query's order, not alphabetically, and a `/sql` response gains a `columns` array naming them in that
+order; row objects are unchanged, and `nuthatch sql --json` still prints them with sorted keys. The
+first-run demo starts near the tip with `nuthatch dev --backfill 300` (the last 300 blocks, about an
+hour of mainnet); when a from-deployment backfill is long, `init` prints a `nuthatch dev --backfill N`
+line under its `next:` hint and `dev` logs the span at cold start. Plain `nuthatch dev` still
+backfills from the contract's deployment block, which for USDC is 20 million blocks and wants your own
+archive-capable RPC.
+
+**The 4.x promise.** From 4.0.0 to the last 4.x release: config keeps working with the same meaning;
+a data directory written by an earlier 4.x opens in place on a later one, with no re-index, re-seal or
+migration command; and no HTTP route, response field, generated table or column, or MCP tool is
+removed, renamed or retyped. It is upgrade only. A released 4.x only gets patches, features wait for
+the monthly minor (4.1, 4.2), and correctness and security fixes ship immediately. Not covered:
+downgrades; the off-by-default cargo features `graph`, `folds`, `counter`, `exex` and
+`shadow-burrmill`; the SQL dialect's functions, which are DuckDB's; segment hashes across `arrow-rs`
+versions; the admin UI's HTML; and the `postgres-store` build's internal schema. The full contract is
+`docs/operators.md#stability-contract` in the nuthatch repository.
 
 **3.9.0 to 3.13.3.** 3.9.0 adds `nest nid` and `offchain pull`, and offchain snapshots reach authored
 entities. Two configurations 3.8.5 accepted now refuse to start: an entity whose `sql` is inline or

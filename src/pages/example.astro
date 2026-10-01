@@ -17,7 +17,7 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
 <Layout
   path="/example"
   title="From contract to nest: indexing USDC - Nuthatch"
-  description="A worked Nuthatch example: index USDC from its contract address, inspect raw event tables, and choose an authored view or maintained entity. Runs on Nuthatch v3.13.3."
+  description="A worked Nuthatch example: index USDC from its contract address, inspect raw event tables, and choose an authored view or maintained entity. Runs on Nuthatch v4.0.0."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -25,8 +25,8 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
       <h1>From contract to nest: indexing USDC</h1>
 
       <p class="preview-note">
-        <strong>This is the current, executable path on v3.13.3.</strong> It creates a nest from
-        a verified contract, backfills it, follows the chain, and serves decoded event data locally.
+        <strong>This is the current, executable path on v4.0.0.</strong> It creates a nest from
+        a verified contract, backfills its recent history, follows the chain, and serves decoded event data locally.
         The data surface is read-only SQL over HTTP and MCP. GraphQL is a partial read surface, exact
         for a subgraph's event-shaped fields and a named refusal for the rest, it is parked, and since 3.10.0
         it is served only by a build with <code>--features graph</code>; see the
@@ -46,11 +46,12 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
         <code>nuthatch.toml</code>, and writes the schema and authoring files. The explicit
         <code>--alias usdc</code> gives the event tables stable, readable names.
       </p>
-      <CopyBlock command="nuthatch dev" />
+      <CopyBlock command="nuthatch dev --backfill 300" />
       <p>
-        The process backfills from the deployment block, follows the tip, and serves a local API at
-        <code>http://127.0.0.1:8288</code>. For production, use an RPC endpoint you control rather
-        than relying on the free public defaults for a deep historical backfill.
+        The process backfills the last 300 blocks, so there are rows within seconds, follows the tip,
+        and serves a local API at <code>http://127.0.0.1:8288</code>. Without <code>--backfill</code>,
+        <code>dev</code> backfills from the contract's deployment block, which for USDC is 20 million
+        blocks and wants your own archive-capable RPC rather than the free public defaults.
       </p>
 
       <h2>Queryable before you model anything</h2>
