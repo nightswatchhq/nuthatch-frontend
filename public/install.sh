@@ -61,5 +61,5 @@ case ":$PATH:" in
   *) echo "nuthatch: add ${dir} to your PATH to run 'nuthatch'" ;;
 esac
 echo ""
-echo "  next:  nuthatch init 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --chain mainnet"
-echo "         nuthatch dev"
+echo "  next:  nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc"
+echo "         nuthatch dev --backfill 300"
