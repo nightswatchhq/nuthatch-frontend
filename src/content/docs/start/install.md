@@ -27,7 +27,7 @@ The Linux binary is dynamically linked and needs **glibc 2.34 or newer** and **l
 or newer**, the latter because it embeds DuckDB. Debian 12, Ubuntu 22.04, RHEL 9 and Amazon Linux 2023
 clear both.
 
-Every v3 artifact also has a GitHub build-provenance attestation, which establishes the producing
+Every artifact since 3.0 also has a GitHub build-provenance attestation, which establishes the producing
 repository and workflow rather than merely the integrity of bytes in transit:
 
 ```sh

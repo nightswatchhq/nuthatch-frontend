@@ -97,10 +97,11 @@ implementation's ABI, which nobody following a four-line demo was going to read.
 
 4.0.0 names a pruned endpoint and the remedy (#1608), and the demo now starts 300 blocks behind the
 tip (#1611). When a full history is long, `init` prints the near-tip command beside the plain one, and
-`dev` logs the span it is about to attempt. On the release branch on 1 October 2026, from an empty
-directory on one MacBook against the bundled endpoints: the old demo had 0 rows after 122 seconds; the
-new one had 6,592 rows six seconds after `dev` started and reached the tip in under 90 seconds. That
-is one run, not a benchmark.
+`dev` logs the span it is about to attempt. Measured on 1 October 2026, from an empty directory on
+one MacBook against the bundled endpoints: the old demo, built from main before the fix, had 0 rows
+after 122 seconds. The published 4.0.0 binary had 10,665 rows eight seconds after `dev` started and
+was following the tip within 30. That is one run of each, not a benchmark, and a public endpoint
+having a worse afternoon will stretch it.
 
 The full history of a busy contract still wants your own archive-capable RPC. The demo no longer
 pretends otherwise.
