@@ -1,0 +1,449 @@
+---
+// The command palette: Cmd+K or Ctrl+K anywhere, or "/" outside a text field.
+//
+// /palette.json holds every page, doc, heading, post and nest by name and is fetched when the
+// palette first opens. The full text (docs-search.json, blog-search.json) is fetched when the reader
+// first types a query, so opening the palette to jump to a page stays cheap. All of it is this
+// site's own static files: no search service, no framework.
+//
+// A native <dialog>, so the focus trap, Escape and the inert page behind are the browser's job.
+---
+<dialog class="palette" id="palette" aria-label="Search">
+  <div class="palette-head">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+      <circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4 4" />
+    </svg>
+    <input
+      id="palette-input"
+      type="text"
+      role="combobox"
+      aria-label="Search"
+      aria-expanded="true"
+      aria-controls="palette-list"
+      aria-autocomplete="list"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      enterkeyhint="go"
+      placeholder="Docs, commands, posts, nests, or any phrase"
+    />
+    <button class="palette-close" id="palette-close" type="button" aria-label="Close search">esc</button>
+  </div>
+  <div class="palette-list" id="palette-list" role="listbox" aria-label="Results"></div>
+  <p class="palette-status" id="palette-status" role="status"></p>
+  <div class="palette-foot" aria-hidden="true">
+    <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> move</span>
+    <span><kbd>&crarr;</kbd> open</span>
+  </div>
+</dialog>
+
+<script>
+  import type { PaletteItem, PaletteKind } from '../lib/palette';
+
+  interface Hit {
+    title: string;
+    url: string;
+    note: string;
+    /** Set for a full-text hit: the words to mark in the note. */
+    marks?: string[];
+    tag?: string;
+    action?: 'theme';
+  }
+  /** `t` is the lowercased title. The rest are word lists, each a superset of the one before. */
+  interface Indexed extends PaletteItem { t: string; tw: string; aw: string; nw: string }
+  interface TextDoc { title: string; href: string; text: string; lower: string }
+
+  const GROUPS: { kind: PaletteKind; title: string; cap: number }[] = [
+    { kind: 'page', title: 'Pages', cap: 4 },
+    { kind: 'doc', title: 'Docs', cap: 5 },
+    { kind: 'section', title: 'Sections', cap: 5 },
+    { kind: 'post', title: 'Blog', cap: 4 },
+    { kind: 'nest', title: 'Nests', cap: 4 },
+  ];
+  const TEXT_FILES = ['/docs-search.json', '/blog-search.json'];
+  const TEXT_CAP = 6;
+
+  function setup(
+    dialog: HTMLDialogElement,
+    input: HTMLInputElement,
+    list: HTMLElement,
+    status: HTMLElement,
+  ) {
+    let index: Indexed[] | null = null;
+    let indexFailed = false;
+    // undefined until asked for, 'loading' while in flight, null once it has failed.
+    let text: TextDoc[] | 'loading' | null | undefined;
+    let opened = false;
+    let active = 0;
+
+    const query = () => input.value.trim();
+    const options = () => Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'));
+    const pathOf = (url: string) => url.split('#')[0].replace(/\/$/, '');
+    const words = (s: string) => ` ${s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()}`;
+
+    // A token should begin a word, and in the note a short one has to be the whole word. Inside
+    // a word it still counts in a title, but last: "light" is in "Pre-flight checklist".
+    function score(it: Indexed, q: string, tokens: string[]): number {
+      if (it.t === q) return 100;
+      if (it.t.startsWith(q)) return 80;
+      if (tokens.length === 0) return 0;
+      if (` ${it.t}`.includes(` ${q}`)) return 60;
+      if (tokens.every((w) => it.tw.includes(` ${w}`))) return 40;
+      if (tokens.every((w) => it.aw.includes(` ${w}`))) return 30;
+      if (q.length > 2 && it.t.includes(q)) return 20;
+      if (q.length > 2 && tokens.every((w) => `${it.nw} `.includes(w.length < 4 ? ` ${w} ` : ` ${w}`))) return 10;
+      return 0;
+    }
+
+    function themeAction(): Hit {
+      const light = document.documentElement.getAttribute('data-theme') === 'light';
+      return { title: `Switch to the ${light ? 'dark' : 'light'} theme`, url: '', note: '', action: 'theme' };
+    }
+
+    /** Groups ordered by their best match, so Enter on the first row is the best answer. */
+    function byName(q: string): { title: string; hits: Hit[] }[] {
+      const items = index;
+      if (!items) return [];
+      if (q.length === 0) {
+        return [
+          { title: 'Go to', hits: items.filter((it) => it.kind === 'page') },
+          { title: 'Actions', hits: [themeAction()] },
+        ];
+      }
+      if (q.length < 2) return [];
+      const lower = q.toLowerCase();
+      const tokens = words(lower).split(' ').filter(Boolean);
+      const groups = GROUPS.map((g, order) => {
+        const scored = items
+          .filter((it) => it.kind === g.kind)
+          .map((it) => ({ it, s: score(it, lower, tokens) }))
+          .filter((x) => x.s > 0)
+          .sort((a, b) => b.s - a.s);
+        return { title: g.title, hits: scored.slice(0, g.cap).map((x) => x.it as Hit), best: scored[0]?.s ?? 0, order };
+      })
+        .filter((g) => g.hits.length > 0);
+      if (tokens.length > 0 && tokens.every((w) => ' switch theme dark light'.includes(` ${w}`))) {
+        groups.push({ title: 'Actions', hits: [themeAction()], best: 35, order: 99 });
+      }
+      return groups.sort((a, b) => b.best - a.best || a.order - b.order);
+    }
+
+    /** Pages whose text holds every word, the exact phrase first, each with the passage around it. */
+    function byText(q: string, skip: Set<string>): Hit[] {
+      if (!Array.isArray(text) || q.length < 3) return [];
+      const lower = q.toLowerCase();
+      const tokens = lower.split(/\s+/).filter(Boolean);
+      const longest = tokens.reduce((a, b) => (b.length > a.length ? b : a));
+      return text
+        .filter((d) => !skip.has(pathOf(d.href)) && tokens.every((w) => d.lower.includes(w)))
+        .map((d) => {
+          const phrase = d.lower.indexOf(lower);
+          const at = phrase >= 0 ? phrase : d.lower.indexOf(longest);
+          return { d, at, s: (phrase >= 0 ? 1000 : 0) + Math.min(d.lower.split(longest).length - 1, 50) };
+        })
+        .sort((a, b) => b.s - a.s)
+        .slice(0, TEXT_CAP)
+        .map(({ d, at }) => {
+          const from = Math.max(0, d.text.lastIndexOf(' ', Math.max(0, at - 40)) + 1);
+          return {
+            title: d.title,
+            url: d.href.replace(/\/$/, ''),
+            note: `${from > 0 ? '... ' : ''}${d.text.slice(from, from + 170)}`,
+            marks: tokens,
+            tag: d.href.split('/')[1],
+          };
+        });
+    }
+
+    function noteNode(hit: Hit): HTMLElement {
+      const note = document.createElement('span');
+      note.className = 'palette-note';
+      if (!hit.marks) { note.textContent = hit.note; return note; }
+      note.classList.add('palette-note--text');
+      const escaped = hit.marks.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      for (const part of hit.note.split(new RegExp(`(${escaped.join('|')})`, 'gi'))) {
+        if (!part) continue;
+        if (hit.marks.includes(part.toLowerCase())) {
+          const mark = document.createElement('mark');
+          mark.textContent = part;
+          note.append(mark);
+        } else note.append(part);
+      }
+      return note;
+    }
+
+    function row(hit: Hit, i: number): HTMLElement {
+      const el = document.createElement(hit.action ? 'button' : 'a');
+      el.className = 'palette-row';
+      el.id = `palette-opt-${i}`;
+      el.setAttribute('role', 'option');
+      el.tabIndex = -1;
+      if (el instanceof HTMLAnchorElement) el.href = hit.url;
+      else { el.type = 'button'; el.dataset.action = hit.action; }
+
+      const main = document.createElement('span');
+      main.className = 'palette-main';
+      const title = document.createElement('span');
+      title.className = 'palette-title';
+      title.textContent = hit.title;
+      main.append(title);
+      if (hit.note) main.append(noteNode(hit));
+      el.append(main);
+      if (hit.tag) {
+        const tag = document.createElement('span');
+        tag.className = 'palette-tag';
+        tag.textContent = hit.tag;
+        el.append(tag);
+      }
+      return el;
+    }
+
+    function render() {
+      const q = query();
+      const groups = byName(q);
+      const shown = new Set(groups.flatMap((g) => g.hits.map((h) => pathOf(h.url))));
+      const passages = byText(q, shown);
+      if (passages.length) groups.push({ title: 'In the text', hits: passages });
+
+      list.replaceChildren();
+      let i = 0;
+      groups.forEach((g, n) => {
+        const box = document.createElement('div');
+        box.setAttribute('role', 'group');
+        box.setAttribute('aria-labelledby', `palette-group-${n}`);
+        const label = document.createElement('p');
+        label.className = 'palette-group';
+        label.id = `palette-group-${n}`;
+        label.textContent = g.title;
+        box.append(label, ...g.hits.map((h) => row(h, i++)));
+        list.append(box);
+      });
+
+      const none = i === 0;
+      let msg = '';
+      if (indexFailed && text === null) msg = 'Search could not be loaded. Reload the page, or start from the docs.';
+      else if (!index && !indexFailed) msg = 'Loading the index.';
+      else if (q.length === 1) msg = 'Keep typing.';
+      else if (q.length >= 2 && text === 'loading' && none) msg = 'Searching the text.';
+      else if (q.length >= 2 && text === null) {
+        msg = none
+          ? `No page, heading or nest is named "${q}", and the full text could not be searched.`
+          : 'The full text could not be searched, so these are matches by name only.';
+      } else if (q.length >= 2 && none) msg = `Nothing here matches "${q}".`;
+      status.textContent = msg;
+      status.hidden = msg === '';
+      setActive(Math.min(active, Math.max(i - 1, 0)), false);
+    }
+
+    function setActive(n: number, scroll = true) {
+      const opts = options();
+      active = n;
+      opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === n)));
+      const cur = opts[n];
+      if (cur) input.setAttribute('aria-activedescendant', cur.id);
+      else input.removeAttribute('aria-activedescendant');
+      if (cur && scroll) cur.scrollIntoView({ block: 'nearest' });
+    }
+
+    async function loadIndex() {
+      try {
+        const res = await fetch('/palette.json');
+        if (!res.ok) throw new Error(String(res.status));
+        const items: PaletteItem[] = await res.json();
+        index = items.map((it) => {
+          const tw = words(it.title);
+          const aw = tw + words(it.also ?? '');
+          return { ...it, t: it.title.toLowerCase(), tw, aw, nw: aw + words(it.note) };
+        });
+      } catch {
+        indexFailed = true;
+      }
+      render();
+    }
+
+    async function loadText() {
+      text = 'loading';
+      try {
+        const files = await Promise.all(TEXT_FILES.map(async (f) => {
+          const res = await fetch(f);
+          if (!res.ok) throw new Error(String(res.status));
+          return (await res.json()) as Omit<TextDoc, 'lower'>[];
+        }));
+        text = files.flat().map((d) => ({ ...d, lower: d.text.toLowerCase() }));
+      } catch {
+        text = null;
+      }
+      render();
+    }
+
+    function open() {
+      if (dialog.open) return;
+      // The phone menu is a checkbox, and would otherwise still be open underneath.
+      const menu = document.getElementById('nav-toggle') as HTMLInputElement | null;
+      if (menu) menu.checked = false;
+      dialog.showModal();
+      input.select();
+      if (!opened) { opened = true; loadIndex(); }
+      active = 0;
+      render();
+    }
+
+    function activate(el: HTMLElement, newTab: boolean) {
+      if (el.dataset.action === 'theme') {
+        const toggle = document.getElementById('theme-toggle') as HTMLInputElement | null;
+        if (toggle) {
+          toggle.checked = !toggle.checked;
+          toggle.dispatchEvent(new Event('change'));
+        }
+        render();
+        return;
+      }
+      const href = (el as HTMLAnchorElement).href;
+      if (newTab) { window.open(href, '_blank', 'noopener'); return; }
+      dialog.close();
+      location.assign(href);
+    }
+
+    input.addEventListener('input', () => {
+      active = 0;
+      if (text === undefined && query().length >= 2) loadText();
+      render();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const opts = options();
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (opts.length === 0) return;
+        const step = e.key === 'ArrowDown' ? 1 : -1;
+        setActive((active + step + opts.length) % opts.length);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const cur = opts[active];
+        if (cur) activate(cur, e.metaKey || e.ctrlKey);
+      }
+    });
+
+    list.addEventListener('mousemove', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[role="option"]');
+      if (!el) return;
+      const n = options().indexOf(el);
+      if (n !== active) setActive(n, false);
+    });
+
+    list.addEventListener('click', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[role="option"]');
+      if (!el) return;
+      if (el.dataset.action) { activate(el, false); input.focus(); return; }
+      // A plain click on a link navigates by itself. Closing covers a heading on the page already open.
+      if (!e.metaKey && !e.ctrlKey && !e.shiftKey) dialog.close();
+    });
+
+    // The dialog box has no padding, so a click whose target is the dialog itself hit the backdrop.
+    dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+    document.getElementById('palette-close')?.addEventListener('click', () => dialog.close());
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        if (dialog.open) dialog.close();
+        else open();
+        return;
+      }
+      const t = e.target as HTMLElement | null;
+      const typing = t?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t?.tagName ?? '');
+      if (e.key === '/' && !typing && !dialog.open && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        open();
+      }
+    });
+
+    // The button is useless without this script, so it ships hidden and is revealed here.
+    const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
+    document.querySelectorAll<HTMLButtonElement>('[data-palette-open]').forEach((b) => {
+      b.setAttribute('aria-keyshortcuts', mac ? 'Meta+K' : 'Control+K');
+      const hint = b.querySelector('kbd');
+      if (hint) hint.textContent = mac ? '⌘K' : 'Ctrl K';
+      b.addEventListener('click', open);
+      b.hidden = false;
+    });
+  }
+
+  const dialog = document.getElementById('palette') as HTMLDialogElement | null;
+  const input = document.getElementById('palette-input') as HTMLInputElement | null;
+  const list = document.getElementById('palette-list');
+  const status = document.getElementById('palette-status');
+  if (dialog && input && list && status && typeof dialog.showModal === 'function') {
+    setup(dialog, input, list, status);
+  }
+</script>
+
+<!-- Global, because the rows are built in the browser and carry no scoping attribute. -->
+<style is:global>
+  .palette {
+    width: min(40rem, calc(100vw - 24px)); max-width: none;
+    max-height: min(36rem, calc(100dvh - 12vh - 24px));
+    margin: 12vh auto 0; padding: 0; overflow: hidden;
+    background: var(--bg-elev); color: var(--text);
+    border: 1px solid var(--border-hi); border-radius: var(--radius);
+  }
+  /* Only when open: an unconditional display here would un-hide the closed dialog. */
+  .palette[open] { display: flex; flex-direction: column; }
+  .palette::backdrop { background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(3px); }
+  .palette-head {
+    display: flex; align-items: center; gap: 12px; padding: 4px 12px 4px 16px;
+    border-bottom: 1px solid var(--border); color: var(--text-muted);
+  }
+  .palette-head svg { width: 17px; height: 17px; flex-shrink: 0; }
+  /* 16px and no smaller: below that iOS zooms the page when the field takes focus. */
+  .palette-head input {
+    flex: 1; min-width: 0; height: 48px; padding: 0;
+    font: inherit; font-size: 1rem; color: var(--text);
+    background: transparent; border: 0; outline: none;
+  }
+  .palette-head input::placeholder { color: var(--text-muted); }
+  .palette-head:focus-within { border-bottom-color: var(--rust); }
+  .palette-close {
+    min-width: 34px; min-height: 26px; padding: 0 7px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted);
+    background: var(--bg-inset); border: 1px solid var(--border-hi); border-radius: var(--radius-sm);
+  }
+  .palette-close:hover { color: var(--text); }
+  .palette-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 6px 6px; }
+  .palette-list:empty { display: none; }
+  .palette-group {
+    padding: 10px 10px 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
+  }
+  .palette-row {
+    display: flex; align-items: baseline; gap: 14px; width: 100%;
+    padding: 8px 10px; text-align: left; font: inherit; cursor: pointer;
+    color: var(--text-muted); background: transparent; border: 0;
+    border-radius: var(--radius-sm); scroll-margin-block: 34px 6px;
+  }
+  .palette-row:hover { text-decoration: none; }
+  .palette-row[aria-selected='true'] { background: var(--bg-inset); box-shadow: inset 2px 0 0 var(--rust); }
+  .palette-main { display: grid; gap: 1px; flex: 1; min-width: 0; }
+  .palette-title { font-size: 0.91rem; color: var(--text); }
+  .palette-note {
+    font-size: 0.78rem; line-height: 1.45; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* A full-text passage is the evidence for the match, so it gets a second line. */
+  .palette-note--text { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .palette-note mark { background: var(--pale-rust-bg); color: var(--text); border-radius: 2px; padding-inline: 1px; }
+  .palette-tag {
+    flex-shrink: 0; max-width: 40%; font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+    letter-spacing: 0.04em; color: var(--text-muted); text-align: right;
+  }
+  .palette-status { padding: 14px 16px; font-size: 0.9rem; color: var(--text-muted); }
+  .palette-foot {
+    display: flex; gap: 14px; padding: 7px 14px; border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted);
+  }
+  .palette-foot kbd { margin-right: 3px; border-bottom-width: 1px; }
+  @media (max-width: 48rem) {
+    .palette { margin-top: 8px; max-height: calc(100dvh - 16px); }
+    .palette-foot { display: none; }
+  }
+</style>

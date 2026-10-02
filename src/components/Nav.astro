@@ -67,6 +67,16 @@ const groups = [
         <span class="theme-word theme-word--light">light</span>
       </label>
     </nav>
+
+    <!-- Opens the command palette (Palette.astro), which also answers Cmd+K and "/". Hidden until
+         that script runs, since without it the button would do nothing. -->
+    <button type="button" class="nav-search" data-palette-open aria-label="Search" aria-haspopup="dialog" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4 4" />
+      </svg>
+      <span class="nav-search-label" aria-hidden="true">Search</span>
+      <kbd aria-hidden="true"></kbd>
+    </button>
   </div>
 </header>
 
@@ -85,9 +95,27 @@ const groups = [
   .brand {
     display: inline-flex; align-items: center; gap: 0.5rem;
     color: var(--text); font-weight: 600; letter-spacing: -0.02em; font-size: 1.02rem;
+    margin-right: auto;
   }
   .brand:hover { text-decoration: none; }
   .nav-links { display: flex; align-items: center; gap: clamp(0.9rem, 2.4vw, 1.6rem); }
+
+  .nav-search {
+    display: inline-flex; align-items: center; gap: 0.45rem; flex-shrink: 0;
+    margin-left: clamp(0.9rem, 2.4vw, 1.6rem); padding: 0.28rem 0.45rem 0.28rem 0.6rem;
+    font: inherit; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;
+    background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+  }
+  .nav-search[hidden] { display: none; }
+  .nav-search:hover { color: var(--text); border-color: var(--border-hi); }
+  .nav-search svg { width: 15px; height: 15px; }
+  .nav-search kbd { font-size: 0.66rem; border-bottom-width: 1px; }
+  /* Between the phone menu and a roomy header there is space for the icon and nothing else. */
+  @media (max-width: 64rem) {
+    .nav-search { padding: 0.4rem; }
+    .nav-search-label, .nav-search kbd { display: none; }
+  }
   .nav-links a { color: var(--text-muted); font-size: 0.92rem; }
   .nav-links a:hover { color: var(--text); text-decoration: none; }
 
@@ -152,7 +180,8 @@ const groups = [
   /* Mobile: collapse the links into a dropdown behind the hamburger. Groups flatten into labelled
      sections of the same list, so nothing needs a second tap to reach. */
   @media (max-width: 48rem) {
-    .nav-burger { display: inline-flex; }
+    .nav-burger { display: inline-flex; order: 2; margin-left: 0.5rem; }
+    .nav-search { order: 1; margin-left: auto; padding: 0.5rem; }
     .nav-links {
       display: none;
       position: absolute; top: 58px; left: 0; right: 0;
