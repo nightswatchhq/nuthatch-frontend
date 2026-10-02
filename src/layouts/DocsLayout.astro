@@ -82,6 +82,9 @@ const groups = GROUPS.map((g) => ({
   /* Desktop: show the closed details' contents as the fixed sidebar. Native closed-details rules
      would otherwise hide the nav, so this deliberately outranks them. */
   .docs-nav:not([open]) > nav { display: block; }
+  /* Current browsers hide a closed <details> through its ::details-content box, with
+     content-visibility rather than display, so the rule above is no longer enough by itself. */
+  .docs-nav:not([open])::details-content { content-visibility: visible; }
   .docs-nav > summary { display: none; }
   .docs-nav > summary::-webkit-details-marker { display: none; }
   .docs-nav-label {
