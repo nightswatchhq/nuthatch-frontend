@@ -337,6 +337,28 @@ on the reasoning that they check answers and not latency, and the job that runs 
 minutes where it took 13. That is the "planning time" line in the section above, with a figure
 on it that we would rather not have had.
 
+**2 October, 10:40 UTC. Every nest is served by Burrmill, and DuckDB is out of the tree.** The
+two remaining nests, the legacy staking archive and the data-services nest, rolled onto a build of
+nuthatch#1626 at 07:37. Each was asked Lodestar's statements before and after, 9 and 15 of them,
+and every answer was the same. DIPS, the last nest with DuckDB checking behind Burrmill, was
+switched to Burrmill alone at 10:40, when #1626 merged. The `checked` mode lived for twenty-four
+hours. Nothing in production consults DuckDB now; four nests still carry it inside their binary,
+unused, until the 4.1.0 release is built and rolled.
+
+**2 October. The QoS nest ate itself, and it was the allocator.** Overnight the QoS nest grew to
+7.3 GB resident with 4.3 GB more in swap, against an engine limit of 2 GB, was throttled by its
+memory cgroup, and stopped answering; Lodestar's daily QoS ingest failed twenty times in a row. A
+restart took it to 4.7 GB again within forty minutes. The engine's limit was not being broken: it
+bounds what the query engine accounts for, and the growth was outside it. Measured on a copy with
+the dashboard's own mix of 279 statements, a fresh server on glibc's malloc ended at 5.6 GB, most
+of it arriving on the ingest job's four whole-day statements, and never gave any of it back. The
+same binary with jemalloc as its allocator ended under 2.1 GB, and after those four statements it
+held 1.28 GB and was at 0.95 GB twenty seconds later. **glibc keeps what a large statement freed;
+jemalloc returns it.** DuckDB never showed this because it manages its own buffers inside the
+limit it is given. nuthatch#1628 makes jemalloc the allocator on Linux and goes into 4.1.0. Until
+then the QoS nest runs with its cgroup ceiling raised to 14 GB on a 62 GB machine, which is not a
+fix, and is written here so nobody mistakes it for one.
+
 ## What would make us go back
 
 Nothing above has happened on a live nest yet. Every figure is from a test suite or a replay over a
