@@ -85,7 +85,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
 
           <ul class="grid">
             {g.items.map((n) => (
-              <li class="nest">
+              <li class="nest" id={`nest-${n.id}`}>
                 <div class="nest-top">
                   <h3>{n.data.name}</h3>
                   <span class={`badge status--${n.data.status}`}>{statusLabel[n.data.status]}</span>
@@ -179,6 +179,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--bg-elev); padding: 1.2rem 1.25rem 1.3rem;
     display: flex; flex-direction: column;
+    scroll-margin-top: 74px; /* the palette links to a card, and the nav is sticky */
     transition: border-color 0.18s var(--ease);
   }
   .nest:hover { border-color: var(--border-hi); }

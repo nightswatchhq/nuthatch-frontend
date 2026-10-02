@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import Palette from '../components/Palette.astro';
 
 interface Props {
   title?: string;
@@ -81,6 +82,7 @@ const ogImage = new URL('/og.png', site).href;
       <slot />
     </main>
     <Footer />
+    <Palette />
 
     <!-- Shared copy-to-clipboard handler for every [data-copy] control.
          The only site-wide JS besides the terminal typewriter. Degrades to

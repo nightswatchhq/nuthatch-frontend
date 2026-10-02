@@ -6,7 +6,13 @@ AI-native blockchain indexer in one Rust binary.
 Built with [Astro](https://astro.build), static output only. The site's pitch is "nothing
 phones home", so the site practises it: no third-party requests, no analytics, no external
 scripts, self-hosted fonts. The only client-side JavaScript is copy-to-clipboard on code
-blocks and the terminal typewriter, both of which degrade gracefully with JS disabled.
+blocks, the terminal typewriter and search, all of which degrade gracefully with JS disabled.
+
+Search is a command palette on every page: Cmd+K, Ctrl+K, or `/` outside a text field. It reads
+three static files from this origin and nothing else. `/palette.json` (every page, doc, heading,
+post and nest by name) is fetched when the palette first opens; `/docs-search.json` and
+`/blog-search.json` (the full text) when the reader first types. A page that is never searched
+loads none of them.
 
 ## Structure
 
@@ -25,6 +31,7 @@ src/
     Nav.astro            sticky nav + CSS-only light/dark toggle (:has() checkbox hack)
     Footer.astro         links, licence, "no third-party resources" note
     Mark.astro           the logo badge, inline SVG (fixed brand colours)
+    Palette.astro        the Cmd+K command palette: a native <dialog>, on every page
     CopyBlock.astro      copyable command block (copy button flips to "copied")
     CodeCard.astro       multi-line code block, build-time Shiki highlight + copy button
     Terminal.astro       faux-OS terminal, static transcript + typewriter enhancement
