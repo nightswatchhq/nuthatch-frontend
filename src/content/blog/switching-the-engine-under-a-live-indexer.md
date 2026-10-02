@@ -322,6 +322,21 @@ On our 32-core test machine, 1,880 tests pass on default features and 1,989 with
 feature, none failing. The Postgres, object-store, Trino and memory-footprint jobs run only in CI,
 and the footprint job has never measured a Burrmill binary before.
 
+**CI then found what that machine could not.** The footprint, Postgres, object-store and Trino
+jobs passed, the last of them comparing Trino against Burrmill's numbers for the first time. One
+job failed: two tests of the network endpoint ran past their 30-second query budget. We had tested
+an optimised build, and CI tests an unoptimised one. DuckDB never showed the difference, because
+its C++ was compiled with optimisation whatever the Rust around it was doing.
+
+The obvious remedy is to compile the engine optimised inside test builds, so we measured it
+before adopting it. It costs 75 CPU-minutes of compilation against 14, and one of the two tests
+still fails on four cores. The cost is not the compiler's to remove: each of those tests takes
+42 to 47 seconds in a release build, because every query in them plans through about thirty
+views, and that planning is where Burrmill is slowest. The tests now have ten times the budget,
+on the reasoning that they check answers and not latency, and the job that runs them takes 45
+minutes where it took 13. That is the "planning time" line in the section above, with a figure
+on it that we would rather not have had.
+
 ## What would make us go back
 
 Nothing above has happened on a live nest yet. Every figure is from a test suite or a replay over a
