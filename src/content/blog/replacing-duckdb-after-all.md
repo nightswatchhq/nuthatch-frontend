@@ -6,6 +6,9 @@ author: "cargopete"
 tags: ["nuthatch", "duckdb", "datafusion", "burrmill", "benchmarks", "sql", "rust"]
 ---
 
+> **Superseded, 2026-10-02.** The release cycle of shadow traffic described below did not happen:
+> Burrmill served its first nest on 1 October and 4.1.0, with no DuckDB in it, was on every nest by
+> the next morning. What that cost and found is in [One engine](/blog/one-engine). Kept as written.
 > **Superseded in part, 2026-10-01.** The order in "How the swap will happen" has changed: Burrmill
 > will serve first and DuckDB will check behind it for a month, instead of the other way round. The
 > reasons, the regressions and the running log are in
