@@ -6,6 +6,10 @@ author: "cargopete"
 tags: ["nuthatch", "duckdb", "datafusion", "benchmarks", "rfc", "sql", "rust"]
 ---
 
+> **Superseded, 2026-10-02.** DuckDB left nuthatch in 4.1.0; every nest we run is on Burrmill. The
+> reversal is [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all) and the account of the
+> switch is [One engine](/blog/one-engine). Kept as written, because a project that quietly edits its
+> old positions is harder to trust than one that dates them.
 > **Superseded, 2026-09-26.** The decision below is reversed in
 > [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all): nuthatch will move to Burrmill, a
 > Rust engine built on DataFusion, once it has run beside DuckDB on live nests for a release with no
