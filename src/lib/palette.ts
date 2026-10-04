@@ -27,7 +27,6 @@ const PAGES: Omit<PaletteItem, 'kind'>[] = [
   { title: 'Manifesto', url: '/manifesto', note: 'Why Nuthatch is deterministic, free and permissively licensed' },
   { title: 'Nuthatch & The Graph', url: '/the-graph', note: 'A network for indexed data and a binary that produces it', also: 'horizon subgraph' },
   { title: 'Network Subgraph endpoint', url: '/network', note: 'A public, rate-limited GraphQL endpoint for Arbitrum One allocations', also: 'arbitrum graphql' },
-  { title: 'Platform', url: '/platform', note: 'Hosted Nuthatch', also: 'hosted cloud' },
 ];
 
 /** Everything the palette matches by name. The full text is a separate, larger file. */

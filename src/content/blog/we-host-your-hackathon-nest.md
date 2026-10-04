@@ -1,14 +1,13 @@
 ---
 title: "We will host your hackathon nest. Free, the same day."
 date: "2026-09-11"
-description: "A standing offer to anyone building on a testnet against a deadline, and what it looked like this morning: four unverified contracts on Arc Testnet, two nests on our box, and a builder who was being rate-limited over thirty events."
+description: "Retired: a standing offer to anyone building on a testnet against a deadline, and what it looked like this morning: four unverified contracts on Arc Testnet, two nests on our box, and a builder who was being rate-limited over thirty events."
 author: "cargopete"
 tags: ["nuthatch", "hackathon", "hosting", "the-graph", "arc", "sepolia"]
 ---
 
-> **Retired, 2026-09-29.** Nightswatch no longer hosts nests, so the offer below is withdrawn, and
-> the Arcaidia nests it describes were stopped that day. GraphOps plans to offer hosted nests on its own platform, running the same binary as
-> anyone else; there is no date for it yet. This post is kept as a record of what it was.
+> **Retired 2026-09-29; Nightswatch no longer hosts nests.** The offer below is withdrawn, and the
+> Arcaidia nests it describes were stopped that day. This post is kept as a record of what it was.
 
 *If you are building at a hackathon and an indexing quota is between you and your demo, send us a
 message. We will build the nest from your contracts, test it, and host it on our own box for the
