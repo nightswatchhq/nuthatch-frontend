@@ -31,7 +31,7 @@ Restart=on-failure
 RestartSec=5
 # Off-localhost the admin UI requires this; unset it and bind 127.0.0.1 to disable remote admin.
 Environment=NUTHATCH_ADMIN_TOKEN=change-me
-# Keep it inside the footprint budget; the box needs headroom for DuckDB queries.
+# Keep it inside the footprint budget; the box needs headroom for analytical queries.
 MemoryMax=2G
 
 [Install]
@@ -52,7 +52,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nightswatchhq/nuthatch:4.0.2
+  ghcr.io/nightswatchhq/nuthatch:4.3.1
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source

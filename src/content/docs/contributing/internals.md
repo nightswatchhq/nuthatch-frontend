@@ -23,7 +23,7 @@ Line counts are given as a sense of weight, not a metric. The crate's `src/` alo
                         └────────────────────────────────┬─────────────┘
                                                          ▼
                                        serve: point-reads from redb,
-                                       analytical SQL from DuckDB over
+                                       analytical SQL from Burrmill over
                                        segments ∪ tip, MCP over the same
 ```
 
@@ -149,16 +149,14 @@ Two surfaces over the same data.
 **Point-reads** come from redb directly - entity by id, balances, flags. Cheap, no SQL engine
 involved.
 
-**Analytical SQL** is an embedded DuckDB that **attaches the sealed segments read-only**. The
-ingestion path never writes DuckDB. For `/sql`, hot rows are scanned into per-table temp tables and
-`UNION ALL`'d into each table's view.
+**Analytical SQL** runs on [Burrmill](https://github.com/nightswatchhq/burrmill), an embedded engine
+on DataFusion. A session opens empty and registers, for each table a statement binds, the segment
+list and the hot rows staged for it, so the ingestion path never writes to the engine.
 
-Since the engine trait (`engine.rs`), `analytics.rs` keeps every policy decision - the read-only
-gates, the allowlist walk, the deadline - and DuckDB sits behind it in `engine_duck.rs`. A
-`shadow-burrmill` feature, off in release builds, runs
-[Burrmill](https://github.com/nightswatchhq/burrmill) beside DuckDB on every statement and logs each
-difference while DuckDB's answer is served; it is the gate for
-[replacing DuckDB](/blog/replacing-duckdb-after-all).
+`analytics.rs` keeps every policy decision - the read-only gates, the allowlist walk, the deadline -
+and Burrmill sits behind the engine trait (`engine.rs`) in `engine_burrmill.rs`. DuckDB sat there
+until 4.1, and a `shadow-burrmill` feature ran the two side by side before the cutover
+([Replacing DuckDB, after all](/blog/replacing-duckdb-after-all)).
 
 The union is exact **without deduplication**, and that is structural rather than careful: cold
 includes only segments at or below `sealed_through`, hot only rows above it. The two sets cannot

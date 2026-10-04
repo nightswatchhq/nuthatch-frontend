@@ -104,8 +104,8 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 
 The budget is per-cursor and CI-enforced; in a runtime it's shared across that cursor's nests
 (`max_rss_mb`, default 2048), and a mount projected to exceed it is refused. Check the per-nest
-estimated footprint (and the runtime-wide actual `nuthatch_rss_bytes`) in the `/nests` roster. DuckDB
-queries carry their own per-query memory cap and thread limit;
+estimated footprint (and the runtime-wide actual `nuthatch_rss_bytes`) in the `/nests` roster. Analytical
+queries carry their own per-session memory cap and thread limit;
 if you're tight, lower query concurrency rather than the per-query cap.
 
 ## "semantic.toml drift" warnings at startup

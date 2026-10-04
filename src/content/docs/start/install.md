@@ -23,9 +23,11 @@ built. Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
 `nuthatch-x86_64-unknown-linux-gnu.tar.gz` and, for [scaled mode](/docs/operate/scaled/),
 `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each with a `.sha256` beside it.
 
-The Linux binary is dynamically linked and needs **glibc 2.34 or newer** and **libstdc++ from GCC 11
-or newer**, the latter because it embeds DuckDB. Debian 12, Ubuntu 22.04, RHEL 9 and Amazon Linux 2023
-clear both.
+The Linux binary is dynamically linked and needs **glibc 2.35 or newer**, measured off the published
+artifact with `objdump -T`: from 4.1.0 it references `hypot` at `GLIBC_2.35`. It links `libc`, `libm`
+and `libgcc` and no C++ runtime; releases before 4.1 embedded DuckDB, needed only glibc 2.34, and also
+needed libstdc++ from GCC 11. Debian 12 and Ubuntu 22.04 clear it. RHEL 9 and Amazon Linux 2023 ship
+glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build.
 
 Every artifact since 3.0 also has a GitHub build-provenance attestation, which establishes the producing
 repository and workflow rather than merely the integrity of bytes in transit:
@@ -39,12 +41,12 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.0.2 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.3.1 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`4.0.2-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`4.3.1-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source

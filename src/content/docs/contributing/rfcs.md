@@ -29,8 +29,8 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0013 Storage & query-engine direction** *(Closed 2026-09-08)* - the DuckDB union shipped.
   DataFusion convergence was **benchmark-gated, and DataFusion did not meet the gate**: 1.6-2.7×
   DuckDB's latency on the fold that matters, widening as segments grow, at exact result parity.
-  Closed on RFC-0042's answer, keep DuckDB. That answer was reversed on 2026-09-26: DuckDB is to be
-  replaced by Burrmill, on DataFusion, after a shadow period - see
+  Closed on RFC-0042's answer, keep DuckDB. That answer was reversed on 2026-09-26, and 4.1.0
+  replaced DuckDB with Burrmill, on DataFusion, after a shadow period - see
   [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
 - **0014 Firehose-class extraction** *(Draft; deferred)* - traces and state diffs via ExEx.
 - **0015 The delightful core** *(Implemented)* - the REPL, magical init, live feedback, `add`, the
@@ -106,7 +106,7 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   history-growing update cost, a pooled-connection explain leak, a 429 classification error and a
   split-lock freshness label; all are fixed in the stable release.
 - **0042 Rust-native without DuckDB** *(Parked; decided 2026-08-30, keep DuckDB)* - the removal
-  investigation, run to slice 6. Reversed by the Burrmill decision above.
+  investigation, run to slice 6. Reversed by the Burrmill decision above, which shipped in 4.1.0.
 - **0043 Lessons from Amp** / **0049 Hardening lessons from an audited pipeline** *(Reference and
   analysis)* - read against our own RFCs; neither is a decision.
 - **0044 The subgraph port skill** *(Implemented in part)* - one subgraph, one nest; S1, S2 and S5
@@ -124,8 +124,8 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0053 Graph-subgraph compatibility** *(Parked 2026-09-12)* - a partial GraphQL read surface, not a
   drop-in replacement; only in a `--features graph` build.
 - **0054 The head count** *(Draft; blocked)* - an opt-in ping at `init`.
-- **0055 The Dune view emitter** *(Accepted)* - `nuthatch emit dune`, DuneSQL models over a mirrored
-  nest.
+- **0055 The Dune view emitter** *(Withdrawn)* - `emit dune`, DuneSQL models over a mirrored nest.
+  Shipped in 3.7.0 and removed in 4.1 with DuckDB, whose parser it depended on.
 - **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Draft)*.
 - **0058 Cross-nest SQL** *(Accepted, then parked 2026-09-26 with no user)* - a declared read-only
   query across mounts in one runtime.

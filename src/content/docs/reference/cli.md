@@ -52,7 +52,6 @@ Almost every command that operates on a nest takes `--dir` (default `.`). The ex
   segment catalogue instead.
 - **`nuthatch serve`** - serve a nest without indexing it; `--hot-store` reads a Postgres hot store in
   a scaled-mode build.
-- **`nuthatch emit dune`** - write one DuneSQL query per event table, offline.
 
 `entities.toml` needs no special command: `dev` loads and maintains it. A nest declaring an entity
 must use the normal ingest path; `dev --seal-direct` is refused because direct sealing bypasses the

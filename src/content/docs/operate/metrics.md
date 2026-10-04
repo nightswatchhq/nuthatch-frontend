@@ -72,7 +72,7 @@ one cursor (≤2 GB total, shared across its nests); a multichain runtime's tota
 cursors. Density is RAM-bounded, not free: a runtime refuses to mount a nest whose projected
 footprint would blow the ceiling (`max_rss_mb`, default 2048).
 
-Inside the budget, the analytical path is separately bounded - each DuckDB query runs under its own
+Inside the budget, the analytical path is separately bounded - each analytical session runs under its own
 memory cap and thread limit, and the concurrency gate bounds the aggregate. If you're tight, lower
 concurrency rather than raising the per-query cap.
 

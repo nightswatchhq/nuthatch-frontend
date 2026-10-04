@@ -2,11 +2,11 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v4.0.2**, the stable line - a promise about stability (from 4.0.0 to the last
+own indexer." Status: **v4.3.1**, the stable line - a promise about stability (from 4.0.0 to the last
 4.x release a config keeps working with the same meaning, a data directory upgrades in place with no
 re-index or migration command, and no HTTP route, response field, generated table or column, or MCP
 tool is removed, renamed or retyped; upgrade only, and the off-by-default cargo features and the SQL
-dialect's functions, which are DuckDB's, are not covered), not a claim of completeness. Licence: MIT OR Apache-2.0.
+dialect behind `/sql` are not covered), not a claim of completeness. Licence: MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the binary does
 today from the design targets. Do not present a design target as a present-tense capability,
@@ -44,8 +44,8 @@ obstacle has been the operational weight of the tooling, which is an engineering
    empty typed table even before a declared event has fired),
    stores rows in an embedded hot store (redb), seals finalized ranges to content-addressed Parquet
    (pruning the hot store), and serves a local HTTP API on 127.0.0.1:8288: `/tables`,
-   `/table/{name}` (hot+cold merged), `/schema` (the enriched data model), `/sql` (read-only DuckDB,
-   sealed history UNION the live hot tip), `/explain` (validate SQL without running it), `/entity/{id}`,
+   `/table/{name}` (hot+cold merged), `/schema` (the enriched data model), `/sql` (read-only SQL on
+   Burrmill, sealed history UNION the live hot tip), `/explain` (validate SQL without running it), `/entity/{id}`,
    `/balances`, `/balance/{addr}`, `/exposure/{addr}`, `/flags`, `/ready` (readiness: 200 fresh / 503
    stalled), `/metrics` (Prometheus), and a localhost-gated admin UI at `/_admin/`. Every row carries provenance columns (`block_hash`,
    `_seq`, `block_timestamp`) and `*_dec`/`*_overflow` siblings. The balance view is DBSP-maintained
@@ -139,17 +139,8 @@ obstacle has been the operational weight of the tooling, which is an engineering
     same settings per mount from `[mounts.publish]` in `mounts.toml`. The mirror runs on its own
     thread, so a slow bucket delays the mirror and never a seal. Credentials are the usual `AWS_*`
     variables. A published prefix is plain Parquet plus a catalogue; CI publishes to a real MinIO and
-    requires Trino's counts and sums over the prefix to match DuckDB's.
-15. `nuthatch emit dune --dir <nest> --out <dir> --source <namespace>` (RFC-0055, 3.7.0): one plain
-    DuneSQL `SELECT` per event table over `dune.<namespace>.<table>`, written offline and
-    deterministically. Each column is cast to its DuneSQL type, every wide integer keeps its exact
-    text beside it as `<name>_raw`, and implicit columns take Dune's `evt_*` names. Views, call tables
-    and block tables are not emitted. The queries push interpretation, not rows: they do not by
-    themselves put data in Dune. Since 3.8.3 an authored view in `views/*.sql` is emitted too when its
-    translation is exact: DuckDB's parser reads the view and the query is rendered again from an
-    allowlist of constructs that return the same result in DuckDB and Trino. Every other view is
-    listed under "Not emitted" in the output `README.md` with the construct that stopped it.
-16. IPFS documents at scale (RFC-0037 slices 5 to 8, 3.8.0): `[[ipfs]]` takes `cid_json_path` (the
+    requires Trino's counts and sums over the prefix to match nuthatch's own engine.
+15. IPFS documents at scale (RFC-0037 slices 5 to 8, 3.8.0): `[[ipfs]]` takes `cid_json_path` (the
     key holding the CID) and `json_match` (resolve only objects whose string fields equal the given
     values), and the source can be an event column or a top-level call's calldata. Every document
     resolves out of band behind the cursor, with retry, backoff and a recorded give-up after 10
@@ -162,18 +153,18 @@ obstacle has been the operational weight of the tooling, which is an engineering
     `--ipfs-window-deadline` (300 s, `0` for none) for one document, and `GET /ipfs/gave-up?limit=`
     lists documents given up on. A document given up on is absent from sealed history and is not
     fetched again.
-17. Store coverage check (3.8.4): beside the registry hash, a nest records its chain and chain id,
+16. Store coverage check (3.8.4): beside the registry hash, a nest records its chain and chain id,
     each contract's address and start block, its factories and its extraction settings in the store
     as `indexed_coverage`, and refuses to start a store holding data when `nuthatch.toml` no longer
     matches, naming each part that moved. The first start after upgrading records rather than
     verifies. RPC endpoints and the nest's name are not checked. `/` and `/nest` show `nid` and
     `data_identity`.
-18. `nuthatch nest nid` (3.9.0) prints the identity a nest's data is stored under (`data/<nid>/`)
+17. `nuthatch nest nid` (3.9.0) prints the identity a nest's data is stored under (`data/<nid>/`)
     without running it. `nuthatch offchain pull <url> --table <name> --format json` (3.9.0, RFC-0045
     stage 2) fetches a JSON-array feed once and seals it as an offchain snapshot, for a host timer to
     run; an authored entity can read `offchain__<table>` as a source, and a snapshot is read only
     after its bytes match the manifest hash.
-19. RPC economy (3.11.0): a backfill takes `block_timestamp` from the logs where the endpoint supplies
+18. RPC economy (3.11.0): a backfill takes `block_timestamp` from the logs where the endpoint supplies
     it rather than buying a header per block; idle polls skip the reorg check; the default poll
     interval is the chain's block time (never below 2 s; `--poll-interval` overrides it, and `/ready`
     reports the source); `--rpc-fallback` names endpoints asked only while every other endpoint is
@@ -190,13 +181,15 @@ startup - a mixed-chain pool is refused, since indexing against the wrong chain 
 silently. The bundled free public RPCs exist so `init` → `dev` works with zero setup; they are
 rate-limited, shared, sometimes fail by returning an empty result rather than an error, and are
 unsuitable for deep backfills or production - use your own node or a paid provider for real work.
-Measured footprint (not a target): ~37 MB single contract, ~58 MB three-contract 23-table nest -
-2.8% of the ≤2 GB per-cursor CI budget (the `footprint` job fails above 256 MB). Backfill paths are
+Measured footprint (not a target): CI's `footprint` job fails a build whose peak RSS passes 256 MB
+indexing a fixed 8,004-row fixture, and on the largest nest we run, 4.3.1 peaked at 1,572 to 1,692 MiB
+answering that nest's 74 production statements under its production limits (v4.3.1 release notes),
+inside the 2 GB per-cursor budget. Backfill paths are
 correctness-gated to produce byte-identical sealed segments; no storage-path multiplier is currently
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v4.0.2 is the current release,
+against a real provider - the event count matching Sentio's own README. v4.3.1 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -211,13 +204,6 @@ flags are stable, so there is no migration or re-backfill.
 
 reth ExEx tip-ingestion (own node; toolchain + dependency blockers cleared, needs a synced node)
 and firehose-class extraction of traces and state diffs on top of it (RFC-0014, deferred);
-**replacing DuckDB with Burrmill**, a Rust query engine built on DataFusion (decided 2026-09-26,
-reversing the August "Keeping DuckDB" post; RFC-0013's gate had found DataFusion alone 1.6-2.7x
-DuckDB's latency). An engine trait and a shadow session, in which Burrmill answers beside DuckDB and
-DuckDB's answer is served, are on main behind a feature off in release builds; cutover waits on a
-release cycle of real traffic with zero unexplained differences. Every release to date, including
-v4.0.2, answers SQL with DuckDB, so do not describe a released nuthatch as running on DataFusion or
-Burrmill;
 streaming subscribe (SSE); local AI models (Ollama / bring-your-own-key); effectful HTTP egress for
 transform worlds (`kv` grant ships today); wildcard indexing.
 
@@ -234,17 +220,23 @@ the indexing logic. A storage trait for scaled mode is planned in the same shape
 
 - Embedded mode (default, built): one process. Ingestion (RPC extraction today; a reth ExEx
   when colocated, designed) -> deterministic decode -> a hot store (redb) for entity point-reads
-  near the tip -> content-addressed Parquet segments sealed strictly past finality -> an embedded
-  DuckDB that attaches those segments read-only for analytical SQL. DuckDB is single-writer: only
-  the ingestion thread writes; queries attach read-only.
+  near the tip -> content-addressed Parquet segments sealed strictly past finality -> Burrmill, our
+  embedded query engine on Apache DataFusion, reading those segments for analytical SQL. Only the
+  ingestion thread writes; queries read.
 - Scaled mode (built, RFC-0022): the same crates with Postgres in place of redb for the hot store,
   run as three roles - a control plane holding desired state, a writer pool taking **one lease per
   chain cursor** with the fence enforced inside the store's own write transaction, and an
   independently-scaled query tier. Workers **pull the nests they are assigned** from a registry; a
   pinned `bundle_hash` is fetched by content address, so re-tagging a version cannot change what the
   fleet runs. Verified across real machines, including 377 blocks indexed through a 90-second
-  control-plane outage. The query engine is DuckDB in both modes in every release to date; its
-  replacement by Burrmill is described under design targets.
+  control-plane outage. The query engine is Burrmill in both modes.
+- The engine: Burrmill has been the only one since 4.1.0 (2026-10-02). Releases up to 4.0.2 ran
+  analytical SQL on DuckDB, which is no longer in the binary. The change was not made for speed: on a
+  production nest on 2026-10-01, Burrmill took about 2.5x DuckDB's time per statement and needed more
+  memory for the same joins. It buys one language in the binary and exact arithmetic that refuses
+  rather than wraps. A statement that needs more memory than its session's budget is refused rather
+  than spilled. The sealed segments are plain Parquet, so external readers such as DuckDB or Trino can
+  still read them.
 
 Reorg strategy: reorgs only ever touch the mutable hot store, and become retractions in the
 incremental view. Segments are sealed to immutable Parquet past finality, so the columnar layer
@@ -297,7 +289,7 @@ contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev -
 the last 300 blocks and follows the tip (plain `nuthatch dev` backfills from the deployment block,
 which for USDC wants your own archive-capable RPC), every declared event becomes a table (`usdc__transfer`) with
 provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v4.0.2.
+between an authored view and a maintained entity. It is the current, executable path on v4.3.1.
 Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
@@ -311,14 +303,15 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`GET /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v4.0.2: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
+v4.3.1: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
 the read surface shipped in 3.7.0 is partial and parked. The page also names two real deployments. Lodestar, a
-public Graph Protocol dashboard, serves two panels live from a single nuthatch binary. Arcaidia, an
-ETHOnline 2026 cross-chain USDC protocol on Ethereum Sepolia and Arc Testnet, reads its indexed state
-from two nuthatch nests over `/sql`: its solver, settlement agent and web console, with its vaults
-discovered from factory events. It is a testnet deployment hosted for the hackathon.
+public Graph Protocol dashboard, serves its live panels from self-hosted nuthatch nests, and since
+2026-09-06 has no Graph gateway client at all. Arcaidia, an ETHOnline 2026 cross-chain USDC protocol
+on Ethereum Sepolia and Arc Testnet, read its indexed state from two nuthatch nests over `/sql`: its
+solver, settlement agent and web console, with its vaults discovered from factory events. It was a
+testnet deployment hosted for the hackathon, and its nests were stopped on 2026-09-29.
 The page states the freshness caveat plainly - derived views read
 finalized data, raw event tables are fresh to the tip. Do not infer customers, quotes, or benchmark
 numbers from it.
@@ -335,7 +328,7 @@ promised - order is.
 
 - Shipped: the embedded single-binary pipeline end to end (multi-contract ABI-driven decode of
   every declared event, provenance/ergonomics columns - `block_hash`, `_seq`, `block_timestamp`,
-  `*_dec`/`*_overflow` - reorg-safe hot store, finality-sealed content-addressed Parquet, DuckDB
+  `*_dec`/`*_overflow` - reorg-safe hot store, finality-sealed content-addressed Parquet, analytical
   SQL over `/tables` + `/table/{name}` and `/sql` (hot tip UNION sealed history), an i128 DBSP balance
   view with restart-replay, HTTP + a 12-tool/3-resource/3-prompt offline MCP server); nests
   (`init --from`, vendored ABIs + deploy blocks, schema versioning, authored drift-gated `views/*.sql`
@@ -361,21 +354,20 @@ promised - order is.
   that retired the roost and keyed nest data by content address (RFC-0032); identity and grafting
   (RFC-0033); the query allowlist (RFC-0034); verified IPFS resolution (RFC-0037); subgraph-manifest
   scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
-  (RFC-0052) and DuneSQL queries emitted for a nest (RFC-0055); proven, typed IPFS documents at
+  (RFC-0052); proven, typed IPFS documents at
   scale (RFC-0037 slices 5 to 8); offchain price snapshots (RFC-0045 stage 2); the 3.11.0 RPC
-  economies; v4.0.2 the current release with prebuilt binaries and container images;
-  a CI RAM-budget gate with a measured footprint (~37 MB single contract, ~58 MB
-  three-contract 23-table nest, 2.8% of 2 GB).
+  economies; Burrmill as the analytical engine (4.1.0); v4.3.1 the current release with prebuilt
+  binaries and container images; a CI RAM-budget gate (256 MB on a fixed fixture) and a release gate
+  that fails a release peaking over 2 GiB on the largest production nest's query set.
 - **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full.
   The work since is the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data, x402 at the
   counter, the lakehouse commitments, pricing query access), plus RFC-0053, RFC-0052 and RFC-0055.
-- In progress: replacing DuckDB with Burrmill (in shadow on main, in no release yet).
+- Removed in 4.1.0 with DuckDB: `emit dune` (RFC-0055, withdrawn).
 - Accepted and then parked on 2026-09-26: RFC-0058 (cross-nest SQL), RFC-0059 (checkpointed folds,
   built in part behind the off-by-default `folds` feature) and RFC-0060 (the Network Subgraph
   endpoint).
 - Deferred, not cancelled, and reopened one item at a time (`docs/frozen-for-2027.md` in the
-  nuthatch repo): the Lodestar migration (RFC-0011 - pilot live in production, two panels
-  serving from one nuthatch binary; remaining panels outstanding); reth ExEx wiring (RFC-0003 -
+  nuthatch repo): reth ExEx wiring (RFC-0003 -
   Source trait, library split, and bridge in and tested; needs a synced node); the remaining release
   engineering (RFC-0005 - signed artifacts, a Homebrew tap); firehose-class extraction of traces and
   state diffs (RFC-0014, gated on ExEx); IVM generalisation;
@@ -385,7 +377,23 @@ promised - order is.
 
 ## Install
 
-v4.0.2 is the current release. The installer and `cargo` fetch the latest.
+v4.3.1 is the current release. The installer and `cargo` fetch the latest.
+
+**4.1.0 changes the SQL engine.** Analytical SQL runs on Burrmill, our engine on Apache DataFusion,
+and DuckDB is no longer in the binary. Nothing is re-indexed and sealed segments are read as they
+are, but `/sql`, the views and the entity checks are answered by a different planner, and the
+release notes list where answers, refusals and costs differ. A statement that needs more memory than
+its session's `analytics.memory_limit` is refused rather than spilled, so a join-heavy nest may need
+that limit raised. `NUTHATCH_ENGINE=duckdb` is refused at startup. `emit dune` was removed with
+DuckDB's parser. The Linux binary no longer links libstdc++ and needs glibc 2.35 or newer, where 4.0.x
+needed 2.34.
+
+**4.1.1 to 4.3.1.** 4.1.1 closes the findings of a cold audit of 4.1.0, among them a `/sql` statement
+that could stop the process. 4.2.0 fixes a memory regression in 4.1.1 and brings more of Burrmill's
+answers in line with DuckDB's. 4.2.1 rebuilds the admin page at `/_admin/` with eight tabs. 4.3.0
+lowers Burrmill's peak memory under a budget: on the Lodestar allocations nest's query set, from
+3.3 GiB to under 1.9 GiB. 4.3.1 fixes a wrong answer in 4.3.0, a join that could drop matches under
+a memory budget; take it if you run 4.3.0.
 
 **4.0.2 narrows a result cap sent under the rate-limit code.** An `eth_getLogs` refused with `-32005` and
 "query returned more than 10000 results", as `rpc.mevblocker.io` answers, is narrowed to the suggested
@@ -415,8 +423,8 @@ a data directory written by an earlier 4.x opens in place on a later one, with n
 migration command; and no HTTP route, response field, generated table or column, or MCP tool is
 removed, renamed or retyped. It is upgrade only. A released 4.x only gets patches, features wait for
 the monthly minor (4.1, 4.2), and correctness and security fixes ship immediately. Not covered:
-downgrades; the off-by-default cargo features `graph`, `folds`, `counter`, `exex` and
-`shadow-burrmill`; the SQL dialect's functions, which are DuckDB's; segment hashes across `arrow-rs`
+downgrades; the off-by-default cargo features `graph`, `folds`, `counter` and `exex`; the SQL
+dialect behind `/sql`; segment hashes across `arrow-rs`
 versions; the admin UI's HTML; and the `postgres-store` build's internal schema. The full contract is
 `docs/operators.md#stability-contract` in the nuthatch repository.
 
@@ -469,7 +477,7 @@ driver, now re-executed as exact strings, and sealed velocity seeds that were sk
 a window start used `/` where it needed integer division.
 
 **3.7.0 mirrors sealed segments to a bucket and emits DuneSQL.** `nuthatch publish sync|verify|status`
-and `--publish-target` on `dev`/`serve` (RFC-0052); `nuthatch emit dune` (RFC-0055). The DuckDB memory
+and `--publish-target` on `dev`/`serve` (RFC-0052); `emit dune` (RFC-0055, removed in 4.1.0). The DuckDB memory
 walls are environment settings with unchanged defaults and refuse a query rather than shrink, new
 seals are zstd with the writer profile named in the catalogue, a declared query (`/q/{name}`) answers
 `422` when its plan could read more than 512 MiB or could rescan, and a local offchain file drop

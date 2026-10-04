@@ -14,8 +14,8 @@ Three kinds of read, one process:
 
 - **Point-reads** - `/entity/{id}`, `/balance/{address}`: sub-millisecond lookups against the redb
   hot store.
-- **Analytical SQL** - `/sql?q=…`: read-only DuckDB queries over the live tip ∪ sealed history.
-  Every event is a view named `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/).
+- **Analytical SQL** - `/sql?q=…`: read-only SQL on Burrmill over the live tip ∪ sealed history.
+  Every event is a table named `{alias}__{event}`. See [The SQL surface](/docs/reference/sql/).
 - **Introspection** - `/`, `/tables`, `/schema`, `/nest`, `/metrics`: what this nest is, what it
   holds, and how it's doing.
 
@@ -30,7 +30,7 @@ raise:
 - **50,000-row cap** per result (requests can ask for less via `max_rows`; the MCP bridge asks for
   much less so an agent's context isn't flooded).
 - **64 MiB result-byte cap** per query. A row cap bounds count, not width - a wide-cell `SELECT` would
-  otherwise materialise unbounded Rust-side (outside DuckDB's memory limit); this keeps a query inside
+  otherwise materialise unbounded Rust-side (outside the engine's memory limit); this keeps a query inside
   the footprint budget. Hitting it flags the result truncated, same as the row cap.
 - **2 concurrent analytical queries.** A third waits up to 250 ms for a permit, then gets a `503` -
   retry, don't remove the gate.
@@ -45,8 +45,10 @@ raise:
 - **SELECT/WITH only.** The query surface is read-only by construction; the ingest thread is the
   only writer.
 
-DuckDB itself runs with a per-query memory cap and a bounded thread count, so the analytical path
-stays inside the [footprint budget](/docs/operate/metrics/).
+The engine runs each session under a memory limit (`analytics.memory_limit`, 512 MB by default) and a
+bounded thread count, so the analytical path stays inside the [footprint budget](/docs/operate/metrics/).
+A statement that needs more memory than its session has is refused with an out-of-memory error, not
+spilled: since 4.1 a hash join or final aggregate cannot spill to disk, though a sort can (4.3.0).
 
 ## When cold data is damaged (2.2.0)
 
