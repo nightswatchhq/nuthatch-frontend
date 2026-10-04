@@ -6,6 +6,9 @@ author: "cargopete"
 tags: ["nuthatch", "duckdb", "datafusion", "benchmarks", "rfc", "sql", "rust"]
 ---
 
+> **Note, 2026-10-04:** nuthatch takes no grants and never had one. The "grant deliverable" searched
+> below was an unsubmitted draft, since withdrawn.
+
 > **Superseded, 2026-10-02.** DuckDB left nuthatch in 4.1.0; every nest we run is on Burrmill. The
 > reversal is [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all) and the account of the
 > switch is [One engine](/blog/one-engine). Kept as written, because a project that quietly edits its
