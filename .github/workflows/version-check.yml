@@ -17,6 +17,12 @@ on:
   pull_request:
   push:
     branches: [main]
+  # A nuthatch release changes the answer with no commit here. 4.1.0 to 4.3.1 shipped over two days
+  # while this repo was quiet, so nothing ran and the site sat on 4.0.2. The schedule makes a release
+  # turn this check red within a day whether or not anyone touches the site.
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
