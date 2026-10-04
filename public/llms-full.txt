@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted-first, AI-native blockchain indexer. One Rust binary, one command,
 a live indexed API. There is no mandatory third-party data dependency, ever. Tagline: "Be your
-own indexer." Status: **v4.3.1**, the stable line - a promise about stability (from 4.0.0 to the last
+own indexer." Status: **v4.4.0**, the stable line - a promise about stability (from 4.0.0 to the last
 4.x release a config keeps working with the same meaning, a data directory upgrades in place with no
 re-index or migration command, and no HTTP route, response field, generated table or column, or MCP
 tool is removed, renamed or retyped; upgrade only, and the off-by-default cargo features and the SQL
@@ -182,14 +182,15 @@ silently. The bundled free public RPCs exist so `init` → `dev` works with zero
 rate-limited, shared, sometimes fail by returning an empty result rather than an error, and are
 unsuitable for deep backfills or production - use your own node or a paid provider for real work.
 Measured footprint (not a target): CI's `footprint` job fails a build whose peak RSS passes 256 MB
-indexing a fixed 8,004-row fixture, and on the largest nest we run, 4.3.1 peaked at 1,572 to 1,692 MiB
-answering that nest's 74 production statements under its production limits (v4.3.1 release notes),
+indexing a fixed 8,004-row fixture, and on the largest nest we run, 4.4.0 peaked at 1,595 to 1,788 MiB
+answering that nest's 74 production statements two at a time under its production limits (v4.4.0
+release notes),
 inside the 2 GB per-cursor budget. Backfill paths are
 correctness-gated to produce byte-identical sealed segments; no storage-path multiplier is currently
 claimed because a harness correction invalidated the old baseline and public-RPC remeasurement
 disagreed. On Sentio's **OBIB** benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum
 blocks) completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS
-against a real provider - the event count matching Sentio's own README. v4.3.1 is the current release,
+against a real provider - the event count matching Sentio's own README. v4.4.0 is the current release,
 with prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 and container images at
 `ghcr.io/nightswatchhq/nuthatch`. Minimum supported Rust version is 1.95.
 
@@ -289,7 +290,7 @@ contract address: `init` vendors the ABI and scaffolds the nest, `nuthatch dev -
 the last 300 blocks and follows the tip (plain `nuthatch dev` backfills from the deployment block,
 which for USDC wants your own archive-capable RPC), every declared event becomes a table (`usdc__transfer`) with
 provenance columns, queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v4.3.1.
+between an authored view and a maintained entity. It is the current, executable path on v4.4.0.
 Scaffolding from a **subgraph manifest** also ships:
 `init --from-subgraph <CID|url>` maps `dataSources` -> `[[contracts]]` and `templates` ->
 `[[templates]]`, vendors every ABI from the CID the manifest pins, and carries `startBlock` and each
@@ -303,7 +304,7 @@ The page at https://www.nuthatch-indexer.com/stories answers "is this for me?" t
 illustrative personas - not testimonials, first names only - each traced end to end through one of
 the three front doors: an SQL endpoint (`GET /sql`) for application backends, published nests for
 analysts who write no indexing code, and the built-in MCP server for agents. These workflows run on
-v4.3.1: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
+v4.4.0: multi-contract nests, every declared event as a table, nine built-in chains, user-authored
 views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all ship, as do
 factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front doors:
 the read surface shipped in 3.7.0 is partial and parked. The page also names two real deployments. Lodestar, a
@@ -356,7 +357,7 @@ promised - order is.
   scaffolding (RFC-0038); distributed scaled mode (RFC-0022); sealed segments mirrored to a bucket
   (RFC-0052); proven, typed IPFS documents at
   scale (RFC-0037 slices 5 to 8); offchain price snapshots (RFC-0045 stage 2); the 3.11.0 RPC
-  economies; Burrmill as the analytical engine (4.1.0); v4.3.1 the current release with prebuilt
+  economies; Burrmill as the analytical engine (4.1.0); v4.4.0 the current release with prebuilt
   binaries and container images; a CI RAM-budget gate (256 MB on a fixed fixture) and a release gate
   that fails a release peaking over 2 GiB on the largest production nest's query set.
 - **The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full.
@@ -377,7 +378,14 @@ promised - order is.
 
 ## Install
 
-v4.3.1 is the current release. The installer and `cargo` fetch the latest.
+v4.4.0 is the current release. The installer and `cargo` fetch the latest.
+
+**4.4.0 keeps a nest inside its budget under production load.** Every analytics session over one
+nest now draws on one memory pool sized by `NUTHATCH_BURRMILL_MEMORY_LIMIT`, where a second
+concurrent statement used to open a second pool; the limit now bounds the nest rather than each
+statement. A hash join with a small build side and a range condition skips Parquet row groups of the
+large side: on a copy of the QoS nest, kittiwake's one-day statements went from 7.2 to 11.9 s to 1.1
+to 1.3 s (v4.4.0 release notes).
 
 **4.1.0 changes the SQL engine.** Analytical SQL runs on Burrmill, our engine on Apache DataFusion,
 and DuckDB is no longer in the binary. Nothing is re-indexed and sealed segments are read as they

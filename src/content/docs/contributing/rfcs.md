@@ -18,8 +18,9 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0003 reth ExEx tip mode** *(Accepted; deferred)* - colocated-node ingestion.
 - **0004 Backfill throughput** *(Implemented)* - measure first, optimise second; seal-direct.
 - **0005 Release engineering** *(Implemented)* - the v0.1.0 bar and beyond.
-- **0006 Grant funding** / **0007 Launch & validation** *(Accepted; process)* - the non-engineering
-  record.
+- **0006 Grant funding** *(Withdrawn 2026-10-04)* - nuthatch takes no grants and never applied for
+  one. It is a self-funded public good, maintained by one person; everything is open source.
+- **0007 Launch & validation** *(Accepted; process)* - the non-engineering record.
 - **0008 The compliance pack** *(Implemented)* - labels, lists, screening, flags, exposure, the
   signed audit pack.
 - **0009 Factories** *(Implemented)* - dynamic child-contract discovery.

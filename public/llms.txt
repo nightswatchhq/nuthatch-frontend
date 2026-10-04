@@ -6,7 +6,7 @@
 
 Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
 binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v4.3.1**, the stable line. Stability is a promise, not a claim of
+MIT OR Apache-2.0. Status: **v4.4.0**, the stable line. Stability is a promise, not a claim of
 completeness: from 4.0.0 to the last 4.x release a config keeps working with the same meaning, a data
 directory upgrades in place with no re-index or migration command, and no HTTP route, response field,
 generated table or column, or MCP tool is removed, renamed or retyped. The promise is upgrade only,
@@ -166,8 +166,9 @@ Tagline: "Be your own indexer."
   against every endpoint at startup. The bundled free public RPCs exist so `init` → `dev` works with zero setup;
   they are rate-limited, shared, and unsuitable for deep backfills or production - use your own node
   or a paid provider for real work. Measured footprint: CI fails a build whose peak RSS passes 256 MB
-  indexing a fixed 8,004-row fixture, and on the largest nest we run, 4.3.1 peaked at 1,572 to 1,692 MiB
-  answering that nest's 74 production statements under its production limits (v4.3.1 release notes),
+  indexing a fixed 8,004-row fixture, and on the largest nest we run, 4.4.0 peaked at 1,595 to 1,788 MiB
+  answering that nest's 74 production statements two at a time under its production limits (v4.4.0
+  release notes),
   inside the 2 GB per-cursor budget.
 
 - **Scaffolding a nest from a subgraph manifest**: `nuthatch init --from-subgraph <CID|url>` maps
@@ -243,9 +244,16 @@ Tagline: "Be your own indexer."
 
 ## Install
 
-**v4.3.1 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
+**v4.4.0 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
 container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
-`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:4.3.1`, `:4.3.1-scaled`, `:latest`).
+`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:4.4.0`, `:4.4.0-scaled`, `:latest`).
+
+**4.4.0 keeps a nest inside its budget under production load.** Every analytics session over one
+nest now draws on one memory pool sized by `NUTHATCH_BURRMILL_MEMORY_LIMIT`, where a second
+concurrent statement used to open a second pool; the limit now bounds the nest rather than each
+statement. A hash join with a small build side and a range condition skips Parquet row groups of the
+large side: on a copy of the QoS nest, kittiwake's one-day statements went from 7.2 to 11.9 s to 1.1
+to 1.3 s (v4.4.0 release notes).
 
 **4.1.0 changes the SQL engine.** Analytical SQL runs on Burrmill, our engine on Apache DataFusion,
 and DuckDB is no longer in the binary. Nothing is re-indexed and sealed segments are read as they
@@ -390,14 +398,14 @@ scaffolds the nest, `nuthatch dev --backfill 300` backfills the last 300 blocks 
 (plain `nuthatch dev` backfills from the deployment block, which for USDC wants your own
 archive-capable RPC), every declared event becomes a table
 (`usdc__transfer`) queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v4.3.1.
+between an authored view and a maintained entity. It is the current, executable path on v4.4.0.
 
 ## Who runs it
 
 `/stories` answers "is this for me?" through three illustrative personas (not testimonials),
 each mapped to one of the three front doors: an SQL endpoint for application backends, published
 nests for analysts who write no indexing code, and the built-in MCP server for agents. These
-workflows run on v4.3.1 - multi-contract nests, every declared event as a table, nine built-in
+workflows run on v4.4.0 - multi-contract nests, every declared event as a table, nine built-in
 chains, user-authored views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all
 ship, as do factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the
 front doors: the read surface shipped in 3.7.0 is partial and parked. It notes that derived views read finalized data while raw event
@@ -424,7 +432,7 @@ still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-man
 (RFC-0038), distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
 leases, and an independently-scaled query-FE tier), sealed segments mirrored to a bucket (RFC-0052),
 proven, typed IPFS documents at scale (RFC-0037 slices 5 to 8), offchain price snapshots (RFC-0045
-stage 2), the 3.11.0 RPC economies, and Burrmill as the analytical engine (4.1.0). v4.3.1 is the
+stage 2), the 3.11.0 RPC economies, and Burrmill as the analytical engine (4.1.0). v4.4.0 is the
 current release, with prebuilt binaries and container images - one embedded, one `-scaled`.
 Accepted and then parked on 2026-09-26: RFC-0058 (cross-nest SQL), RFC-0059 (checkpointed folds, built in part behind
 the off-by-default `folds` feature) and RFC-0060 (the Network Subgraph endpoint).
