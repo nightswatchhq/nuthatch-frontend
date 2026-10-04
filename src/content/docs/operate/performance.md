@@ -109,9 +109,9 @@ mount with a `507` rather than admitted with a warning.
 
 Two measurements bound it. CI's footprint job fails a build whose peak RSS passes 256 MB indexing a
 fixed 8,004-row fixture. The release gate serves a copy of the largest nest we run, the Lodestar
-allocations nest, under its production limits and runs the 74 statements its consumers send; 4.3.1
-peaked at 1,572 to 1,692 MiB over four runs on Linux, and a peak over 2 GiB fails the gate
-([release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.3.1)). Most of that is
+allocations nest, under its production limits and runs the 74 statements its consumers send, two at a
+time as production runs them; 4.4.0 peaked at 1,595 to 1,788 MiB over four runs on Linux, and a peak
+over 2 GiB fails the gate ([release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.4.0)). Most of that is
 analytical SQL, not indexing. The 320 MB in the OBIB run above is a full-throttle backfill.
 
 ## Query speed, and the engine question
