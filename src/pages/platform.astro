@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CopyBlock from '../components/CopyBlock.astro';
+---
+
+<Layout
+  path="/platform"
+  title="Run your own nest - Nuthatch"
+  description="Nuthatch is one binary you run yourself. Install it, point it at a contract, and query a live indexed API on your own machine."
+>
+  <section class="page">
+    <div class="wrap narrow">
+      <p class="section-label">Run your own nest</p>
+      <h1>Nuthatch runs on your machine.</h1>
+      <p class="lede">
+        There is no Nuthatch service to sign up for. It is one binary: install it, give it a
+        contract address, and it indexes that contract's events into a local SQL database with an
+        HTTP API and an MCP server.
+      </p>
+      <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
+      <p>
+        <a href="/install">Install options</a> covers prebuilt binaries, container images and
+        building from source. <a href="/docs/start/quickstart/">The quickstart</a> goes from a
+        contract address to a first query.
+      </p>
+    </div>
+  </section>
+</Layout>
