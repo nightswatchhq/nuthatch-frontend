@@ -52,7 +52,7 @@ A tool that only lists its strengths is an advert, so here are the rest.
 - **It needs an RPC endpoint.** The bundled public ones are there for trying it out. Running it in earnest means your own node or a provider, and a provider may charge.
 - **It is not the fastest on every benchmark.** On that same case 6, one of OBIB's own published rounds has Envio at 30 seconds, ahead of the 49.5 seconds we recorded on an Alchemy endpoint. Envio serves it from its own pre-indexed network, while nuthatch reads plain JSON-RPC, and that difference is the point of the exercise rather than an excuse for it.
 - **It records facts, not a mapping's accumulated state.** Every event becomes a row exactly as the chain emitted it. Running totals, prices and TVL are yours to declare, as SQL views or as incremental entities, rather than something it infers.
-- **It is EVM only,** and it will stay that way.
+- **It is EVM only.**
 - **It is a public good, not a company, and nobody pays for it.** No grant, no investor, no sponsor: I have built it in my own time and I maintain it alone. That is a real bus factor, and I would rather you heard it from me. Everything is open source and anyone is welcome to fork it or contribute, so the code is never hostage to one maintainer.
 
 It is for the indie developer, the self-hosting crowd and the small project that would rather own its index than rent it. For larger teams, GraphOps is our design partner: one of The Graph's core developer teams, with many years of running indexing and data infrastructure behind it.
