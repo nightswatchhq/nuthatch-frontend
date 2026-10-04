@@ -1,6 +1,6 @@
 ---
 title: Storage & sealing
-description: A hot redb tip store, content-addressed Parquet sealed past finality, unified behind DuckDB SQL.
+description: A hot redb tip store, content-addressed Parquet sealed past finality, unified behind one SQL surface.
 order: 3
 ---
 
@@ -30,16 +30,16 @@ on any machine, on any run. That's what makes segments *reusable* across nest ve
 > is append-only. If a change would require mutating a sealed segment, the design is wrong - go back. A
 > reorg can never reach a sealed segment, by construction.
 
-## The union: DuckDB over hot ∪ cold
+## The union: one engine over hot ∪ cold
 
-Analytical SQL (`/sql`, `nuthatch sql`) runs over an embedded **DuckDB** that attaches the sealed
-segments **read-only** and unions them with the hot tip - so a query spans all of history seamlessly,
-hot and cold. DuckDB is single-writer by design: only the ingestion thread writes; queries attach
-read-only. Never design around concurrent DuckDB writers.
+Analytical SQL (`/sql`, `nuthatch sql`) runs on [Burrmill](https://github.com/nightswatchhq/burrmill),
+an embedded query engine on DataFusion. Each session registers the sealed segments and the hot tip's
+rows as one table per event, so a query spans all of history seamlessly, hot and cold. Only the
+ingestion thread writes; queries only read.
 
-DuckDB is due to be replaced by [Burrmill](https://github.com/nightswatchhq/burrmill), a Rust engine
-on DataFusion, once it has answered beside DuckDB on live nests for a release without an unexplained
-difference. The storage tiers do not change; only the engine reading them does. See
+Burrmill has been the only engine since 4.1.0. Releases up to 4.0.2 used DuckDB, which is no longer
+in the binary; the storage tiers did not change, only the engine reading them. Because sealed segments
+are plain Parquet, external readers such as DuckDB or Trino can read them directly. See
 [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
 
 A point-read for a pruned id transparently falls back to the cold path, so `/entity/{id}` works across

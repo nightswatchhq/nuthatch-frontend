@@ -202,7 +202,7 @@ max_rows = 100000
 `name` is the relation name served on `/sql`. `key` lists unique output columns in point-read order.
 `max_rows` is required and positive. It is the resource bound Nuthatch admits, not merely an estimate:
 crossing it faults the entity and quarantines the nest. The entity SQL subset is deliberately smaller
-than DuckDB SQL, so use an authored view for a query it refuses.
+than the SQL `/sql` accepts, so use an authored view for a query it refuses.
 
 Adding this file to a nest with history makes the next normal start seed the relation from local sealed
 segments and the hot tail. It does not re-index from RPC. Do not start an entity-bearing nest with

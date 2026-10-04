@@ -25,7 +25,7 @@ circuit and feeds it facts as they arrive. The relation can be queried through S
 
 The distinction stops a pleasing but false sales pitch. Naming a view does not make it incremental.
 An entity does, but it gains that property by accepting resource limits and less SQL, not by attaching
-an adjective to a DuckDB query.
+an adjective to a SQL query.
 
 ## Why the restriction earns its keep
 

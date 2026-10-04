@@ -11,7 +11,7 @@ table of raw events" and "a nest that answers a question."
 ## Where they live
 
 `init` scaffolds a `views/` directory with a commented starter. Drop `*.sql` files in it; each is a
-`CREATE VIEW` over your nest's tables. Views run against the **live tip ∪ sealed** DuckDB surface, so
+`CREATE VIEW` over your nest's tables. Views run against the **live tip ∪ sealed** SQL surface, so
 they span all of history - hot and cold - seamlessly.
 
 ```sql

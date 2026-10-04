@@ -107,13 +107,18 @@ failover as well as throughput.
 sum of its cursors, and a nest whose projected footprint would exceed the budget is **refused** at
 mount with a `507` rather than admitted with a warning.
 
-Measured peaks: ≈37 MB for a single contract, ≈58 MB across a three-contract, 23-table nest - under 3%
-of the budget. The 320 MB in the OBIB run above is a full-throttle backfill, which is the expensive
-case, not the steady state.
+Two measurements bound it. CI's footprint job fails a build whose peak RSS passes 256 MB indexing a
+fixed 8,004-row fixture. The release gate serves a copy of the largest nest we run, the Lodestar
+allocations nest, under its production limits and runs the 74 statements its consumers send; 4.3.1
+peaked at 1,572 to 1,692 MiB over four runs on Linux, and a peak over 2 GiB fails the gate
+([release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.3.1)). Most of that is
+analytical SQL, not indexing. The 320 MB in the OBIB run above is a full-throttle backfill.
 
 ## Query speed, and the engine question
 
-Analytical queries run on DuckDB, attaching sealed Parquet segments read-only alongside the hot tip.
+Analytical queries run on [Burrmill](https://github.com/nightswatchhq/burrmill), a Rust engine on
+DataFusion, over sealed Parquet segments and the hot tip. Until 4.1 they ran on DuckDB. How that
+changed is below.
 
 DataFusion - one Arrow-native, pure-Rust engine across both modes - has been the recorded *direction*
 since RFC-0013, gated on a benchmark. We ran the gate rather than arguing about it, on the fold that
@@ -131,10 +136,11 @@ cache. Results were **identical** at every size, in both orders - correctness wa
 What failed the gate is that the gap **widens with segment size**, and segments only grow. So in
 August DuckDB stayed in both modes: measure-then-switch worked, and the measurement said don't.
 
-In September that was reversed. DuckDB will be replaced by
-[Burrmill](https://github.com/nightswatchhq/burrmill), a Rust engine built on DataFusion, once it has
-answered beside DuckDB on live nests for a release without an unexplained difference. Until then
-DuckDB serves every query. See [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
+In September that was reversed, and 4.1.0 (2026-10-02) shipped Burrmill as the only engine. The
+change was not made for speed: measured on a production nest on 2026-10-01, Burrmill takes about
+2.5× DuckDB's time per statement and needs more memory for the same joins. What it buys is one
+language in the binary and exact arithmetic that refuses rather than wraps. See
+[Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
 
 ## Measuring your own
 

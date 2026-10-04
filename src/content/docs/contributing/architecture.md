@@ -28,8 +28,8 @@ The load-bearing properties:
 - **Determinism in the core.** Decode, reorg handling, and anything feeding stored state is
   deterministic and re-executable - same inputs, same bytes. LLMs may generate code and tests;
   LLM output never sits in the runtime data path.
-- **Single writer.** Only the ingestion thread writes. DuckDB attaches the sealed segments
-  **read-only** for analytical SQL; never design around concurrent DuckDB writers.
+- **Single writer.** Only the ingestion thread writes. The analytical engine only reads the sealed
+  segments and the hot rows; never design around a second writer.
 - **The hot/cold seam.** Reorgs only ever touch the hot store; a sealed segment is immutable and
   content-addressed. The `/sql` surface unions both so queries never see the seam.
 - **The footprint budget.** ≤2 GB RAM per active-chain cursor, CI-enforced. A design that
@@ -47,7 +47,7 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
   `registry` (content-addressed bundles and the nest registry).
 - **Derivation & query**: `views` (the DBSP IVM core, e.g. balances), `entities` (authored
   incremental entities), `recipes`, `analytics` (read-only SQL over hot ∪ sealed, and authored SQL
-  views), `engine` + `engine_duck` (the engine trait, with DuckDB behind it), `serve` (the HTTP
+  views), `engine` + `engine_burrmill` (the engine trait, with Burrmill behind it), `serve` (the HTTP
   surface), `sql_errors` (errors-as-prompts), `transform` (the WASIp2 component runtime).
 - **Meaning & agents**: `semantic` (the governed semantic layer), `mcp`, `skill` (the generated
   CLI reference), `metadata`.

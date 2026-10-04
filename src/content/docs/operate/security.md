@@ -32,7 +32,7 @@ Two controls with deliberately **different failure modes**, not one behind the o
 quotes are normalised away - so `"read_csv"(`, `read"_"csv(`, and anything else quoting can do to break
 a name apart all collapse to the same match.
 
-**An allowlist** (since v0.9.3) asks DuckDB's own parser what a statement references and refuses
+**An allowlist** (since v0.9.3) asks the engine's own parser what a statement references and refuses
 anything unrecognised: a table function must be one of three, and a base table must be *named like an
 identifier* - which is what catches a replacement scan, `FROM '/x.parquet'`, that the parse tree
 otherwise reports as an ordinary table whose name happens to be a path.
@@ -41,9 +41,11 @@ The allowlist **fails open** if the parse is unavailable, which is why it does n
 denylist: a parse failure must not take down `/sql` while a control that has guarded this surface since
 RFC-0008 is still in front of it.
 
-> **DuckDB's `allowed_directories` does not enforce** on the build we bundle. We measured it, and a
-> test pins which control actually blocks a file read. Do not budget for it as a layer behind the two
-> above. An unmeasured defence-in-depth layer is worse than none, because it gets counted on.
+> **Behind them, the engine registers only what nuthatch binds.** Each Burrmill session opens empty
+> and registers the sealed segments and hot rows of the tables a statement uses. Until 4.1 the engine
+> was DuckDB, whose `allowed_directories` did not enforce on the bundled build; a test pinned which
+> control actually blocked a file read. An unmeasured defence-in-depth layer is worse than none,
+> because it gets counted on.
 
 ## Resource guards
 

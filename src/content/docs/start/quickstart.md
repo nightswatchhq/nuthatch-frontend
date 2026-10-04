@@ -92,7 +92,7 @@ appears in that range - start from `/balances` if you want an address that defin
 - **A decoded database.** Every declared event becomes a table `{alias}__{event}`, with implicit
   columns (`block_number`, `tx_hash`, `log_index`, `address`, …) alongside the decoded fields.
 - **Hot + cold storage.** A redb tip store for point-reads, sealed content-addressed Parquet past
-  finality, unified behind DuckDB SQL. See [Storage &amp; sealing](/docs/concepts/storage/).
+  finality, unified behind one SQL surface. See [Storage &amp; sealing](/docs/concepts/storage/).
 - **Derived state, no `eth_call`.** Add `nuthatch recipe add total_supply` for an ERC-20's supply
   derived from Transfers - no archive node. See [Recipes](/docs/build/recipes/).
 - **An admin UI and metrics** at `/_admin/` and `/metrics`.

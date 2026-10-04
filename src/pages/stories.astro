@@ -24,7 +24,7 @@ const mcpConfig = `{
 <Layout
   path="/stories"
   title="Who runs Nuthatch - Nuthatch"
-  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v4.0.2; GraphQL is only a partial, parked read surface."
+  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v4.3.1; GraphQL is only a partial, parked read surface."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -36,10 +36,10 @@ const mcpConfig = `{
         nests for people who want data without writing indexing code, and a built-in MCP
         server for agents. Same data and the same nest definition, on hardware you control.
       </p>
-      <p class="illus">Illustrative workflows, not customer stories - current for Nuthatch v4.0.2.</p>
+      <p class="illus">Illustrative workflows, not customer stories - current for Nuthatch v4.3.1.</p>
 
       <p class="preview-note">
-        <strong>These workflows run on v4.0.2.</strong> Multi-contract nests, every declared event
+        <strong>These workflows run on v4.3.1.</strong> Multi-contract nests, every declared event
         as a queryable table, nine built-in chains, user-authored <code>views/*.sql</code>,
         maintained <code>entities.toml</code> relations,
         <code>init --from</code>, read-only <code>/sql</code>, and the MCP server all ship today - as
@@ -53,38 +53,48 @@ const mcpConfig = `{
         <h2>Live in production: Lodestar</h2>
         <p>
           Not illustrative - this one is real. <a href="https://www.lodestar-dashboard.com" rel="noopener">Lodestar</a>,
-          an analytics dashboard for The Graph Protocol on Arbitrum One, serves two of its panels
-          from self-hosted Nuthatch nests instead of The Graph gateway. The
-          <strong>Delegation Activity</strong> feed (HorizonStaking delegation events) comes through
-          byte-for-byte identical to the subgraph; the <strong>Developer Activity</strong> chart
-          (L2GNS subgraph publishes) tracks it within a documented ~0-1%. Both run flag-gated, with
-          automatic fallback to the old gateway - two panels that no longer depend on a third-party
-          data API.
+          an analytics dashboard for The Graph Protocol on Arbitrum One, serves its live panels
+          from self-hosted Nuthatch nests instead of The Graph gateway. The first two to move were the
+          <strong>Delegation Activity</strong> feed (HorizonStaking delegation events), byte-for-byte
+          identical to the subgraph, and the <strong>Developer Activity</strong> chart (L2GNS subgraph
+          publishes), which tracks it within a documented ~0-1%. The rest followed, and since
+          2026-09-06 Lodestar holds no Graph API key and has no gateway client in its code.
         </p>
         <p class="prod-box">
-          The deployment: two nests, backfilled and serving live on one Hetzner VPS, with Caddy
+          The deployment: nests backfilled and serving live on one Hetzner VPS, with Caddy
           providing TLS and path routing. Resource use is monitored against a 2 GB footprint budget.
           <a href="/blog/serving-lodestar-from-one-box">The full write-up is on the blog.</a>
         </p>
       </div>
 
       <div class="in-production">
-        <h2>Live at ETHOnline 2026: Arcaidia</h2>
+        <h2>Design partner: GraphOps</h2>
         <p>
-          Also real. <a href="https://arcaidia.io" rel="noopener">Arcaidia</a> is a speed layer over
-          Circle's CCTP between Ethereum Sepolia and Arc Testnet: an autonomous solver advances USDC
-          from a liquidity vault in seconds, and canonical CCTP settlement repays the vault minutes
-          later. Its solver discovers intents from two Nuthatch nests, its settlement agent tracks
-          CCTP through them, and its web console renders fills, settlements and vault history from
-          them, all over <code>/sql</code>. Nine vaults across the two chains, every one found from
-          the factory's own events rather than listed by hand.
+          <a href="https://graphops.xyz" rel="noopener">GraphOps</a>, an indexer and core developer on
+          The Graph, is a design partner. Its feedback is what led to maintained entities: a view
+          recomputed on every query gives the caller a name but no speed, so an entity declared in
+          <code>entities.toml</code> is kept up to date as blocks arrive instead.
+        </p>
+      </div>
+
+      <div class="in-production">
+        <h2>At ETHOnline 2026: Arcaidia</h2>
+        <p>
+          Also real, and now finished. <a href="https://arcaidia.io" rel="noopener">Arcaidia</a> is a speed
+          layer over Circle's CCTP between Ethereum Sepolia and Arc Testnet: an autonomous solver
+          advances USDC from a liquidity vault in seconds, and canonical CCTP settlement repays the
+          vault minutes later. Its solver discovered intents from two Nuthatch nests, its settlement
+          agent tracked CCTP through them, and its web console rendered fills, settlements and vault
+          history from them, all over <code>/sql</code>. Nine vaults across the two chains, every one
+          found from the factory's own events rather than listed by hand.
         </p>
         <p class="prod-box">
           It began with a rate limit. Subgraph Studio's development endpoint allows 3,000 queries a
           day, the app needed about 120,000, and Arc Testnet has no paid tier to buy. The nests were
           serving within two hours of the builder asking for a higher limit, and by 15 September they
           had indexed about a thousand intents; a single console page sends 42 queries in its first
-          five seconds. Testnet, and hosted by us for the hackathon.
+          five seconds. Testnet, and hosted by us for the hackathon; the nests were stopped on
+          2026-09-29.
           <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, and the
           nest itself is <a href="https://github.com/nightswatchhq/arcaidia-nest" rel="noopener">published</a>.
         </p>

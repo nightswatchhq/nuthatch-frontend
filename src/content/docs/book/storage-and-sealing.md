@@ -46,8 +46,8 @@ becomes important during upgrades.
 
 ## One query surface
 
-DuckDB reads sealed Parquet efficiently and can also query the current hot rows. Nuthatch builds a
-read-only SQL surface over the union. A query for a block range that straddles the finality boundary
+Burrmill, the embedded query engine on DataFusion, reads sealed Parquet and the current hot rows
+together. Nuthatch builds a read-only SQL surface over the union. A query for a block range that straddles the finality boundary
 does not require the caller to issue two requests or reconcile duplicate rows. The storage boundary
 is an implementation detail, albeit one worth understanding when diagnosing performance.
 

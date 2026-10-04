@@ -18,7 +18,7 @@ const rows = [
   <!-- 1. HERO -->
   <section class="hero">
     <div class="wrap">
-      <p class="hero-eyebrow rise rise-1"><span class="tag">v4.0.2 · MIT OR Apache-2.0</span></p>
+      <p class="hero-eyebrow rise rise-1"><span class="tag">v4.3.1 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
         Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres,
@@ -64,8 +64,8 @@ const rows = [
     <div class="wrap">
       <div class="proof-grid">
         <div class="card proof-card">
-          <div class="proof-stat">~58 MB RAM <span class="tag proof-tag">measured</span></div>
-          <p>A three-contract, 23-table nest, tip-following and serving, live - 2.8% of the 2 GB budget CI enforces.</p>
+          <div class="proof-stat">&lt; 1.7 GiB peak <span class="tag proof-tag">measured</span></div>
+          <p>The largest nest we run, answering the 74 statements its dashboard and jobs send, under its production limits on Linux: 1,572 to 1,692 MiB over four runs of 4.3.1, inside the 2 GB budget. <a href="https://github.com/nightswatchhq/nuthatch/releases/tag/v4.3.1" rel="noopener">Release notes</a>.</p>
         </div>
         <div class="card proof-card">
           <div class="proof-stat">74.8 s <span class="tag proof-tag">measured</span></div>
@@ -98,8 +98,8 @@ const rows = [
           <h3>Two engines, one binary</h3>
           <p>
             A hot store (redb) answers entity point-reads at the tip. Past finality, ranges
-            seal to content-addressed Parquet segments, and an embedded DuckDB attaches them
-            read-only for analytical SQL. Single writer, no Postgres, no Docker.
+            seal to content-addressed Parquet segments, and Burrmill, an embedded query engine on
+            DataFusion, reads them for analytical SQL. Single writer, no Postgres, no Docker.
           </p>
         </div>
         <div>

@@ -6,6 +6,9 @@ author: "cargopete"
 tags: ["nuthatch", "hackathon", "the-graph", "subgraphs", "testnets", "sepolia", "arc"]
 ---
 
+> **The hosting offer below was retired 2026-09-29; Nightswatch no longer hosts nests.** The rest of
+> this post stands as written.
+
 *This morning a builder at ETHOnline 2026 asked The Graph's Discord for "a massively increased rate
 limit for the next week". His app polled his Sepolia and Arc Testnet subgraphs seven times every five
 seconds and ran out of quota in under an hour. We spent the day working out what would actually help

@@ -22,8 +22,8 @@ changed. From 4.0.0 to the last 4.x release:
 
 The promise is upgrade only; a downgrade is not covered. A released 4.x only gets patches, features
 wait for the monthly minor (4.1, 4.2), and correctness and security fixes ship immediately. Also not
-covered: the off-by-default cargo features `graph`, `folds`, `counter`, `exex` and `shadow-burrmill`;
-the SQL dialect's functions, which are DuckDB's; segment hashes across `arrow-rs` versions; the admin
+covered: the off-by-default cargo features `graph`, `folds`, `counter` and `exex`; the SQL dialect behind
+`/sql`, which changed with the engine in 4.1; segment hashes across `arrow-rs` versions; the admin
 UI's HTML; and the `postgres-store` build's internal schema. The full contract is in the operator
 guide's [stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
 

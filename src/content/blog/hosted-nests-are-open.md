@@ -1,15 +1,14 @@
 ---
 title: "Hosted nests: the same binary, run by us"
 date: "2026-09-24"
-description: "platform.nuthatch-indexer.com runs the stock nuthatch binary for people who would rather not. Sign in with GitHub or a wallet, point it at a repo or paste an ABI, and get a SQL endpoint with CORS open. Here is how to use it, what it costs, and what it does not do yet."
+description: "Retired: platform.nuthatch-indexer.com runs the stock nuthatch binary for people who would rather not. Sign in with GitHub or a wallet, point it at a repo or paste an ABI, and get a SQL endpoint with CORS open. Here is how to use it, what it costs, and what it does not do yet."
 author: "cargopete"
 tags: ["nuthatch", "hosting", "platform", "usdc"]
 draft: false
 ---
 
-> **Retired, 2026-09-29.** Nightswatch no longer hosts nests, and the service this post describes
-> has closed. GraphOps plans to offer hosted nests on its own platform, running the same binary as
-> anyone else; there is no date for it yet. This post is kept as a record of what it was.
+> **Retired 2026-09-29; Nightswatch no longer hosts nests.** The service this post describes has
+> closed. This post is kept as a record of what it was.
 
 > **Updated, 2026-09-24, later still.** There are now three plans, Free, Builder at 29 USDC and Pro
 > at 79 USDC, in place of Free and a $20 Paid, priced by how often a nest checks for new blocks;
