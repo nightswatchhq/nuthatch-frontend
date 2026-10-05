@@ -2,6 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
+checked: 4.10.1
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
@@ -21,16 +22,19 @@ called with no query), `GET /sql`, or the MCP `sql` tool.
 
 ## Columns
 
-Every event table carries the implicit columns `block_number`, `block_timestamp`, `log_index`,
-`tx_hash`, and `address` (the emitting contract), plus one column per event parameter.
+Every event table carries the implicit columns `block_number`, `block_hash`, `block_timestamp`,
+`tx_hash`, `log_index`, `address` (the emitting contract) and `_seq` (a monotonic per-row ordering
+key), plus one column per event parameter.
 
 Two footguns, both machine-tracked in [`semantic.toml`](/docs/build/semantic/):
 
-- **Reserved words.** Solidity loves `from` and `to`; SQL reserves them. Double-quote:
-  `SELECT "from", "to" FROM usdc__transfer`.
+- **Reserved words.** Solidity loves `from` and `to`. Burrmill accepts a bare `to`, but `from` is
+  reserved and must be double-quoted: `SELECT "from", "to" FROM usdc__transfer`. A bare `from` comes
+  back with that hint.
 - **Big integers.** A `uint256` column like `value` is stored exactly and can't be summed
   directly. Every big-int column gets a derived **`*_dec`** sibling (`value_dec`) for arithmetic:
-  `sum(value_dec)`, `value_dec > 1e6`.
+  `sum(value_dec)`, `value_dec > 1e6`. `_dec` is NULL, and `value_overflow` true, for a value past
+  38 digits.
 
 Get either wrong and the error comes back with a fix hint derived from the real schema - the
 binder knows the nearest table name, the quoting rule, and the `_dec` convention.
@@ -71,8 +75,8 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
   The stamp does not list the individual segments read.
 
 ```sql
--- the shape of a typical answer
-SELECT date_trunc('day', TIMESTAMP '1970-01-01' + block_timestamp * INTERVAL '1 second') AS day,
+-- the shape of a typical answer (block_timestamp is epoch seconds; to_timestamp() makes it a time)
+SELECT date_trunc('day', to_timestamp(block_timestamp)) AS day,
        count(*)                                          AS transfers,
        sum(value_dec) / 1e6                              AS volume_usdc
 FROM usdc__transfer

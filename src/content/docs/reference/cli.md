@@ -2,6 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
+checked: 4.10.1
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -78,10 +79,9 @@ entity circuit.
   `latest`, and index it by NID; prints the hash and the NID.
 - **`nuthatch nest nid --dir <nest>`** - print the NID the nest's data is stored under (`data/<nid>/`), without
   running it.
-- **`nuthatch nest rename-alias <old> <new>`** - re-key a contract alias in `nuthatch.toml`, the ABI
-  file and `semantic.toml`.
-- **`nuthatch publish sync|status|verify --target <prefix>`** - mirror sealed segments to a directory
-  or `s3://bucket/prefix`; `dev --publish-target` does it as they seal.
+- **`nuthatch publish sync|status|verify|finalise --target <prefix>`** - mirror sealed segments to a
+  directory or `s3://bucket/prefix`; `dev --publish-target` does it as they seal, and `finalise` marks
+  each table's provisional tail final so a seed can trust it.
 - **`nuthatch migrate --dir <dir>`** - move a pre-2.0 directory to identity-keyed datasets, and apply
   a staged nest upgrade. Classifies the change and **refuses a breaking one by name**
   (`--allow-breaking` to accept). Moves data and never re-indexes; `--dry-run` prints the plan.
@@ -116,6 +116,8 @@ entity circuit.
 - **`nuthatch pack keygen|build|verify`** - the signed compliance-pack manifest (ed25519).
 - **`nuthatch audit replay|report`** - re-prove the annotations from scratch, or summarise them
   over a range (`--json`).
+- **`nuthatch audit sealed --rpc <url>`** - re-fetch a sample of sealed ranges from a second endpoint
+  and compare them row by row; `dev --audit-rpc` does the same in the background.
 
 ## Measurement
 
