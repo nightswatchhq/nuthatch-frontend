@@ -1,462 +1,216 @@
 # Nuthatch
 
-> A self-hosted-first, AI-native blockchain indexer in one Rust binary. From a contract
-> address to a live indexed API, with no mandatory third-party data service and nothing
-> phoning home.
+> A self-hosted, AI-native blockchain indexer in one Rust binary. A contract address becomes a
+> live, queryable SQL API on your own machine, with no third-party data service in the path and
+> nothing phoning home. Tagline: "Be your own indexer."
 
-Nuthatch indexes EVM chains on your own hardware. Embedded mode runs as a single static
-binary with no external services: no Postgres, no Docker, no IPFS. It is free and licensed
-MIT OR Apache-2.0. Status: **v4.10.1**, the stable line. Stability is a promise, not a claim of
-completeness: from 4.0.0 to the last 4.x release a config keeps working with the same meaning, a data
-directory upgrades in place with no re-index or migration command, and no HTTP route, response field,
-generated table or column, or MCP tool is removed, renamed or retyped. The promise is upgrade only,
-and it does not cover the off-by-default cargo features or the SQL dialect behind `/sql`. This file separates what the binary does today
-from the design targets, so a model does not present unbuilt features as present-tense fact.
+Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
+process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
+licensed
+MIT OR Apache-2.0. Status: v4.10.1, released 2026-10-05, on the stable 4.x line.
 
-Tagline: "Be your own indexer."
+The 4.x line is a promise about upgrades, not a claim of completeness: from 4.0.0 to the last 4.x
+release a config keeps working with the same meaning, a data directory opens in place on a later
+release with no re-index or migration command, and no HTTP route, response field, generated table or
+column, or MCP tool is removed, renamed or retyped. Downgrades, the off-by-default cargo features
+(`graph`, `folds`, `counter`, `exex`) and the SQL dialect behind `/sql` are not covered.
+
+This file is written for language models and coding agents. It separates what the released binary
+does from what is designed and not built. The longer version is
+https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run against the released
+4.10.1 binary when this file was written.
 
 ## What it does today
 
-- `nuthatch init 0xAddr [0xAddr…] [--chain <mainnet|arbitrum-one|base|bsc|polygon|gnosis|optimism|monad|robinhood>]`
-  resolves each contract's
-  ABI (Sourcify, then an Etherscan-class API; EIP-1967/legacy-OZ proxies resolved) and scaffolds a
-  multi-contract nest: `nuthatch.toml`, `abis/`, a `schema.json`, a `semantic.toml` (per-nest
-  meaning, seeded from the ABI), a commented `views/` starter, an `llms.txt`, and a Claude Code
-  skill. Omit `--chain` and nuthatch probes each supported chain for the contract's bytecode. It
-  does not yet auto-generate the view logic, handlers, or tests from the ABI.
-- `nuthatch sql "…"` runs one-shot SQL from the terminal (aligned table, `--json` to pipe), or opens
-  an interactive REPL (`.tables`/`.schema`, history) when given no query. `nuthatch add 0xAddr` grows
-  a nest with another contract without re-init. `nuthatch mcp --print-config` prints a copy-paste MCP
-  client config; systemd/docker recipes run `dev` unattended.
-- Governed semantic layer (RFC-0016): the `semantic.toml` drives an enriched `schema` (meaning +
-  hot/cold coverage seam + derived footguns); a failed query returns a one-line fix hint and `explain`
-  validates a query without executing it; MCP results are compact tables with a citable provenance
-  stamp (`as of block N, sealed_through M, registry <hash>`).
-- `nuthatch dev` polls logs over RPC (round-robin failover, adaptive `getLogs` chunking), decodes
-  every declared event of every contract (topic0 registry → one table per `{alias}__{event}`),
-  including an empty typed table before a declared event has fired,
-  stores rows in an embedded hot store (redb), seals finalized ranges to content-addressed Parquet
-  (hot store pruned), and serves a local HTTP API on 127.0.0.1:8288: `/tables`, `/table/{name}`
-  (hot+cold merged), `/schema` (the enriched data model), `/sql` (read-only SQL on Burrmill, sealed history
-  UNION the live hot tip), `/explain` (validate SQL without running it), `/entity/{id}`, `/balances`,
-  `/balance/{addr}`, `/exposure/{addr}`, `/flags`, `/ready` (readiness: 200 fresh / 503 stalled),
-  `/metrics` (Prometheus), and a localhost-gated admin UI at `/_admin/`. Every row carries provenance columns (`block_hash`, `_seq`,
-  `block_timestamp`) and `*_dec`/`*_overflow` siblings for big integers.
-- A nest is a git repo: `nuthatch init --from <git-url | ./dir>` runs a published nest (vendored
-  ABIs + deployment blocks, schema-version guarded); authored `views/*.sql` (RFC-0018) are a
-  validated, drift-gated layer - each binds against the schema at load, so a moved column is a loud
-  `nuthatch check` failure, described in `semantic.toml` and surfaced in `/schema`; `nuthatch check`
-  also runs `checks/*.sql` against recorded fixtures (hermetic parity/invariant framework).
-- Authored incremental entities (RFC-0041, stable in 3.0.0): an `entities.toml` declaration points
-  to one `SELECT`, its unique key and `max_rows`. Nuthatch maintains that bounded relation as blocks
-  arrive, retracts it on reorg, exposes it on `/sql` and `/derived/{entity}`, and reports its
-  applied-through watermark plus six per-entity Prometheus series. Views remain query-time SQL. An
-  entity seeds from locally stored history on restart and `dev --seal-direct` refuses a nest that
-  declares one rather than serving an empty result.
-- Balances are an incrementally-maintained view (DBSP): i128 base units serialised as decimal
-  strings, a reorg is a retraction, and the view replays from stored facts on restart.
-- `dev --seal-direct` writes finalized history straight to Parquet, bypassing the hot store, while
-  producing byte-identical segments and resolving every declared `[[calls]]` input. The former
-  ~8.7x seal-direct and ~20x stacked speedup claims were withdrawn in 2.7.0 after a harness fix made
-  their denominator invalid; a deterministic replay rig comes before another multiplier. Operator
-  surface: `/metrics`, `/ready`, `/sql` guards
-  (30 s timeout, 50,000-row cap, 64 MiB result-byte ceiling, 2 concurrent, a filesystem-access
-  denylist, and single-statement enforcement - a `;`-stacked statement is refused), health-aware RPC
-  failover (a failing endpoint is benched on a cooldown), startup segment recovery (hash-verify +
-  quarantine), graceful shutdown on SIGTERM.
-- `nuthatch transform <component.wasm>` runs a pure, zero-capability WASM transform over an Arrow
-  batch. `nuthatch mcp` serves the Model Context Protocol over stdio (12 tools: status, schema,
-  tables, table, sql, explain, entity, balance, top_balances, flags, exposure, screen_status; plus 3
-  resources - nuthatch://schema|tables|status - and 3 prompts: profile-contract, investigate-address,
-  verify-a-number), bridging offline to a running instance.
-- Factories and dynamic contract discovery (RFC-0009): `[[templates]]`/`[[factories]]` index the
-  child contracts a factory deploys at runtime (it indexes Uniswap), tip + backfill + reorg-safe,
-  with a `{template}__children` view.
-- Compliance pack (RFC-0008): sanctions screening against content-addressed list snapshots
-  (`nuthatch screen`, replayable `sanction_hit` annotations), threshold/velocity flags at `/flags`,
-  counterparty exposure at `/exposure/{addr}`, alert webhooks via a durable at-least-once outbox, and
-  a signed pack manifest (`pack build`/`verify`, ed25519) with `audit replay`/`report`.
-- Admin UI and webhooks (RFC-0010): an embedded read-only admin UI at `/_admin/` (no framework/CDN,
-  localhost-gated), plus user `[[webhooks]]` that POST sealed rows matching a `where` clause,
-  HMAC-signed with `X-Nuthatch-Signature`.
-- Nest packaging and multi-nest tenancy (RFC-0012 + RFC-0032, complete): `nuthatch nest bundle`/`load`
-  build and verify a content-addressed, portable nest `.bundle` (loadable from a file or an http(s)
-  URL), reproducing the decode registry from the installed inputs. **There is no `roost` subcommand -
-  it was removed in 2.0, not renamed.** One `nuthatch dev --dir <dir>` runs one nest or many
-  depending on what the directory holds: a `nuthatch.toml` or a `mounts.toml`. A nest's data is keyed
-  by its content address (`data/<nid>/`) and a mount is keyed by `(tenant, nid)`, so two mounts may
-  share one dataset and it is never indexed twice; unmounting one of two decrements a reference
-  rather than destroying data someone else is using, and `nuthatch prune` reclaims what nothing
-  mounts any more. `nuthatch migrate` moves a pre-2.0 directory across. A tenant is an opaque
-  ownership label - no identity, no authentication, no quotas, no metering. Verified live on Arbitrum.
-- The nest registry (RFC-0019): publish and pull nests by `name@version` from a filesystem or S3
-  backend; versions are content-addressed, so what you resolved is what you run.
-- Safe upgrades, no resync tax (RFC-0020): `nest diff` classifies an update as compatible or
-  breaking; `nest upgrade` hot-swaps a compatible one with an atomic endpoint flip after the new
-  version catches up (reusing the old sealed segments when decode is unchanged, so it costs seconds
-  rather than days), and serves a breaking one at a new endpoint with RFC-8594 deprecation headers on
-  the old.
-- Multichain runtimes (RFC-0021): one runtime hosting nests across more than one chain via
-  `[[chains]]` in `mounts.toml`, with one isolated cursor per chain (its own tip, finality, and reorg
-  boundary) and a per-cursor footprint budget. Multichain is a capability, not a mandate - one chain
-  per runtime stays valid and is the default, and a cursor is never multiplexed across two chains.
-- The runtime owns the nest lifecycle (3.13.0): a runtime may start with chains declared and nothing
-  mounted. `POST /_admin/nests {name, nid}` mounts a nest identity as a job (202, then `GET
-  /_admin/mounts/<name>` through accepted, fetching, joining, live or failed), fetching it from
-  `--registry` by NID when the runtime does not hold it and verifying it as `nest load` does.
-  `?dry_run=true` reports its backfill, per-block RPC work and footprint and the refusal a real mount
-  would give; `/_admin/suspend` and `/_admin/resume` pause a mount behind a named 503;
-  `/_admin/move` switches a name to a new NID in one step with no gap; `?reclaim=true` on an unmount
-  frees the disk. Per-nest storage is on `/metrics`. Guide: /docs/operate/hosting-nests/.
-- Derive-first contract reads (RFC-0023, tiers 1-3): `nuthatch recipe add total_supply|balances|
-  holder_count|reserves` derives what a subgraph pays an archive node to `eth_call` for, from the
-  events already indexed - no archive node, no eth_call. `nuthatch metadata fetch` calls once and
-  caches the immutable reads (`decimals`/`symbol`/`name`). Tier 3 (2.6.0) is the escape hatch when a
-  value genuinely cannot be derived: a `[[calls]]` block reads contract state via `eth_call` **pinned
-  to a fixed block**, so the result is reproducible rather than whatever the chain says today. A
-  `[[calls]]` block is either sampled (one fixed calldata every N blocks) or row-driven (RFC-0038 §3:
-  one call per row of a table at that row's block, arguments taken from the row's columns - what a
-  mapping's `balanceOf(event.params.to)` does). Since 2.7.0 the streaming and every seal-direct path
-  resolve these reads; the benchmark does so in both
-  arms and requires `--state-rpc` rather than silently skipping them.
-- Adaptive MCP tool advertisement (RFC-0025): `GET /shape` reports which capabilities a nest can
-  actually answer, and the MCP bridge filters `tools/list`/`prompts/list` accordingly, so an agent is
-  never handed an inert tool. Fails open if the probe fails.
-- Fault quarantine and partial health (RFC-0026): a faulting nest is quarantined rather than fatal -
-  healthy siblings keep indexing and serving, and a retryable fault is re-admitted on a backoff. A
-  nest's error no longer kills its cursor and a cursor's death no longer kills the runtime. Surfaced
-  by `GET /nests` (live per-nest health merged per request), runtime-root and per-nest `/ready`, and the
-  `nuthatch_nest_health` / `nuthatch_nest_quarantine_total` / `nuthatch_cursor_live` metrics.
-  `--fail-fast` restores exit-on-first-fault for CI.
-- Publishing sealed segments (RFC-0052, 3.7.0): `nuthatch publish sync --target <dir |
-  s3://bucket/prefix>` mirrors every segment that is not provisional to `<target>/<data identity>/`;
-  `publish verify` checks each object against the local catalogue (`--deep` re-downloads and
-  re-hashes; `--etag-md5` compares ETags on a store whose ETag is the object's MD5), and `publish
-  status` reports what is still to upload and writes nothing. `dev` and `serve` mirror continuously
-  with `--publish-target`, `--publish-interval` and `--publish-parallelism`, on their own thread, so a
-  slow bucket delays the mirror and never a seal. Credentials are the usual `AWS_*` variables. A
-  published prefix is plain Parquet plus a catalogue; CI checks that Trino reads what nuthatch's own
-  engine reads over one.
-- IPFS documents at scale (RFC-0037 slices 5 to 8, 3.8.0): `[[ipfs]]` takes `cid_json_path` and
-  `json_match` to read a CID out of JSON in an event column or a top-level call's calldata. Every
-  document resolves behind the cursor with retry and a recorded give-up, and sealing holds below any
-  block whose documents are still undecided. A multi-block document is proven against its CID, and an
-  unproven one writes no row. `[ipfs.rows]` explodes a proven JSON document into typed rows in its own
-  table; `keep_content = false` drops the raw JSON. Documents given up on are listed at
-  `GET /ipfs/gave-up` (3.8.2), and under `--seal-direct` one document holds a window for at most
-  `--ipfs-window-deadline` (300 s by default). A seal cut is bounded at 20,000 rows or 64 MiB of row
-  JSON, whichever comes first.
-- Store coverage check (3.8.4): a nest records its chain, each contract's address and start block, its
-  factories and its extraction settings in the store, and refuses to start a store holding data if
-  `nuthatch.toml` has since changed any of them. RPC endpoints and the nest's name may change freely.
-  `/` and `/nest` show the nest's `nid` and `data_identity`.
-- `nuthatch nest nid` (3.9.0) prints the identity a nest's data is stored under (`data/<nid>/`)
-  without running it. `nuthatch offchain pull <url> --table <name> --format json` (3.9.0, RFC-0045
-  stage 2) fetches a JSON-array feed once and seals it as an offchain snapshot, for a host timer to
-  run; an authored entity can read `offchain__<table>` as a source.
-- RPC economy (3.11.0): a backfill takes `block_timestamp` from the logs where the endpoint supplies
-  it rather than buying a header per block, idle polls skip the reorg check, the default poll interval
-  is the chain's block time (never below 2 s; `--poll-interval` overrides it), and `--rpc-fallback`
-  names endpoints asked only while every other endpoint is failing.
-- Chains: Ethereum mainnet, Arbitrum One (42161), Base (8453), BSC (56), Polygon (137), Gnosis (100),
-  Optimism (10), Monad (143) and Robinhood Chain (4663) are built in, with keyless public endpoints,
-  a tuned `eth_getLogs` window, and finality as a per-chain policy. **Any other EVM chain also works**:
-  `nuthatch init 0xAddr --chain <name> --rpc <url>` reads the chain id from the endpoint itself. An
-  unlisted chain inherits depth-64 finality and a 20-block window, and its `chain_id` is verified
-  against every endpoint at startup. The bundled free public RPCs exist so `init` → `dev` works with zero setup;
-  they are rate-limited, shared, and unsuitable for deep backfills or production - use your own node
-  or a paid provider for real work. Measured footprint: CI fails a build whose peak RSS passes 256 MB
-  indexing a fixed 8,004-row fixture, and on the largest nest we run, 4.7.0 peaked at 1,595 to 1,788 MiB
-  answering that nest's 74 production statements two at a time under its production limits (v4.7.0
-  release notes),
-  inside the 2 GB per-cursor budget.
-
-- **Scaffolding a nest from a subgraph manifest**: `nuthatch init --from-subgraph <CID|url>` maps
-  `dataSources` -> `[[contracts]]` and `templates` -> `[[templates]]`, vendors every ABI from the CID the
-  manifest pins, carries `startBlock` across, and carries each dataSource's `eventHandlers` over as that
-  contract's event allowlist. The pinned ABIs beat Sourcify for proxy-heavy codebases, where Sourcify
-  returns the proxy ABI that declares none of the events the contract emits. Factory rules are inferred
-  only where a parameter unambiguously names a template - which template a factory creates lives in the
-  mapping WASM, not the manifest, so anything ambiguous is reported with candidates rather than guessed.
-  A CID names what to ask a gateway for, and an `[[ipfs]]` block (RFC-0037) resolves documents and
-  **verifies the returned bytes against the content address that names them**, so a lying gateway is
-  caught rather than indexed. Between `[[calls]]` and `[[ipfs]]`, the two things a subgraph could do
-  and a nest could not are no longer missing, and neither costs the determinism.
-- `nuthatch doctor --rpc <url> --address 0xAddr` probes an endpoint and reports the largest `getLogs`
-  window it will actually serve, its batch limit, and whether it has archive history - measured
-  against that endpoint rather than read from its documentation. With `--dir`, it uses the nest's
-  full declared contract set rather than only the first address.
-- **Scaled mode** (RFC-0022, opt-in at build time with `--features postgres-store`, so the default
-  binary carries no database driver): the same crates run as a control plane holding desired state, a
-  writer pool whose members take **one lease per chain cursor**, and an independently-scaled query
-  tier. Ownership is enforced by the store - every write carries a fence, and a stalled worker that
-  wakes finds its writes refused. Workers **pull the nests they are assigned** from a registry; with a
-  `bundle_hash` pinned the fetch is by content address, so re-tagging a version in a registry cannot
-  change what a fleet runs. Verified across real machines, including 377 blocks indexed through a
+- `nuthatch init <address>…` resolves each contract's ABI (Sourcify, then a keyless Blockscout,
+  then Etherscan if `ETHERSCAN_API_KEY` is set; EIP-1967 and legacy proxies followed), detects the
+  deployment block and scaffolds a nest: `nuthatch.toml`, vendored `abis/`, `schema.json`,
+  `semantic.toml`, a commented `views/` starter, an `llms.txt` and a Claude Code skill. Omit
+  `--chain` and it probes the nine built-in chains for the contract's bytecode. `--from <git-url |
+  dir>` runs a published nest; `--from-subgraph <CID | url>` scaffolds from a subgraph manifest;
+  `--abi <file>` is the escape hatch for a proxy whose implementation ABI no resolver returns.
+- `nuthatch dev` is the serve command. It backfills, follows the tip, decodes every declared event
+  of every contract into a table named `{alias}__{event}` (an empty typed table even before the
+  event has fired), keeps the reorgable tip in an embedded redb store, seals finalised ranges to
+  content-addressed Parquet, and serves an HTTP API on `127.0.0.1:8288`. Every row carries
+  `block_number`, `block_hash`, `block_timestamp`, `tx_hash`, `log_index`, `address` and `_seq`;
+  every integer wider than 64 bits is an exact decimal string with a `{col}_dec` DECIMAL sibling
+  and a `{col}_overflow` flag.
+- Analytical SQL over the live tip and the sealed history as one surface, through `GET /sql`,
+  `nuthatch sql` and the MCP `sql` tool. The engine is Burrmill, an embedded query engine on Apache
+  DataFusion, since 4.1.0 (2026-10-02). Releases up to 4.0.2 used DuckDB, which is no longer in the
+  binary; the sealed segments are plain Parquet and DuckDB or Trino can still read them.
+- Built-in derived state: balances maintained incrementally (DBSP) from transfers, served at
+  `/balances` and `/balance/{address}`; a reorg is a retraction. `nuthatch recipe add
+  total_supply|balances|holder_count|reserves` derives what a subgraph pays an archive node to
+  `eth_call` for, as an ordinary SQL view. `nuthatch metadata fetch` reads `decimals`, `symbol` and
+  `name` once and caches them.
+- Authored logic: `views/*.sql` are `CREATE VIEW` statements evaluated when a reader asks, bound
+  against the schema at load so a moved column fails `nuthatch check` loudly. `entities.toml`
+  declares an authored incremental entity (stable since 3.0.0): one `SELECT`, a unique key and
+  `max_rows`, maintained as blocks arrive, retracted on reorg, served by name on `/sql` and at
+  `/derived/{entity}`. On the Lodestar nest the view it replaced went from 2.15 s to 87.7 ms. A nest
+  declaring an entity cannot run with `dev --seal-direct`; the refusal is deliberate.
+- Pinned contract reads and verified documents: a `[[calls]]` block samples an `eth_call` at fixed
+  blocks (or one call per row of a table), needing `--state-rpc` against an archive node; an
+  `[[ipfs]]` block resolves a CID named in a column and refuses any body that does not hash to it.
+- Factories: `[[templates]]` and `[[factories]]` index the children a contract deploys at runtime,
+  sharing one table per template, distinguished by `address`. It indexes Uniswap.
+- The compliance pack (opt-in): sanctions screening against content-addressed list snapshots,
+  threshold and velocity flags at `/flags`, counterparty exposure at `/exposure/{address}`, alert
+  and row webhooks over a durable at-least-once outbox, and a signed pack manifest with
+  `audit replay`.
+- A built-in MCP server (`nuthatch mcp`, stdio, bridging to a running `dev`): 12 tools in all, of
+  which seven (`status`, `schema`, `tables`, `table`, `sql`, `explain`, `entity`) are advertised on
+  every nest, `balance` and `top_balances` where the nest decodes transfers, and `flags`,
+  `exposure` and `screen_status` where compliance is configured; three resources
+  (`nuthatch://schema|tables|status`); three prompts (`profile-contract`, `verify-a-number`, and
+  `investigate-address` where compliance is configured). A token nest therefore advertises nine
+  tools and two prompts. Results carry a provenance stamp (`as_of`, `sealed_through`, `nid`,
+  `registry_hash`). `GET /explain` validates a query without running it.
+- Nests as packages: `nuthatch nest bundle` writes a content-addressed `.bundle`; `nest load`
+  verifies every file's hash and regenerates the decode registry before installing; `nest publish`
+  and `nest load name@version --registry <dir | s3://bucket/prefix>` share them by name and by
+  NID. `nuthatch nest nid` prints the identity a nest's data lives under (`data/<nid>/`).
+- One runtime, many nests: `nuthatch dev --dir <dir>` runs one nest over a `nuthatch.toml` or many
+  over a `mounts.toml`, with one isolated cursor per chain, nests on a chain sharing its cursor, a
+  per-cursor RAM ceiling, and a nest that faults quarantined rather than fatal. There is no
+  `roost` subcommand; it was removed in 2.0. A runtime may start empty and be driven over the admin
+  API: `POST /_admin/nests {name, nid}` mounts a NID as a job, fetching it from `--registry`;
+  `?dry_run=true` prices it; suspend, resume, move to a new NID with no gap, and unmount with
+  `?reclaim=true` are routes too. A tenant is an opaque label in a mount name (`acme/usdc`); two
+  mounts of one NID share one dataset and it is never indexed twice.
+- The mirror: `nuthatch publish sync --target <dir | s3://bucket/prefix>` mirrors sealed segments
+  and the catalogue, `dev --publish-target` does it as they seal, `publish verify` and `publish
+  status` check it, and `publish finalise` (4.8.0) marks a stopped nest's provisional tails final.
+  `nuthatch seed --from <mirror> --dir <nest>` (4.9.0) fills a nest that has not indexed from such a
+  mirror, checking every file against its hash, and the next `dev` follows the chain from where the
+  mirror ends. A public mirror of four Graph Protocol nests is at
+  https://www.nuthatch-indexer.com/mirror.
+- Sealed-history audit (4.5.0): `nuthatch audit sealed --rpc <second endpoint>` re-fetches a sample
+  of sealed ranges and compares them row by row; `dev --audit-rpc` does it in the background.
+- `[extract] l1_blocks = true` (4.6.0) adds an `l1_blocks` table on a chain that reports its L1
+  block in every header (Arbitrum); a header without the field refuses the window rather than
+  storing a zero. Turning it on for a nest that has already indexed is refused.
+- Scaled mode (opt-in at build time, the `-scaled` artifacts): a control plane, a writer pool
+  taking one lease per chain cursor with the fence enforced by the store, and an independently
+  scaled query tier. Verified across real machines, including 377 blocks indexed through a
   90-second control-plane outage.
-- **Measured performance**: Sentio's OBIB benchmark, case 1 (LBTC `Transfer`, 22.2M Ethereum blocks)
-  completes in **74.8 s** for **294,278 events** in **321 RPC requests** at 320 MB peak RSS, against a
-  real provider. The event count matches Sentio's own README. `block_timestamp` is demand-driven;
-  measured real backfills attributed roughly 80% of provider compute units to header reads, and
-  2.7.0 makes partial-batch retry splits descend concurrently. The `getLogs` window adapts to what an
-  endpoint will actually serve.
+- Chains built in: Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis, Optimism, Monad and
+  Robinhood Chain, each with keyless public endpoints and a finality policy. Any other EVM chain
+  works with `--chain <name> --rpc <url>`; it inherits depth-64 finality and a 20-block `getLogs`
+  window, and its `chain_id` is verified against every endpoint at startup. The bundled public
+  endpoints are for trying it out; they are rate-limited, sometimes answer empty instead of
+  erroring, and are not for production.
 
-## Design targets (not built yet)
+## Guards and limits
 
-- reth ExEx tip-ingestion against your own node (designed and stubbed; toolchain + dependency
-  blockers cleared, needs a synced node; RPC is the working path), and firehose-class extraction of
-  traces and state diffs on top of it (RFC-0014, deferred).
-- Streaming subscribe (SSE); local AI models (Ollama /
-  bring-your-own-key); effectful HTTP egress for transform worlds (`kv` grant ships today);
-  wildcard signature-scoped indexing.
-- GraphQL (RFC-0053) is no longer a design target: 3.7.0 ships a partial read surface, exact for a
-  subgraph's event-shaped fields and a named refusal for the rest, and it is parked. Since 3.10.0 the
-  GraphQL routes exist only in a build with `--features graph`; the published binary and images
-  answer them with 404. An analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for one unanswerable
-  field. Do not describe it as a drop-in replacement.
+`/sql` accepts one `SELECT` or `WITH` statement per request, at most 16 KiB of text, and refuses
+file-reading functions by denylist and by an allowlist over the engine's own parse. Defaults: a 30 s
+timeout (answered 504), a 50,000-row cap, a 64 MiB result ceiling, two concurrent statements (a
+third waits 250 ms, then 503), two million unsealed tip rows per query (refused with 503 rather than
+answered from sealed data alone). The engine runs each session under a memory limit
+(`NUTHATCH_ANALYTICS_MEMORY_LIMIT`, 512 MB by default) and a thread cap, and since 4.4.0 every
+session over one nest draws on one pool (`NUTHATCH_BURRMILL_MEMORY_LIMIT`); a statement that needs
+more is refused, not spilled. 4.10.0 added `NUTHATCH_RUNTIME_HEADROOM` and a lower
+`NUTHATCH_INGESTION_RESERVATION`, and the startup check refuses a configuration that does not fit
+the cursor's budget, naming the largest value that would. The API has no authentication of its own:
+bind localhost (the default) and put a proxy in front, or set `sql = "allowlist"` on a mount so
+callers get named queries at `/q/{name}` and never send SQL.
 
-## How it works
+## Footprint and speed, measured
 
-- Ingestion (RPC extraction today; reth ExEx when colocated, designed) -> deterministic decode
-  -> a hot store (redb) for point-reads at the tip -> content-addressed Parquet sealed past
-  finality -> Burrmill, our embedded query engine on Apache DataFusion, reading them for analytical
-  SQL. Balances are declarative incremental views (IVM).
-- Burrmill has been the only engine since 4.1.0 (2026-10-02). Releases up to 4.0.2 ran analytical
-  SQL on DuckDB, which is no longer in the binary. The change was not made for speed: on a
-  production nest on 2026-10-01, Burrmill took about 2.5x DuckDB's time per statement and needed
-  more memory for the same joins. It buys one language in the binary and exact arithmetic that
-  refuses rather than wraps. The sealed segments are plain Parquet, so external readers such as
-  DuckDB or Trino can still read them.
-- Reorgs touch only the mutable hot store and become retractions in the incremental view. The
-  columnar layer is append-only by construction.
-- The escape hatch is capability-isolated WASM components via WIT. A component granted zero
-  capabilities is a pure function and can be re-executed and verified; its purity is checkable
-  from its imports alone.
+- Budget: at most 2 GB RAM per active-chain cursor, enforced rather than aspired to. CI fails a
+  build whose peak RSS passes 256 MB indexing a fixed 8,004-row fixture. The release gate serves a
+  copy of the largest nest we run, the Lodestar allocations nest, under its production limits and
+  runs the 74 statements its consumers send, two at a time; a peak over 2 GiB fails it. 4.4.0 peaked
+  at 1,595 to 1,788 MiB over four runs. 4.10.0 took a copy of the QoS nest, two statements at a
+  time, from 1,746 to 1,749 MiB down to 1,298 to 1,349 MiB with identical answers.
+- Sentio's OBIB benchmark, case 6 (the Uniswap V2 factory over 10,001 mainnet blocks, 232 pairs
+  discovered as it ran): 5.9 s median of five runs of the published 4.10.1 binary against a keyless
+  public gateway, 35,271 events in 14 RPC requests at 241 MB peak RSS. The event count matches
+  Sentio's; the stopwatch is one workload under one set of conditions.
+- No seal-direct or pipeline multiplier is quoted. The 8.7x and 20x figures were withdrawn in
+  2.7.0 when their baseline was traced to an obsolete harness.
+- Running a nest at tip costs RPC requests: measured against a paid Arbitrum endpoint on
+  2026-09-06, about 9,900 CU a minute, roughly $185 a month; `--poll-interval 5m` cuts that by about
+  a hundred times for the same rows.
 
-## Principles
+## Not built (design targets)
 
-- Single binary; zero external services in embedded mode.
-- No phone-home: no telemetry, no mandatory API tokens, no gated data service, ever.
-- Deterministic core: decode, reorg handling, and entity derivation are reproducible. LLMs
-  generate code and tests; LLM output never sits in the runtime data path.
-- AI-native today: a built-in MCP server, a `schema` tool, and a shipped `llms.txt` and Claude
-  Code skill, all offline against your local instance. Local models (Ollama / BYO-key) are planned.
+reth ExEx tip ingestion against a colocated node (the Source trait and bridge are in; wiring needs
+a synced node) and firehose-class extraction on top of it; streaming subscribe (SSE); local models
+(Ollama) or bring-your-own-key; effectful HTTP egress for WASM transforms (a `kv` grant ships);
+wildcard signature-scoped indexing; a Homebrew tap. GraphQL (RFC-0053) shipped in 3.7.0 as a
+partial read surface, exact for a subgraph's event-shaped fields and a named refusal for the rest;
+it is parked, and since 3.10.0 only a build with `--features graph` serves it. The published
+binaries answer those routes with 404. Do not describe it as a drop-in subgraph replacement.
 
-## Install
+## Install and first run
 
-**v4.10.1 is the current release.** The installer and `cargo` fetch the latest. Two artifacts and two
-container images per release: the default (embedded) one, and a `-scaled` one carrying `worker` and
-`control`. Images are at `ghcr.io/nightswatchhq/nuthatch` (`:4.10.1`, `:4.10.1-scaled`, `:latest`).
+```sh
+curl -fsSL https://nuthatch-indexer.com/install.sh | sh
+nuthatch --version
+nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet
+nuthatch dev --backfill 300
+nuthatch sql 'SELECT dst, wad FROM weth__transfer ORDER BY block_number DESC LIMIT 5'
+curl 'http://127.0.0.1:8288/sql?q=SELECT+count(*)+FROM+weth__transfer'
+nuthatch mcp --print-config
+```
 
-**4.7.0 keeps a nest inside its budget under production load.** Every analytics session over one
-nest now draws on one memory pool sized by `NUTHATCH_BURRMILL_MEMORY_LIMIT`, where a second
-concurrent statement used to open a second pool; the limit now bounds the nest rather than each
-statement. A hash join with a small build side and a range condition skips Parquet row groups of the
-large side: on a copy of the QoS nest, kittiwake's one-day statements went from 7.2 to 11.9 s to 1.1
-to 1.3 s (v4.7.0 release notes).
+`--backfill 300` starts 300 blocks behind the tip so there are rows within seconds; without it
+`dev` backfills from the deployment block, which for a long-lived contract wants your own
+archive-capable RPC. WETH names its transfer fields `src`, `dst` and `wad`; most ERC-20s use
+`from`, `to` and `value`, and `from` must be double-quoted in SQL. `nuthatch recipe add
+total_supply` on this WETH nest fails `nuthatch check` with `no column from` until the view's
+columns are renamed, as the docs say. Prebuilt binaries cover macOS Apple Silicon and Linux x86_64
+(glibc 2.35 or newer from 4.1.0; no C++ runtime); `cargo +1.95.0 install --git
+https://github.com/nightswatchhq/nuthatch nuthatch` builds elsewhere, and the toolchain pin is
+required because `rust-toolchain.toml` does not apply to `cargo install`. Images:
+`ghcr.io/nightswatchhq/nuthatch:4.10.1` and `:4.10.1-scaled`, `linux/amd64` only. Every artifact
+has a `.sha256` and a GitHub build-provenance attestation (`gh attestation verify <tarball> --repo
+nightswatchhq/nuthatch`).
 
-**4.1.0 changes the SQL engine.** Analytical SQL runs on Burrmill, our engine on Apache DataFusion,
-and DuckDB is no longer in the binary. Nothing is re-indexed and sealed segments are read as they
-are, but `/sql`, the views and the entity checks are answered by a different planner, and the
-release notes list where answers, refusals and costs differ. A statement that needs more memory than
-its session's `analytics.memory_limit` is refused rather than spilled, so a join-heavy nest may need
-that limit raised. `NUTHATCH_ENGINE=duckdb` is refused at startup. The Linux binary no longer links
-libstdc++ and needs glibc 2.35 or newer, where 4.0.x needed 2.34.
+Upgrading the binary is a swap and a restart. Two old patches matter if you advise on a version:
+v0.9.3 fixed an arbitrary file read through `/sql` (DuckDB, the engine then, accepted a quoted
+function name the guard did not match) and v0.6.2 fixed an arbitrary file write through
+`;`-stacked statements. Both are on the repository's Security tab.
 
-**4.1.1 to 4.3.1.** 4.1.1 closes the findings of a cold audit of 4.1.0, among them a `/sql` statement
-that could stop the process. 4.2.0 fixes a memory regression in 4.1.1 and brings more of Burrmill's
-answers in line with DuckDB's. 4.2.1 rebuilds the admin page at `/_admin/` with eight tabs. 4.3.0
-lowers Burrmill's peak memory under a budget: on the Lodestar allocations nest's query set, from
-3.3 GiB to under 1.9 GiB. 4.3.1 fixes a wrong answer in 4.3.0, a join that could drop matches under
-a memory budget; take it if you run 4.3.0.
+## Documentation
 
-**4.0.2 narrows a result cap sent under the rate-limit code.** An `eth_getLogs` refused with `-32005` and
-"query returned more than 10000 results", as `rpc.mevblocker.io` answers, is narrowed to the suggested
-range instead of being retried at the same width.
-
-**4.0.1 changes the mainnet defaults.** A new Ethereum mainnet nest gets `mainnet.gateway.tenderly.co` and
-`rpc.mevblocker.io`, replacing two public endpoints that could not serve a backfill. An existing nest
-keeps the endpoints in its `nuthatch.toml`; `--rpc` overrides them at runtime.
-
-**4.0.0 is the stable line.** It is 3.13.3 plus three small fixes, and the major version is a promise
-about later releases rather than a claim about what changed. Upgrading from 3.13.3 is a binary swap:
-no storage migration, config change, NID change or re-index. A backfill whose RPC endpoints cannot
-serve its history says so: an endpoint that has pruned the range is named with the remedy (an
-archive-capable RPC via `--rpc` or `rpc_urls`), a backfill stops on the first refusal when every
-endpoint has pruned it, one that makes no progress stops with its cause, and a runtime hosting mounts
-warns with the same text and keeps retrying. `nuthatch sql` and the MCP SQL tool print columns in the
-query's order, not alphabetically, and a `/sql` response gains a `columns` array naming them in that
-order; row objects are unchanged, and `nuthatch sql --json` still prints them with sorted keys. The
-first-run demo starts near the tip with `nuthatch dev --backfill 300` (the last 300 blocks, about an
-hour of mainnet); when a from-deployment backfill is long, `init` prints a `nuthatch dev --backfill N`
-line under its `next:` hint and `dev` logs the span at cold start. Plain `nuthatch dev` still
-backfills from the contract's deployment block, which for USDC is 20 million blocks and wants your own
-archive-capable RPC.
-
-**The 4.x promise.** From 4.0.0 to the last 4.x release: config keeps working with the same meaning;
-a data directory written by an earlier 4.x opens in place on a later one, with no re-index, re-seal or
-migration command; and no HTTP route, response field, generated table or column, or MCP tool is
-removed, renamed or retyped. It is upgrade only. A released 4.x only gets patches, features wait for
-the monthly minor (4.1, 4.2), and correctness and security fixes ship immediately. Not covered:
-downgrades; the off-by-default cargo features `graph`, `folds`, `counter` and `exex`; the SQL
-dialect behind `/sql`; segment hashes across `arrow-rs`
-versions; the admin UI's HTML; and the `postgres-store` build's internal schema. The full contract is
-`docs/operators.md#stability-contract` in the nuthatch repository.
-
-**3.9.0 to 3.13.3.** 3.9.0 adds `nest nid` and `offchain pull`, and offchain snapshots reach authored
-entities. Two configurations 3.8.5 accepted now refuse to start: an entity whose `sql` is inline or
-names a file other than `entities/<name>.sql`, and a contract alias or template name that would put
-its tables inside `offchain__`. An `eth_call` item error is no longer stored as a revert: only an
-explicit revert is, and anything else is retried and then stalls the nest at that block, so a nest
-calling through a pruned endpoint needs an archive one. 3.10.0 moves the GraphQL routes behind
-`--features graph` (the published binary answers them with 404; `init --from-subgraph`, `port-emit`
-and `graph-validate` stay in the default build) and lets a second live mount share an already-mounted
-dataset. 3.11.0 cuts the RPC bill: timestamps from the logs (4,444 header reads down to 34 on the same
-20,000-block Sepolia backfill, byte-identical segments), the chain's block time as the default poll
-interval, and `--rpc-fallback`. 3.12.0 changes nothing in the published binaries; its work is behind
-the off-by-default `folds` feature. 3.12.1 executes each `/sql` statement once rather than twice, and
-answers a query cut off by the time budget with 504 rather than 400. 3.12.2 moves Wasmtime past two security advisories, holds a nest mounted on a running runtime to the rules boot enforces, lets a runtime start with nothing mounted, and reads a provider's wrapped revert and block-range cap correctly. 3.13.0 lets a runtime run its own nests: handed a NID, it fetches the nest from a registry, verifies and indexes it as a job readable over the admin API, and can dry-run, suspend, resume, move and reclaim it; `/metrics` reports storage per nest, and the runtime-wide sealed total no longer counts a shared store once per nest. 3.13.1 fixes what an end-to-end run of that admin API found against a real chain: names and a restart mid-move that left a runtime unable to start, a move that broke a dataset two tenants shared, and identical mounts reported as failed; routes are now keyed per mount, so a mount of a single non-default tenant serves at `/<tenant>/<alias>/`, and `/metrics` is served at the runtime root. 3.13.3 makes `nuthatch check` lower and bind each entity as `dev` starts it, so the two agree; makes every entity `port-emit` writes startable; makes `nest bundle` refuse to publish credentials; stops log lines keeping an RPC URL's password; and makes a restart, an idle entity fault and a finality violation report truthfully. 3.13.2 fixes what a hardening pass found: Arbitrum timestamps stored as 0 through `arb1.arbitrum.io` (now fetched as headers, in batches of ten that `arb1` takes, so a backfill through keyless `arb1` runs at a few times chain speed), an analytics spill cap DuckDB did not enforce (now enforced, 2 GB by default, off a tmpfs `/tmp`), authored entity columns reaching SQL as text, and misspelt `nuthatch.toml` keys silently ignored (now a warning, a `check` failure, and a suggestion). Each is a binary swap and a
-restart, apart from the 3.9.0 refusals and the 3.10.0 GraphQL routes, and from 3.13.0 a script that mounts over the admin API adds `?wait=true`.
-
-**3.8.0 makes an `[[ipfs]]` nest over megabyte documents fit to deploy.** Every document a nest names
-resolves behind the cursor, is proven against its CID however many blocks it spans, and can be
-exploded into typed rows (`[ipfs.rows]`); a seal cut is also bounded at 64 MiB of row JSON. It adds
-`--cors <ORIGIN>` on `dev` and `serve`, `--explorer <URL>` (a Blockscout instance) on `init` and `add`,
-`init --from-subgraph` over a local `subgraph.yaml`, and a `doctor` that finds its own probe address
-without `--address`. `/sql` and `/explain` answer `503` when the hot tip holds more than 64 MiB of row
-JSON, and a `/sql` request waits up to 250 ms for a free permit before it is refused. An events-only
-nest swaps the binary and restarts. A nest that has indexed top-level calls must re-index (call rows
-now carry `tx_from`), and a nest with `[extract] traces` gets a new identity. An `[[ipfs]]` name or
-`[ipfs.rows]` table declared twice or landing on an event or call table, and a decoded call argument
-named `tx_from`, now refuse to start. After one start on 3.8, a nest with `[[calls]]`, `[[ipfs]]` or
-`[extract]` is refused by 3.7.0; an events-only nest can go back.
-
-**3.8.1 to 3.8.5 are binary-swap patches.** 3.8.1 checks an empty document body against its CID
-instead of retrying it. 3.8.2 logs and counts every retried document fetch
-(`nuthatch_nest_ipfs_retries_total`), grows the fetch timeout from 30 to 60 to 120 s, gives a
-`--seal-direct` window at most `--ipfs-window-deadline` (300 s) per document, lists documents given up
-on at `GET /ipfs/gave-up`, adds three `/ready` fields, and holds a hot-mounted nest to one backfill
-window at a time on a single-endpoint chain. 3.8.3 keys a runtime nest's cursor, health and metrics by
-its route, so the `nest` label on `nuthatch_nest_*` is the route where it differs from the nest's name,
-and `emit dune` translates authored views whose DuneSQL is exact. 3.8.4 records what a store covers as
-`indexed_coverage` and refuses to start a store whose chain, contracts, start blocks, factories or
-extraction settings no longer match `nuthatch.toml`; the first start after upgrading records rather
-than verifies. 3.8.5 fixes a `/sql` panic on scaled `DECIMAL` results too wide for the driver, and
-sealed velocity seeds that were silently skipped.
-
-**3.7.0 mirrors sealed segments to a bucket and emits DuneSQL.** `nuthatch publish sync|verify|status`
-and `--publish-target` on `dev`/`serve` (RFC-0052); `emit dune` (RFC-0055, removed in 4.1.0). The DuckDB memory
-walls are environment settings with unchanged defaults, new seals are zstd, a declared query
-(`/q/{name}`) answers `422` when its plan could read more than 512 MiB, and a local offchain file drop
-stores a file as an immutable snapshot. The x402 counter and `nuthatch settle` exist only in a
-`--features counter` build; no release binary contains them. A nest with a ported
-`graph/schema.graphql` answers GraphQL as a partial read surface, exact or refused by name field by
-field, that is parked and is not a drop-in replacement for a subgraph. Most operators swap the binary
-and restart. The exceptions: `NUTHATCH_SQL_MAX_CONCURRENCY` above 2 refuses to start unless
-`NUTHATCH_ANALYTICS_MEMORY_LIMIT` comes down (256MB at four permits), and a nest with a fully named,
-non-indexed tuple event parameter gets a new NID and re-indexes (#1364). Downgrading to 3.6.1 after
-running 3.7.0 is not safe.
-
-**3.0.0 makes authored incremental entities stable.** A nest can declare a bounded keyed relation in
-`entities.toml`, maintained as blocks arrive and queryable through `/sql` and `/derived`. Existing
-nests remain a binary-swap upgrade; adding an entity seeds local history on restart, and
-`--seal-direct` refuses an entity-bearing nest. Every release artifact carries a GitHub
-build-provenance attestation, verified with `gh attestation verify <tarball> --repo
-nightswatchhq/nuthatch`.
-
-**2.7.0 made `[[calls]]` and `--seal-direct` compatible.** It also narrows and retries the factory
-fetch for newly discovered children on a provider cap, gives declared-but-unfired events empty typed
-tables, repairs stale schema columns from the live registry, probes all contracts in `doctor --dir`,
-parallelises timestamp retry splits, and redacts state-RPC credentials from benchmark output. The old
-seal-direct multipliers were withdrawn because their baseline came from an obsolete harness path.
-
-Apart from the 3.7.0, 3.8.0, 3.9.0 and 3.10.0 exceptions above, upgrading is a plain binary swap - on-disk state is forward-readable and the `dev` flags are stable, so
-no migration or re-backfill is involved. Minimum supported Rust version is **1.95**.
-
-**Two security patches are worth knowing about if you advise anyone on a version.** Both are on the
-`/sql` surface, which binds 127.0.0.1 by default:
-
-- **v0.9.3** fixes an **arbitrary file read**: DuckDB accepts a quoted function name and the guard
-  matched only an unquoted one, so `SELECT * FROM "read_csv"('/etc/passwd')` executed. Every earlier
-  release is affected.
-- **v0.6.2** fixes an **arbitrary file write** via `;`-stacked `COPY ... TO`.
-
-Earlier milestones: 0.9 brought scaled mode's writer pool and the backfill work above; 0.8 the
-control plane; 0.7 the live roost and the relicense to `MIT OR Apache-2.0`; 0.6 nest bundles, the
-registry, and zero-downtime N-1 upgrades.
-
-- Prebuilt binaries for macOS (Apple Silicon) and Linux x86_64 on the GitHub release, with
-  SHA-256 checksums; the one-line installer (`curl -fsSL https://nuthatch-indexer.com/install.sh | sh`)
-  downloads and verifies them.
-- `cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch` (**exactly 1.95.0** - `rust-toolchain.toml` does not apply to `cargo install`, and 1.97 hits a dbsp ICE).
-- A Homebrew tap and detached release signatures are still on the way. The OCI image ships today.
-
-## Worked example
-
-`/example` indexes USDC on Ethereum mainnet from its contract address: `init` vendors the ABI and
-scaffolds the nest, `nuthatch dev --backfill 300` backfills the last 300 blocks and follows the tip
-(plain `nuthatch dev` backfills from the deployment block, which for USDC wants your own
-archive-capable RPC), every declared event becomes a table
-(`usdc__transfer`) queryable through read-only SQL over HTTP and MCP, and the page then chooses
-between an authored view and a maintained entity. It is the current, executable path on v4.10.1.
-
-## Who runs it
-
-`/stories` answers "is this for me?" through three illustrative personas (not testimonials),
-each mapped to one of the three front doors: an SQL endpoint for application backends, published
-nests for analysts who write no indexing code, and the built-in MCP server for agents. These
-workflows run on v4.10.1 - multi-contract nests, every declared event as a table, nine built-in
-chains, user-authored views, maintained `entities.toml` relations, `init --from`, `/sql`, and MCP all
-ship, as do factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the
-front doors: the read surface shipped in 3.7.0 is partial and parked. It notes that derived views read finalized data while raw event
-tables are fresh to the tip.
-
-## Roadmap
-
-`/roadmap` is generated from the source repo, not from marketing copy: the README's working-now
-table and progress log are the source of truth for what is shipped, and the numbered RFCs under
-`docs/rfcs/` for what is planned. Shipped: the embedded pipeline end to end, nests, nine built-in
-chains (Ethereum mainnet, Arbitrum One, Base, BSC, Polygon, Gnosis, Optimism, Monad, Robinhood Chain), the correctness-gated
-seal-direct and pipelined backfill paths (RFC-0004), the operator surface (`/metrics`, `/sql` guards, graceful
-shutdown), factory/dynamic discovery (RFC-0009, it indexes Uniswap), the compliance pack (RFC-0008:
-screening, flags, exposure, signed audit), a local admin UI + webhooks (RFC-0010), content-addressed
-nest packaging (RFC-0012), the delightful core (RFC-0015: sql/REPL, magical init, add, prod
-recipes), the governed semantic layer + agent-grade MCP (RFC-0016/0017), the nest registry
-(RFC-0019), N-1 upgrades (RFC-0020), multichain runtimes (RFC-0021), derive-first recipes and pinned
-`eth_call` (RFC-0023 tiers 1-3), adaptive MCP tools (RFC-0025), fault quarantine (RFC-0026), live
-mount and unmount with no co-tenant restart (RFC-0027), `eth_getLogs` range-control hardening
-(RFC-0028), the tenant runtime that retired the roost and keyed nest data by content address
-(RFC-0032), identity and grafting (RFC-0033), the query allowlist (RFC-0034), calldata decode and
-the `[extract]` surface (RFC-0014 slice 0 - decode, schemas and volume guard; extraction itself
-still needs a colocated node), verified IPFS resolution (RFC-0037), subgraph-manifest scaffolding
-(RFC-0038), distributed scaled mode (RFC-0022 - a control plane, a writer pool taking cursor
-leases, and an independently-scaled query-FE tier), sealed segments mirrored to a bucket (RFC-0052),
-proven, typed IPFS documents at scale (RFC-0037 slices 5 to 8), offchain price snapshots (RFC-0045
-stage 2), the 3.11.0 RPC economies, and Burrmill as the analytical engine (4.1.0). v4.10.1 is the
-current release, with prebuilt binaries and container images - one embedded, one `-scaled`.
-Accepted and then parked on 2026-09-26: RFC-0058 (cross-nest SQL), RFC-0059 (checkpointed folds, built in part behind
-the off-by-default `folds` feature) and RFC-0060 (the Network Subgraph endpoint).
-
-**The 2026 feature freeze is over.** It ran from 2026-08-20 to 2026-09-08 and was lifted in full. The
-work since is the RFC-0044 to RFC-0048 programme (the subgraph port, offchain data, x402 at the
-counter, the lakehouse commitments, pricing query access), plus RFC-0053, RFC-0052 and RFC-0055.
-Deferred items stay deferred and reopen one at a time (`docs/frozen-for-2027.md` in the nuthatch
-repo): reth ExEx wiring (RFC-0003, needs a synced node), the remaining release engineering (RFC-0005:
-signing, Homebrew), firehose-class *extraction* (RFC-0014, needs the node), IVM generalisation, and
-wildcard indexing.
-Not planned: a token or decentralized-network features, telemetry, a Kubernetes-first deployment,
-and any gateway/auth/metering layer in the core. It promises order, not dates, and defers to the
-README progress log when the two disagree.
+- [Quickstart](https://www.nuthatch-indexer.com/docs/start/quickstart/): address to live API in under two minutes.
+- [Install](https://www.nuthatch-indexer.com/docs/start/install/): installer, images, source build, attestation.
+- [What is a nest?](https://www.nuthatch-indexer.com/docs/concepts/nests/): a content-addressed spec, not a program.
+- [Runtimes and cursors](https://www.nuthatch-indexer.com/docs/concepts/runtimes/): one cursor per chain, the single-cursor law.
+- [Storage and sealing](https://www.nuthatch-indexer.com/docs/concepts/storage/): redb tip, Parquet past finality, one SQL surface.
+- [Reorgs and finality](https://www.nuthatch-indexer.com/docs/concepts/reorgs/): reorgs touch only the hot store.
+- [Determinism](https://www.nuthatch-indexer.com/docs/concepts/determinism/): LLM output never sits in the data path.
+- [Nest identity and reuse](https://www.nuthatch-indexer.com/docs/concepts/nest-identity/): NID, data identity, dataset adoption.
+- [nuthatch.toml](https://www.nuthatch-indexer.com/docs/build/config/) and the [configuration reference](https://www.nuthatch-indexer.com/docs/reference/config/).
+- [ABIs, events and tables](https://www.nuthatch-indexer.com/docs/build/tables/): the column mapping and big integers.
+- [Authored SQL views](https://www.nuthatch-indexer.com/docs/build/views/) and [incremental entities](https://www.nuthatch-indexer.com/docs/build/entities/).
+- [Factories](https://www.nuthatch-indexer.com/docs/build/factories/), [recipes](https://www.nuthatch-indexer.com/docs/build/recipes/), [contract calls and IPFS](https://www.nuthatch-indexer.com/docs/build/contract-calls/).
+- [Compliance pack](https://www.nuthatch-indexer.com/docs/build/compliance/) and [webhooks](https://www.nuthatch-indexer.com/docs/build/webhooks/).
+- [Build a subgraph fallback](https://www.nuthatch-indexer.com/docs/build/subgraph-fallback/): the boundary of event-derived data.
+- [CLI guide](https://www.nuthatch-indexer.com/docs/reference/cli/); the generated full reference is `skills/nuthatch-builder/cli-reference.md` in the repository.
+- [HTTP API](https://www.nuthatch-indexer.com/docs/reference/http-api/), [the SQL surface](https://www.nuthatch-indexer.com/docs/reference/sql/), [MCP server](https://www.nuthatch-indexer.com/docs/reference/mcp/).
+- [Run it in production](https://www.nuthatch-indexer.com/docs/operate/production/), [deploy](https://www.nuthatch-indexer.com/docs/operate/deploy/), [security](https://www.nuthatch-indexer.com/docs/operate/security/).
+- [Metrics and footprint](https://www.nuthatch-indexer.com/docs/operate/metrics/), [performance](https://www.nuthatch-indexer.com/docs/operate/performance/), [what it costs](https://www.nuthatch-indexer.com/docs/operate/costs/).
+- [Run many nests](https://www.nuthatch-indexer.com/docs/operate/many-nests/), [host nests for others](https://www.nuthatch-indexer.com/docs/operate/hosting-nests/), [the registry](https://www.nuthatch-indexer.com/docs/operate/registry/).
+- [Upgrading a nest](https://www.nuthatch-indexer.com/docs/operate/upgrades/), [verifying a deployment](https://www.nuthatch-indexer.com/docs/operate/verifying/), [troubleshooting](https://www.nuthatch-indexer.com/docs/operate/troubleshooting/).
+- [Scaled mode](https://www.nuthatch-indexer.com/docs/operate/scaled/): the fleet.
+- [Agent-grade MCP](https://www.nuthatch-indexer.com/docs/ai/mcp/), [llms.txt in a nest](https://www.nuthatch-indexer.com/docs/ai/llms-txt/), [the builder skill](https://www.nuthatch-indexer.com/docs/ai/builder-skill/).
+- [The book](https://www.nuthatch-indexer.com/docs/book/): why the machine is shaped as it is, read against 4.10.1.
+- [Architecture](https://www.nuthatch-indexer.com/docs/contributing/architecture/) and [RFCs](https://www.nuthatch-indexer.com/docs/contributing/rfcs/).
 
 ## Links
 
 - Website: https://www.nuthatch-indexer.com/
-- Install guide: https://www.nuthatch-indexer.com/install
-- Worked example (contract to nest): https://www.nuthatch-indexer.com/example
-- Who runs Nuthatch (personas): https://www.nuthatch-indexer.com/stories
+- Worked example (USDC, contract to nest): https://www.nuthatch-indexer.com/example
+- Public mirror: https://www.nuthatch-indexer.com/mirror
+- Who runs it: https://www.nuthatch-indexer.com/stories
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
-- Manifesto: https://www.nuthatch-indexer.com/manifesto
-- Nuthatch and The Graph (complements, not competitors): https://www.nuthatch-indexer.com/the-graph
-- Source and docs: https://github.com/nightswatchhq/nuthatch
+- Nuthatch and The Graph: https://www.nuthatch-indexer.com/the-graph
+- Source and release notes: https://github.com/nightswatchhq/nuthatch
 - Full description for models: https://www.nuthatch-indexer.com/llms-full.txt
 - Licence: MIT OR Apache-2.0
