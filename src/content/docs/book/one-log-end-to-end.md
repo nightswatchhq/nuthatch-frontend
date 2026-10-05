@@ -1,7 +1,7 @@
 ---
 title: "Appendix A. One log, end to end"
 description: "A close reading of the path from an RPC log to a row that survives sealing and can be queried."
-order: 10
+order: 11
 ---
 
 The architecture becomes less mysterious when reduced to one ordinary event. Take a real one: USDC
