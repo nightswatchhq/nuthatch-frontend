@@ -2,6 +2,7 @@
 title: "Troubleshooting"
 description: "RPC failover, stalls, corrupt-segment recovery, and common errors."
 order: 13
+checked: 4.10.1
 ---
 
 Symptom → what to look at (`/metrics`) → remedy. All series live on the running `dev`/`runtime` at
@@ -53,8 +54,8 @@ and the failure mode is worth knowing because **it does not always look like an 
   can fail partway.
 
 **Symptoms:** `nuthatch_last_block` barely moves while `nuthatch_rpc_requests_total` climbs; `/ready`
-reports `stalled` (no successful poll within the stall window); the log shows `all RPC endpoints
-unreachable` every ~60 s.
+reports `stalled` (no successful poll within the stall window); the log names each endpoint that
+refused the window.
 
 **Remedy - use your own endpoint:**
 
@@ -97,7 +98,7 @@ sealed Parquet to "fix" a reorg, the plan is wrong - the hot store already handl
 - **504, 30 s timeout** - the query is too heavy. Add a `WHERE`/`LIMIT`, aggregate with `GROUP BY`, or
   validate cheaply with [`/explain`](/docs/reference/http-api/) first.
 - **Binder and parse errors come back with a fix hint** derived from the real schema: an unknown
-  table suggests the nearest real one, `from`/`to` suggests double-quoting, `sum(value)` suggests
+  table suggests the nearest real one, a bare `from` suggests double-quoting, `sum(value)` suggests
   `value_dec`. Follow the hint.
 
 ## RAM near the 2 GB budget

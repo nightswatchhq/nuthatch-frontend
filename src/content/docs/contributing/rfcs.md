@@ -2,6 +2,7 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
+checked: 4.10.1
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
@@ -70,8 +71,10 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0029 The fastest indexer** *(Implemented; all 5 slices)* - found by running someone else's
   benchmark, Sentio's OBIB. Case 1 did not merely run slowly, it **never finished**: Alchemy returns
   its oversized-range refusal as HTTP 400, which the classifier did not enumerate, so a window that
-  needed splitting was retried unchanged forever. It now completes in **74.8 s for 294,278 events in
-  321 RPC requests** - the record count matching Sentio's own README.
+  needed splitting was retried unchanged forever. It now completes with the record count Sentio's own
+  README gives, 294,278 events; the timings once quoted here came from an Alchemy account since closed
+  and are withdrawn (#1844). The reproducible figure is OBIB case 6, on
+  [Performance](/docs/operate/performance/).
 - **0030 Adding EVM chains** *(Implemented)* - the registry, the endpoint bar, and Gnosis first;
   `nuthatch doctor --rpc` makes that bar self-service, and Gnosis clears it comfortably.
 - **0031 Optimism and Polygon** *(Deferred 2026-09-08; Optimism implemented, Polygon shipped but not
@@ -130,8 +133,9 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Draft)*.
 - **0058 Cross-nest SQL** *(Accepted, then parked 2026-09-26 with no user)* - a declared read-only
   query across mounts in one runtime.
-- **0059 Checkpointed folds** / **0060 The Network Subgraph endpoint** *(Accepted, behind the
-  off-by-default `folds` and `graph` features)*.
+- **0059 Checkpointed folds** / **0060 The Network Subgraph endpoint** *(Accepted 2026-09-21, behind
+  the off-by-default `folds` and `graph` features; parked in full 2026-09-26 after 0059's S3)* - what
+  was built stays in the tree; nothing further is started.
 - **0061 256-bit values stay decimal text** *(Accepted 2026-09-23)* - no segment-format change.
 
 ## Conventions

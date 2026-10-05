@@ -2,6 +2,7 @@
 title: Storage & sealing
 description: A hot redb tip store, content-addressed Parquet sealed past finality, unified behind one SQL surface.
 order: 3
+checked: 4.10.1
 ---
 
 Nuthatch stores data in two tiers, split at the finality boundary - and glues them behind one SQL
@@ -20,7 +21,9 @@ Once a block range passes finality (a conservative depth), its rows are **sealed
 **content-addressed** (`sha256`) zstd **Parquet** segment under `segments/`, catalogued in
 `manifest.json` with block bounds and row count. Segments sealed before 3.7.0 are Snappy; a nest
 holding both serves across the seam. A monotonic `sealed_through` watermark advances so each
-range seals exactly once, and the sealed rows are then pruned from the hot store.
+range seals exactly once, and the sealed rows are then pruned from the hot store. A table with fewer
+than 1,000 final rows (or 16 MiB) at a cut is sealed provisionally and folded into its next cut, so a
+quiet nest keeps its tip in redb a while before its first segment appears.
 
 Because a segment's identity is a hash over its bytes, the same range always produces the same segment -
 on any machine, on any run. That's what makes segments *reusable* across nest versions (see

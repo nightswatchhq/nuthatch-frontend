@@ -2,6 +2,7 @@
 title: "Deploy it"
 description: systemd, Docker, and a reverse proxy - the whole distance from "it works on my laptop" to "it is running on my box".
 order: 2
+checked: 4.10.1
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one

@@ -2,6 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
+checked: 4.10.1
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:
@@ -31,7 +32,7 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 - `GET /sql?q=…&max_rows=N` - read-only SQL over the live tip ∪ sealed history (SELECT/WITH only).
   Guarded: 30 s timeout, row cap (50,000 max; `max_rows` asks for less), 64 MiB result-byte cap, 2 concurrent.
   A query cut off by the timeout is answered with 504, one that spills more than the analytics spill
-  cap to temporary storage (`analytics.max_temp_size`, 2 GB by default) with 507, and a malformed one
+  cap to temporary storage (`NUTHATCH_ANALYTICS_MAX_TEMP_SIZE`, 2 GB by default) with 507, and a malformed one
   with 400. Results
   carry a **provenance stamp**: `as_of`, `sealed_through`, `source`, `nid` and `registry_hash`,
   so a figure can be cited against a fixed watermark. It does not list the segments read. See
