@@ -2,6 +2,7 @@
 title: Quickstart
 description: From a contract address to a live, queryable indexer in under two minutes.
 order: 1
+checked: 4.10.1
 ---
 
 This is the golden path: from a bare contract address to a decoded, tip-following, queryable API - on
@@ -32,7 +33,8 @@ no API key required for a verified contract.
 nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet
 ```
 
-You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `views/`, `llms.txt`.
+You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `semantic.toml`, `views/`,
+`llms.txt` and a `.claude/skills/nuthatch/` skill for a coding agent.
 
 `--alias` is the table prefix, so this contract's events land in `weth__transfer`, `weth__approval`,
 and so on. Leave it out and the alias is the contract name from the ABI in snake_case
@@ -66,11 +68,13 @@ seconds. Without the flag `dev` backfills from the contract's deployment block. 
 Point-read an entity, run analytical SQL over the hot tip ∪ sealed history, or read a derived view.
 
 ```sh
-nuthatch sql 'SELECT "to", value FROM weth__transfer ORDER BY block_number DESC LIMIT 5'
+nuthatch sql 'SELECT dst, wad FROM weth__transfer ORDER BY block_number DESC LIMIT 5'
 ```
 
-`to` and `from` are SQL reserved words, so double-quote them. nuthatch spots this one and tells you
-so rather than just failing.
+WETH names its `Transfer` fields `src`, `dst` and `wad`, and every decoded column keeps its ABI name.
+Most ERC-20s name them `from`, `to` and `value`; `from` is a SQL reserved word, so double-quote it
+(`SELECT "from", value …`). nuthatch spots a bare `from` and tells you to quote it rather than just
+failing.
 
 …or over HTTP:
 
