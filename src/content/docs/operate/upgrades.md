@@ -2,6 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
+checked: 4.10.1
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -102,7 +103,10 @@ curl -XPOST localhost:8288/_admin/move/usdc -H "Authorization: Bearer $NUTHATCH_
 ```
 
 It is a job, readable at `GET /_admin/mounts/usdc`. A move keeps its chain, and it does not classify
-compatibility the way `nuthatch migrate` does: it serves the new identity under the old name. See
+compatibility the way `nuthatch migrate` does: it serves the new identity under the old name. Nor does
+it adopt the old dataset: that store is locked while the old nest serves, so the new nest indexes from
+its own start (or the runtime's `--backfill`) beside it, and the dataset adoption below is for
+`nuthatch migrate` on a stopped runtime. See
 [Host nests for others](/docs/operate/hosting-nests/).
 
 ## Why an edit usually costs nothing

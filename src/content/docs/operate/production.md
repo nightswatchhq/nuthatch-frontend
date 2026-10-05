@@ -2,6 +2,7 @@
 title: "Run it in production"
 description: The whole path from a fresh box to a nest serving unattended - endpoint check, layout, service, exposure, backups, alerts, and what to do when it breaks.
 order: 3
+checked: 4.10.1
 ---
 
 The other pages in this section each cover one surface. This one is the **path**: follow it top to
@@ -215,7 +216,7 @@ and query results you compare at a fixed watermark.
 ## 9. Prove it, do not assume it
 
 ```sh
-./scripts/verify.sh 0 4
+./scripts/verify.sh 0 1 2 3 4
 ```
 
 An acceptance runbook where every step is falsifiable, covering the artifact, a single nest,
