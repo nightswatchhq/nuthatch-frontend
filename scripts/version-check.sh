@@ -82,7 +82,11 @@ probe() {  # probe <file> <what> <grep-args...>  - the matched line must carry $
 probe src/pages/index.astro            "hero tag"                  -E 'class="tag"'
 probe src/pages/install.astro           "install page description"  -E '^  description="Install Nuthatch'
 probe src/pages/example.astro           "worked example"            -E 'current, executable path'
-probe src/layouts/DocsLayout.astro      "docs verification"         -E 'Checked against Nuthatch'
+# A docs page stamps the release it was checked against in its frontmatter (`checked: 4.10.1`, #81).
+# A page without the field makes no claim; one with it must name the current release.
+for f in $(grep -rlE "^checked: " src/content/docs); do
+  probe "$f" "page checked against" -E "^checked: "
+done
 probe src/layouts/BookLayout.astro      "book kicker"               -E 'class="book-kicker"'
 probe src/content/docs/book/index.md    "book describes"            -E 'It describes Nuthatch'
 probe src/pages/book/print.astro        "print edition version"     -E '<span>Version '

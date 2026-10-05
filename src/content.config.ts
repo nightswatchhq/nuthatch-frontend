@@ -10,6 +10,9 @@ const docs = defineCollection({
     title: z.string(),
     description: z.string(),
     order: z.number().default(99),
+    // The release the page was last checked against by running what it describes (#81). A page
+    // without it makes no claim and carries no stamp.
+    checked: z.string().optional(),
   }),
 });
 

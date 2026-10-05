@@ -9,9 +9,11 @@ interface Props {
   description?: string;
   slug: string;
   headings?: Array<{ depth: number; slug: string; text: string }>;
+  checked?: string;
 }
-const { title, description, slug, headings = [] } = Astro.props;
-const showVerification = slug.startsWith('operate/') || slug.startsWith('reference/');
+const { title, description, slug, headings = [], checked } = Astro.props;
+// A page stamps the release it was checked against (frontmatter `checked`, #81). Until every
+// operate/ and reference/ page carries one, those sections keep the older section-wide line.
 
 // The docs IA: sidebar groups, in order. Each group's pages come from `src/content/docs/<dir>/`,
 // ordered by the page's `order` frontmatter. Single source of truth - add a page, it appears.
@@ -65,7 +67,7 @@ const groups = GROUPS.map((g) => ({
       <article class="prose docs-content">
         <h1>{title}</h1>
         <slot />
-        {showVerification && <p class="docs-verified">Checked against Nuthatch 4.10.1. Verify a release-specific command with the <a href="/docs/reference/cli/">CLI reference</a> before running it in production.</p>}
+        {checked && <p class="docs-verified">Checked against Nuthatch {checked}. Verify a release-specific command with the <a href="/docs/reference/cli/">CLI reference</a> before running it in production.</p>}
       </article>
       <DocsToc headings={headings} />
     </div>

@@ -2,6 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
+checked: 4.10.1
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
