@@ -2,6 +2,7 @@
 title: ABIs, events & tables
 description: How decoded events become SQL tables - one table per event, with implicit columns.
 order: 2
+checked: 4.10.1
 ---
 
 Nuthatch is a log indexer: it turns a contract's **events** into **SQL tables**. This page explains the
@@ -24,7 +25,7 @@ columns `from`, `to`, `value`.
 
 The table exists even before that event has fired. It resolves as an empty typed view, so an authored
 view may safely refer to a rare event from the first run rather than failing to load until the first
-matching log happens to arrive. Startup logs name declared tables which are currently empty.
+matching log happens to arrive.
 
 ## Implicit columns
 
@@ -43,9 +44,11 @@ Every table also carries the same implicit columns, before the event's own field
 ## Column types
 
 Decoded fields keep their Solidity types. Wide integers (`uint256`, and anything over 64 bits) are
-stored as an exact decimal string, with a derived `{col}_dec` DECIMAL column for numeric use. A value
-over 38 digits exceeds `DECIMAL(38,0)`, and there is no exact substitute in SQL: `HUGEINT` is signed
-128-bit, so it overflows at the same order of magnitude, and `DOUBLE` holds any size but loses
+stored as an exact decimal string, with a derived `{col}_dec` DECIMAL column for numeric use and a
+`{col}_overflow` boolean beside it. A value over 38 digits exceeds `DECIMAL(38,0)`: its `_dec` is NULL
+and `_overflow` is true, so `SUM({col}_dec)` is the sum of the values that fit, and `WHERE NOT
+{col}_overflow` says so. There is no exact substitute in SQL: `HUGEINT`, which Burrmill accepts, is
+signed 128-bit, so it overflows at the same order of magnitude, and `DOUBLE` holds any size but loses
 precision past about 15 digits. Keep the decimal string when exactness matters.
 See [The SQL surface](/docs/reference/sql/).
 
