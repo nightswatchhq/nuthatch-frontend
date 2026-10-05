@@ -13,10 +13,11 @@ capable of expressing both a simple point lookup and a careful event-derived cal
 
 Every selected event has a table, including an event which the contract has not emitted yet. In
 that case the table is present and empty, rather than appearing only on the day the first log
-arrives. The table contains decoded event fields and chain coordinates: block number, transaction
-hash, log index, emitting address and related identity information. These columns let a consumer
-order simultaneous events, trace a result back to a transaction and decide how to display the
-distance from finality.
+arrives. The table contains decoded event fields and chain coordinates: block number, block hash,
+block timestamp (on unless the nest was scaffolded with `--no-timestamps`), transaction hash, log
+index, emitting address and a sequence number. There is no transaction index; the log index is
+block-wide, so it alone orders a block. These columns let a consumer order simultaneous events,
+trace a result back to a transaction and decide how to display the distance from finality.
 
 Raw tables are the audit trail. They may not be the API a product wants to hand to a browser, and
 that is quite all right. They are the stable base upon which a product-specific interface can be
@@ -57,7 +58,9 @@ same 82-row rewards result moved from 2.15 seconds at p50 as a view to 87.7 ms a
 
 That comes with an operator's obligations. The declared maximum rows is a hard admission bound, a
 fault quarantines rather than serving a frozen answer, and a restart seeds the entity from locally
-stored facts before serving it. The [entities guide](/docs/build/entities/) spells out those limits.
+stored facts before serving it. The maintained relation is read by key under `/derived` and by
+name from `/sql`, beside the decoded tables. The [entities guide](/docs/build/entities/) spells out
+those limits.
 
 ## Serving safely
 
@@ -68,9 +71,12 @@ these local resource bounds, while a gateway in front supplies authentication, r
 tenant policy.
 
 The HTTP API offers conventional endpoints for discovery and tables as well as `/sql`. Admin routes
-are a distinct surface and may mutate runtime state, such as mounting or unmounting a dataset. It
-is important not to describe the whole server as “read-only” merely because its data API is. The
-administrator can make changes, so the administrative listener needs the corresponding protection.
+are a distinct set of routes under `/_admin`, and they may mutate runtime state, such as mounting or
+unmounting a dataset. They are not a separate listener: they sit on the same port as the data API,
+and the binary mounts them only when that port is loopback or an admin token has been set in the
+environment, with `--no-admin` to leave them out altogether. It is important not to describe the
+whole server as "read-only" merely because its data API is. The administrator can make changes, so
+the port that carries the admin routes needs the corresponding protection.
 
 MCP and semantic descriptions provide more guided access for agents and tools. They are not a
 second data model. They describe and query the same underlying tables, views and entities.
