@@ -1,0 +1,30 @@
+{
+  "base": "https://pub-bc282d5016f242a783a6c28cbcd4401a.r2.dev",
+  "live": true,
+  "datasets": [
+    {
+      "nest": "graph-gns-nest",
+      "repo": "https://github.com/nightswatchhq/graph-gns-nest",
+      "dataset": "494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7bf115a9b15c7",
+      "commit": "33d010ff69b526a838f68384625144a7b421bc3a"
+    },
+    {
+      "nest": "graph-allocations-nest",
+      "repo": "https://github.com/nightswatchhq/graph-allocations-nest",
+      "dataset": "",
+      "commit": ""
+    },
+    {
+      "nest": "dips-nest",
+      "repo": "https://github.com/nightswatchhq/dips-nest",
+      "dataset": "9bd4bdc1c7a51ed7b4364e25c7502d8973ba2233e9189051c44934fa6768b81c",
+      "commit": "0cf0ec2c7b1a2e1504c2fc3bd5e0d8b90f725a9b"
+    },
+    {
+      "nest": "data-services-nest",
+      "repo": "https://github.com/nightswatchhq/data-services-nest",
+      "dataset": "02bd0eba7421efe1e3f7736db8ef2533033cdc18dbebecf78ab1b695fff2f64a",
+      "commit": "9696cb4beb1d5220e21c09c05d5875e6ea02c3a3"
+    }
+  ]
+}
