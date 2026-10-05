@@ -1,7 +1,7 @@
 ---
-title: "8. Operating a truthful index"
+title: "9. Operating a truthful index"
 description: "Verification, health, security and the habits that keep an index honest in production."
-order: 9
+order: 10
 ---
 
 An indexer can be available and wrong. It can answer HTTP requests while following the wrong chain,
@@ -27,6 +27,23 @@ fallback, exercise the exact named query and response shape the application will
 only proves that an endpoint returned 200 has the emotional comfort of a fire alarm with its
 batteries removed.
 
+Nuthatch's own releases are held to the same rule, and the way they are is worth copying. Since
+4.1.1 reached a production nest and refused its dashboard's join-heavy views within minutes, with
+every CI gate green, a release candidate is served over a copy of that nest, under the budget the
+nest runs on, and sent the 74 statements its consumers actually issue. Each answer is compared with
+the last release's by digest, not only by status, because 4.3.0 once passed every statement and
+served `NULL` for a column that had been populated the day before. A refusal, an error, an
+out-of-memory or a time past a stated bound turns the candidate red, and red stops the roll to
+production. The script is `scripts/release-gate.sh` in the repository, and the query set lives with
+the consumer that sends it. The habit generalises: gate on the answers your readers depend on, at
+the budget they are served under, and compare them with what was served yesterday.
+
+A nest seeded from someone else's mirror deserves one more question. The seed checks every file
+against the hash the catalogue names, and refuses a catalogue that overlaps itself or carries a
+provisional segment, so what arrived is what was published. Whether what was published is true to
+the chain is not something a hash can say. Spot-check a seeded range against an independent RPC
+before the nest serves anything a reader will act on.
+
 ### Verify the endpoint, and then verify it again later
 
 The package is not the only input. The RPC endpoint is one too, and it is the one that changes
@@ -36,14 +53,17 @@ without telling you.
 widest `eth_getLogs` range it will serve, the largest JSON-RPC batch it accepts, and whether it has
 archive depth. Each of those limits otherwise surfaces mid-backfill as a retry loop that looks
 exactly like slowness, which is the worst way to learn it. Run it as `nuthatch doctor --dir <nest>`,
-without `--rpc`, and it probes the nest's own endpoints with the full declared contract filter the
-nest will actually issue, rather than an empty one or the first contract in the file. With an
-explicit `--rpc`, pass `--address` too; otherwise the probe is range-only, and doctor says so.
+without `--rpc`, and it probes the nest's own endpoints filtered to every address the nest declares,
+rather than an empty filter or the first contract in the file. With an explicit `--rpc` and no
+`--address`, doctor samples the endpoint for its busiest address and re-probes with that, so the
+figure it recommends reflects a result-count limit as well as a range limit; pass `--address` when
+you would rather it probed with yours.
 
 It prints two window figures, and they mean different things. `up to N blocks` is what the endpoint
-served. `recommend --window M` is what to set: from an address-filtered probe it is half the measured
-limit, and from a range-only probe it is capped at 320, because a probe without an address cannot see
-the result-count limit a real nest meets. Read the recommendation as a starting point that holds, and
+served. `recommend --window M` is what to set: half the measured limit from an address-filtered
+probe. Only when doctor could find no address to probe with does it fall back to a range-only
+figure, capped at 320 and labelled as such, because a probe without an address cannot see the
+result-count limit a real nest meets. Read the recommendation as a starting point that holds, and
 re-probe with `--address` for a figure that reflects both limits.
 
 The part worth building a habit around is the second probe. Nuthatch ships measured endpoints for
@@ -71,10 +91,12 @@ reconsider the mounting budget before the machine makes the decision rather more
 ## Secure the separate surfaces
 
 The data API is read-only, but a runtime may also expose administrative routes that mount or remove
-nests. Do not put an unauthenticated administrative listener on the public internet and then feel
-surprised when somebody experiments with it. Restrict the listener, use a gateway where public
-access is needed, and keep database credentials and RPC URLs in deployment configuration rather
-than the nest package.
+nests, on the same port. The binary refuses to mount them off loopback unless `NUTHATCH_ADMIN_TOKEN`
+is set, and then checks the token on every admin request; `--no-admin` leaves them out entirely.
+Do not undo that care by putting a token-bearing port on the public internet and then feel
+surprised when somebody experiments with it. Restrict the port, use a gateway where public access is
+needed, and keep database credentials and RPC URLs in deployment configuration rather than the nest
+package.
 
 SQL needs its own care. General SQL is powerful enough to consume resources even when it cannot
 write. Use named queries or an allowlist for public services. Keep the node's built-in timeout,

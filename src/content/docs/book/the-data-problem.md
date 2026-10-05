@@ -63,6 +63,11 @@ This bounded scope gives Nuthatch several useful properties:
 - The operator owns availability. An application may query its own machine or an API it controls.
 - Historical data can be sealed and retained without keeping a full node or a bespoke database
   cluster alive forever.
+- Sealed history travels. Since 4.9.0 an operator can publish a nest's sealed segments as a
+  mirror, and another operator can seed a new nest from it instead of backfilling over RPC, with
+  every file checked against the content address the catalogue names. What the hashes do not
+  prove is that the catalogue is true to the chain; that remains the reader's question to ask of
+  whoever published it.
 
 The machine does not know the business meaning of an event. It knows how to preserve and present it
 without quietly changing its mind. The semantic layer belongs in views and application code, where
