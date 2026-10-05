@@ -2,13 +2,14 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
+checked: 4.10.1
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
 follows one log entry from an RPC response to a row someone queries, then covers what each component
 refuses to do, which is usually the more interesting half.
 
-Line counts are given as a sense of weight, not a metric. The crate's `src/` alone is about 140,000 lines of Rust.
+Line counts are given as a sense of weight, not a metric. The crate's `src/` alone is about 150,000 lines of Rust.
 
 ## The shape of it
 
