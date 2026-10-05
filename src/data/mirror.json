@@ -1,0 +1,10 @@
+{
+  "base": "",
+  "live": false,
+  "datasets": [
+    { "nest": "graph-gns-nest", "repo": "https://github.com/nightswatchhq/graph-gns-nest", "dataset": "" },
+    { "nest": "graph-allocations-nest", "repo": "https://github.com/nightswatchhq/graph-allocations-nest", "dataset": "" },
+    { "nest": "dips-nest", "repo": "https://github.com/nightswatchhq/dips-nest", "dataset": "" },
+    { "nest": "data-services-nest", "repo": "https://github.com/nightswatchhq/data-services-nest", "dataset": "" }
+  ]
+}

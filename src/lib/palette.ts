@@ -21,6 +21,7 @@ const PAGES: Omit<PaletteItem, 'kind'>[] = [
   { title: 'Book', url: '/docs/book', note: 'A guided tour of how Nuthatch turns chain logs into durable, queryable data' },
   { title: 'Worked example', url: '/example', note: 'Index USDC from its contract address, then choose a view or an entity', also: 'tutorial usdc' },
   { title: 'Nests', url: '/nests', note: 'The catalogue of prebuilt indexing definitions', also: 'catalogue registry' },
+  { title: 'Mirror', url: '/mirror', note: 'Seed a nest from published history instead of an RPC backfill', also: 'seed backfill snapshot download' },
   { title: 'Blog', url: '/blog', note: 'Field notes from running Nuthatch in production', also: 'posts news' },
   { title: 'Stories', url: '/stories', note: 'Who runs Nuthatch: app backends, analysts and agents', also: 'use cases personas' },
   { title: 'Roadmap', url: '/roadmap', note: 'What is shipped, in progress and planned', also: 'rfcs plans' },

@@ -1,0 +1,176 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CodeCard from '../components/CodeCard.astro';
+import { mirrorBase, mirrorEntries, mirrorLive } from '../lib/mirror';
+
+const entries = await mirrorEntries();
+const fmt = (n?: number) => (n === undefined ? '-' : n.toLocaleString('en-GB'));
+const chains: Record<number, string> = { 1: 'Ethereum', 42161: 'Arbitrum One', 8453: 'Base' };
+const day = (iso?: string) => (iso ? iso.slice(0, 10) : '-');
+const base = mirrorBase || 'https://mirror.nuthatch-indexer.com';
+const seedCommand = (e: (typeof entries)[number]) =>
+  `git clone ${e.repo}
+nuthatch seed --from ${base} --dir ${e.nest}
+nuthatch dev --dir ${e.nest}`;
+---
+<Layout
+  path="/mirror"
+  title="Public mirror - Nuthatch"
+  description="Start a nest from indexed history someone has already paid for. Download a published mirror, check every file against its hash, and follow the chain from where it ends."
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">Mirror</p>
+      <h1>Start from history, not from block zero</h1>
+      <p class="lede">
+        A backfill is the expensive part of running a nest: a million RPC credits for the larger Graph
+        Protocol nests, every one of them buying history somebody has already indexed. The public mirror
+        holds that history. <code>nuthatch seed</code> downloads it, checks every file against its
+        content address, and leaves your nest following the chain from the block where the mirror ends.
+      </p>
+
+      {!mirrorLive && (
+        <p class="pending">
+          The public bucket is not open yet. The nests below will be mirrored from the Lodestar
+          deployment once it is, and this page fills in their figures at the next build.
+        </p>
+      )}
+
+      <div class="how">
+        <div class="steps">
+          <div>
+            <span class="cap">1 · the nest</span>
+            <p>Clone the nest exactly as published. The mirror is found by the nest's data identity, so an edited copy finds nothing.</p>
+          </div>
+          <div>
+            <span class="cap">2 · the history</span>
+            <p>Seed downloads the sealed segments, refuses any file that does not hash to its address, and resumes if interrupted.</p>
+          </div>
+          <div>
+            <span class="cap">3 · the tip</span>
+            <p>Dev follows the chain from the next block, over your own RPC. Catching up a day costs a few hundred calls.</p>
+          </div>
+        </div>
+      </div>
+
+      <ul class="grid">
+        {entries.map((e) => (
+          <li class="nest" id={`mirror-${e.nest}`}>
+            <div class="nest-top">
+              <h3>{e.nest}</h3>
+              {e.completeThrough !== undefined ? (
+                <span class="badge status--available">published {day(e.publishedAt)}</span>
+              ) : (
+                <span class="badge status--planned">{e.error ? 'unreadable' : 'not yet published'}</span>
+              )}
+            </div>
+
+            {e.completeThrough !== undefined && (
+              <dl class="figures">
+                <div><dt>chain</dt><dd>{chains[e.chainId ?? 0] ?? e.chainId}</dd></div>
+                <div><dt>history</dt><dd>{fmt(e.indexedFrom)} to {fmt(e.completeThrough)}</dd></div>
+                <div><dt>rows</dt><dd>{fmt(e.rows)}</dd></div>
+                <div><dt>files</dt><dd>{fmt(e.segments)} segments, {fmt(e.tables)} tables</dd></div>
+              </dl>
+            )}
+
+            <div class="cmd">
+              <CodeCard code={seedCommand(e)} lang="bash" label="shell" />
+              <a class="repolink" href={e.repo} rel="noopener">{e.repo.replace('https://github.com/', '')} ↗</a>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div class="notes">
+        <section>
+          <h2>What the hashes prove</h2>
+          <p>
+            That every file is the one the publisher wrote, and that nothing was swapped on the way. They
+            do not prove the publisher indexed the chain correctly. Seed from a mirror run by someone you
+            would trust to run the nest for you, or re-index a sample of it yourself and compare.
+          </p>
+        </section>
+        <section>
+          <h2>Publish your own</h2>
+          <p>
+            Any nest can be a mirror. Run it with <code>--publish-target s3://your-bucket/prefix</code>, or
+            run <code>nuthatch publish sync</code> on a stopped one, and point people at the bucket's public
+            address. The mirror is append-only and costs nothing to read from a bucket that does not charge
+            for downloads. The <a href="https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#data-lifecycle" rel="noopener">operator guide</a> has the bucket policy.
+          </p>
+        </section>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.8rem; }
+  .lede {
+    color: var(--text-muted); font-size: 1.08rem; line-height: 1.7;
+    margin-bottom: 2rem; max-width: 62ch;
+  }
+  code {
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em;
+  }
+  .pending {
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+    background: color-mix(in srgb, var(--warn) 8%, transparent);
+    border-radius: var(--radius); padding: 0.9rem 1.1rem; margin-bottom: 2rem;
+    color: var(--text-muted); font-size: 0.94rem; line-height: 1.6; max-width: 70ch;
+  }
+  .how {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-elev); padding: 1.4rem 1.5rem; margin-bottom: 2.5rem;
+  }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.2rem; }
+  .steps p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
+  .cap {
+    display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-faint); margin-bottom: 0.5rem;
+  }
+  .grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 1rem;
+  }
+  .nest {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-elev); padding: 1.2rem 1.25rem 1.3rem;
+    display: flex; flex-direction: column; scroll-margin-top: 74px;
+    transition: border-color 0.18s var(--ease);
+  }
+  .nest:hover { border-color: var(--border-hi); }
+  .nest-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+  .nest-top h3 { font-size: 1.1rem; color: var(--text); overflow-wrap: anywhere; }
+  .badge {
+    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.18rem 0.5rem; border-radius: 9999px; border: 1px solid transparent;
+  }
+  .status--available { color: var(--ok); background: var(--pale-green-bg); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+  .status--planned { color: var(--text-faint); border-color: var(--border); }
+  .figures { margin: 1rem 0 0; display: grid; gap: 0.35rem; }
+  .figures div { display: flex; gap: 0.8rem; font-size: 0.86rem; }
+  .figures dt {
+    width: 4.5rem; flex-shrink: 0; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint); padding-top: 0.15rem;
+  }
+  .figures dd { margin: 0; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+  .cmd { margin-top: auto; padding-top: 1.1rem; }
+  .repolink {
+    display: inline-block; margin-top: 0.5rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted);
+  }
+  .repolink:hover { color: var(--accent); }
+  .notes {
+    margin-top: 3.5rem; display: grid; gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  }
+  .notes h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
+  .notes p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0; }
+</style>
