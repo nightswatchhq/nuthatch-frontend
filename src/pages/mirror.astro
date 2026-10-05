@@ -25,8 +25,8 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
       <p class="section-label">Mirror</p>
       <h1>Start from history, not from block zero</h1>
       <p class="lede">
-        A backfill is the expensive part of running a nest: a million RPC credits for the larger Graph
-        Protocol nests, every one of them buying history somebody has already indexed. The public mirror
+        A backfill is the expensive part of running a nest: about a million RPC credits for the Lodestar allocations
+        nest (the 4.9.0 release notes), every one of them buying history somebody has already indexed. The public mirror
         holds that history. <code>nuthatch seed</code> downloads it, checks every file against its
         content address, and leaves your nest following the chain from the block where the mirror ends.
       </p>
@@ -50,7 +50,7 @@ FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7b
           </div>
           <div>
             <span class="cap">3 · the tip</span>
-            <p>Dev follows the chain from the next block, over your own RPC. Catching up a day costs a few hundred calls.</p>
+            <p>Dev follows the chain from the next block, over your own RPC. Seeding graph-gns-nest and catching up to the tip took six RPC calls (4.9.0 release notes).</p>
           </div>
         </div>
       </div>

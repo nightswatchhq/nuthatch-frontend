@@ -17,7 +17,7 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
 <Layout
   path="/example"
   title="From contract to nest: indexing USDC - Nuthatch"
-  description="A worked Nuthatch example: index USDC from its contract address, inspect raw event tables, and choose an authored view or maintained entity. Runs on Nuthatch v4.7.0."
+  description="A worked Nuthatch example: index USDC from its contract address, inspect raw event tables, and choose an authored view or maintained entity. Runs on Nuthatch v4.10.1."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -45,6 +45,11 @@ const httpQuery = `curl -G 'http://127.0.0.1:8288/sql' \\
         <code>init</code> vendors the ABI, records the chain and contract in
         <code>nuthatch.toml</code>, and writes the schema and authoring files. The explicit
         <code>--alias usdc</code> gives the event tables stable, readable names.
+      </p>
+      <p>
+        USDC is a proxy, so <code>init</code> also warns that events before block 18,921,498, when the
+        current implementation was deployed, will not decode under this scaffold. Add the earlier ABI
+        as a second contract entry before trusting historical totals.
       </p>
       <CopyBlock command="nuthatch dev --backfill 300" />
       <p>

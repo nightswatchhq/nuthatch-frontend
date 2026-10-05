@@ -38,7 +38,7 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
 <Layout
   path="/nests"
   title="Nests - Nuthatch"
-  description="The nest catalogue: prebuilt indexing definitions for the protocols people usually rent The Graph or Goldsky for. Self-hosted, content-addressed, nothing phoning home."
+  description="The nest catalogue: prebuilt indexing definitions for contracts and protocols, each a git repository you clone and run yourself. Self-hosted, content-addressed, nothing phoning home."
 >
   <section class="page">
     <div class="wrap">
@@ -46,8 +46,9 @@ const tierLabel = (t: number) => (t === 0 ? 'Tier 0 · beachhead' : `Tier ${t}`)
       <h1>The nest catalogue</h1>
       <p class="lede">
         A <strong>nest</strong> is a packaged indexing definition - ABIs, decoded event tables and
-        declarative views - for a contract or protocol. Point Nuthatch at one and you get a
-        self-hosted equivalent of the subgraph you'd otherwise rent.
+        declarative views - for a contract or protocol. Point Nuthatch at one and the contract's
+        decoded events and views land in a database on your own machine, where you might otherwise
+        query a subgraph someone else runs.
       </p>
 
       <div class="how">

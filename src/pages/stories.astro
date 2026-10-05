@@ -24,7 +24,7 @@ const mcpConfig = `{
 <Layout
   path="/stories"
   title="Who runs Nuthatch - Nuthatch"
-  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v4.7.0; GraphQL is only a partial, parked read surface."
+  description="Three workflows through Nuthatch's three front doors: a read-only SQL endpoint for app backends, published nests for analysts, and MCP for agents. Illustrative personas, current for Nuthatch v4.10.1; GraphQL is only a partial, parked read surface."
 >
   <section class="page">
     <article class="wrap narrow prose">
@@ -78,25 +78,23 @@ const mcpConfig = `{
       </div>
 
       <div class="in-production">
-        <h2>At ETHOnline 2026: Arcaidia</h2>
+        <h2>At ETHOnline 2026: Arcaidia (retired)</h2>
         <p>
-          Also real, and now finished. <a href="https://arcaidia.io" rel="noopener">Arcaidia</a> is a speed
-          layer over Circle's CCTP between Ethereum Sepolia and Arc Testnet: an autonomous solver
-          advances USDC from a liquidity vault in seconds, and canonical CCTP settlement repays the
-          vault minutes later. Its solver discovered intents from two Nuthatch nests, its settlement
-          agent tracked CCTP through them, and its web console rendered fills, settlements and vault
-          history from them, all over <code>/sql</code>. Nine vaults across the two chains, every one
-          found from the factory's own events rather than listed by hand.
+          This one is over. <a href="https://arcaidia.io" rel="noopener">Arcaidia</a> was a speed
+          layer over Circle's CCTP between Ethereum Sepolia and Arc Testnet, and its builder needed
+          an indexer for a hackathon. Two nests, one per chain, reproduced his subgraph's entities
+          and the pending-intents query his agent polled as SQL views, served over
+          <code>/sql</code>.
         </p>
         <p class="prod-box">
           It began with a rate limit. Subgraph Studio's development endpoint allows 3,000 queries a
           day, the app needed about 120,000, and Arc Testnet has no paid tier to buy. The nests were
-          serving within two hours of the builder asking for a higher limit, and by 15 September they
-          had indexed about a thousand intents; a single console page sends 42 queries in its first
-          five seconds. Testnet, and hosted by us for the hackathon; the nests were stopped on
-          2026-09-29.
-          <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, and the
-          nest itself is <a href="https://github.com/nightswatchhq/arcaidia-nest" rel="noopener">published</a>.
+          serving within two hours of the builder asking for a higher limit. They were testnet nests
+          that Nightswatch ran for the hackathon, and they were stopped on 2026-09-29, when
+          Nightswatch stopped running nests for anyone.
+          <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, kept as a
+          record, and the nest itself is
+          <a href="https://github.com/nightswatchhq/arcaidia-nest" rel="noopener">published</a>.
         </p>
       </div>
 
@@ -124,8 +122,8 @@ const mcpConfig = `{
       </p>
       <CodeCard code={sqlCurl} lang="bash" label="the backend reads it over HTTP" />
       <p>
-        When Arbitrum reorgs, the affected rows retract and anything derived from them corrects
-        itself; the frontend never sees the wobble.
+        When the chain reorgs, the affected rows are rolled back and anything derived from
+        them is retracted.
       </p>
       <p>
         What she stopped doing: paying per entity for her own application's data, and trusting a
@@ -176,7 +174,7 @@ const mcpConfig = `{
       <p>
         The agent discovers the schema itself through the <code>schema</code> tool and composes
         queries through the <code>sql</code> tool, so when her user types "which indexers grew
-        delegation fastest this month?" it writes the query rather than guessing the shape.
+        delegation the most this month?" it writes the query rather than guessing the shape.
       </p>
       <p>
         Nothing leaves the machine: no API key, no per-query bill, and it works offline against
@@ -187,7 +185,7 @@ const mcpConfig = `{
       <p class="signoff">
         The pattern across all three: nobody deployed to someone else's platform, nobody got an
         API key, and nobody's story ends with a monthly invoice. To a frontend, Nuthatch looks
-        like a fast read-only database that fills itself from the chain and heals itself through
+        like a read-only database that fills itself from the chain and rolls back through
         reorgs. GraphQL is a partial read surface, and parked: an analytics client cannot adopt it
         unmodified, because GraphQL refuses a whole query for one field it cannot answer.
       </p>
