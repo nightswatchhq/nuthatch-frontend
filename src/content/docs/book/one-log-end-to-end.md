@@ -4,13 +4,16 @@ description: "A close reading of the path from an RPC log to a row that survives
 order: 10
 ---
 
-The architecture becomes less mysterious when reduced to one ordinary event. Suppose an ERC-20
-contract emits a `Transfer` log in block 19,000,100. The transaction succeeded, the receipt holds
-the log, and the chain's RPC can return it through `eth_getLogs`. What must happen before a reader
-can safely ask Nuthatch for that transfer?
+The architecture becomes less mysterious when reduced to one ordinary event. Take a real one: USDC
+emitted a `Transfer` log at index 663 of block 26,128,681 on Ethereum mainnet, 135 USDC from
+`0x58df…47af` to `0x64cd…9a53`, at 20:52:47 UTC on 2026-10-05. The transaction succeeded, the
+receipt holds the log, and the chain's RPC can return it through `eth_getLogs`. What must happen
+before a reader can safely ask Nuthatch for that transfer?
 
 The short answer is fetch, route, decode, order, persist, then eventually seal. The longer answer
-is worth knowing because each verb protects a different invariant.
+is worth knowing because each verb protects a different invariant. The figures below come from
+running the released 4.10.1 binary on a laptop against two public mainnet endpoints, with a nest
+scaffolded by `nuthatch init` for the USDC contract from 120 blocks behind the tip.
 
 ## 1. Fetch only a defined universe
 
@@ -29,13 +32,28 @@ An empty result still matters. The cursor must advance over a block range with n
 otherwise it would return to the same quiet range forever. Progress is about blocks successfully
 accounted for, not merely rows received.
 
+Where the nest declares `[extract] l1_blocks`, the window also fetches the header of every block
+that produced a row, so the L1 block it settled against is recorded beside the logs. That is the
+one case in which the fetch step reads more than `eth_getLogs`.
+
+As run: `init` resolved USDC's ABI through its proxy via Sourcify and wrote the nest in 4.4 s. `dev`
+reported `finality Depth(64), window 20`, had the API live within 0.2 s of starting, and announced
+`cold start: backfilling from block 26128556 (tip 26128677)`. Eight seconds later it was `caught up
+to tip at block 26128678 - 17881 events in 8s, 2321 ev/s`, seventeen tables' worth of rows across
+122 blocks, with the adaptive window reporting 22 blocks by the end. Eighteen seconds from an empty
+directory to a live, caught-up index is what the first-run promise looks like on a quiet afternoon.
+
 ## 2. Route and decode with a pinned registry
 
 For the transfer log, the registry looks at the emitting address and topic zero, identifies the
 `Transfer(address,address,uint256)` decoder from the vendored ABI, and decodes indexed and data
 fields into a typed row. It also supplies the implicit chain columns: block number, block hash,
-transaction hash, log index, address and, where configured, the block timestamp. There is no
-transaction index column; order within a block is the log index, which is block-wide.
+block timestamp (on unless the nest was scaffolded with `--no-timestamps`), transaction hash, log
+index, address and a sequence number. There is no transaction index column; order within a block is
+the log index, which is block-wide. The row for our transfer, read back from
+`/table/fiat_token_v2_2__transfer`, carries exactly those: `block_number` 26128681, `block_hash`
+`0x627b…5b50`, `block_timestamp` 1791233567, `tx_hash` `0xaca1…10c8`, `log_index` 663, `address`
+the USDC contract, and then `from`, `to` and `value` as the ABI names them.
 
 No schema inference happens at this point. The table layout was generated from the nest's inputs.
 An unknown event is not invited to become a new column because it happened to look interesting.
@@ -43,18 +61,22 @@ Likewise, a malformed log does not earn a creative interpretation. The point of 
 is that the mapping from byte sequence to row is reviewable and repeatable.
 
 Factories add one wrinkle. A factory event can discover child contracts which should be indexed
-thereafter. During backfill, Nuthatch performs discovery before the authoritative decode for the
-window so a child discovered in the window is already known when its own logs are decoded. The
-final row path remains the same. Discovery is not allowed to become a second, differently behaving
+thereafter. On the ordinary path, discovery happens inside the one decode pass, log by log in chain
+order, so a child created earlier in a window is known by the time its first log is reached. The
+direct-seal backfill, which fetches a window by topic alone, runs a discovery pass over the window
+first and discards its rows, then performs the authoritative decode with the children known, so a
+child discovered in the window is already known when its own logs are decoded. The final row path
+remains the same either way. Discovery is not allowed to become a second, differently behaving
 decoder.
 
 ## 3. Establish a canonical local order
 
 Providers are not entitled to return equivalent log sets in the same order. Nuthatch therefore
-sorts decoded rows by chain coordinates before writing or sealing. The salient ordering is block,
-transaction and log index. This is not cosmetic. A view calculating a balance, a factory registry
-or a content-addressed segment must behave the same when two RPC endpoints return the same chain
-facts in different sequence.
+sorts decoded rows by chain coordinates before writing or sealing. The ordering is block number,
+then log index, and the sealer breaks a tie on the row's canonical bytes; there is no transaction
+key, because the log index already orders a whole block. This is not cosmetic. A view calculating
+a balance, a factory registry or a content-addressed segment must behave the same when two RPC
+endpoints return the same chain facts in different sequence.
 
 This is also why concurrent backfill needs care. Fetches may happen in parallel, but their results
 must enter the sealing path in deterministic block order. Otherwise speed has changed the bytes of
@@ -64,9 +86,10 @@ would be a rather expensive way of saving a few seconds.
 ## 4. Commit to the hot store
 
 For an unfinalised block, the sorted row is written to the dataset's hot store alongside the cursor
-checkpoint. The write establishes two things together: the transfer is visible to live reads, and
-the cursor now has evidence of which chain block it believes it processed. A later reorg check
-compares that evidence with the chain's current answer.
+checkpoint. The write establishes two things together, in one transaction: the window's rows, the
+hash of its last block and the new last-block mark all land or none do. The transfer is then
+visible to live reads, and the cursor has evidence of which chain block it believes it processed. A
+later reorg check compares that evidence with the chain's current answer.
 
 Derived views and incremental state receive the same event in this phase. Their update is part of
 the reversible hot path. If the log later belongs to a discarded branch, the rollback replays its
@@ -75,10 +98,22 @@ not permitted to outlive the raw event it depends upon.
 
 ## 5. Seal after finality
 
-Once block 19,000,100 crosses the finality watermark, Nuthatch serialises its rows into a
-content-addressed Parquet segment. The segment is staged and verified; the seal manifest is updated
-only when the output is ready to become the committed sealed history. The matching hot rows can then
-be pruned. The event is no longer subject to ordinary reorg rollback.
+Once block 26,128,681 sits 64 blocks behind the tip it may be sealed, but it is not sealed yet.
+The sealer cuts a segment when the finalised rows held reach 20,000 or 64 MiB, or when they span
+the chain's seal span of 1,800 blocks; until then they stay in the hot store, with a checkpoint
+pinned at the finalised ceiling so a later reorg walk cannot step past the watermark. In the run,
+the nest had 14,403 transfer rows across 126 blocks and had sealed nothing, which `/ready` reported
+as `sealed_through: 0` beside `last_block: 26128681`.
+
+When the cut comes, Nuthatch serialises the rows into a content-addressed Parquet segment, written
+to a temporary name, fsynced and renamed into place, and only then rewrites the catalogue and swaps
+it in with one rename. The hash is computed from the bytes before they are written; re-hashing
+the file is the job of the startup integrity pass, not of the seal. The same hot-store transaction
+that advances the sealed watermark prunes the matching hot rows. The event is no longer subject to
+ordinary reorg rollback. On a fork of mainnet where the clock could be advanced, the same nest
+configuration reached its span cut at block 26,130,493 and wrote
+`fiat_token_v2_2__transfer-2d2d37dd….parquet`, 1,800 blocks of transfers in 32,940 bytes, then
+advanced the watermark on through the empty finalised tail to 26,130,693.
 
 `--seal-direct` uses the same sealed representation for old, already-final history, bypassing the
 hot store during an initial bulk backfill. It still resolves every declared `[[calls]]` input at its
@@ -91,8 +126,12 @@ recent, reversible blocks permanent.
 When a reader asks for the transfer or runs SQL over its table, the serving layer reads sealed
 segments and the hot tail as one logical surface. The response carries watermarks and source
 information so a caller can tell how current the answer is and whether the hot contribution was
-available. A hot-store failure must not quietly make a query look complete while returning only
-sealed history.
+available. A count over the table in the run came back with `provenance` naming `as_of` 26128681,
+`sealed_through` 0, `source` `hot+sealed`, the registry hash `0xce63…f128` and the nest's NID, and
+with `tip_unavailable: false`. A hot-store failure must not quietly make a query look complete
+while returning only sealed history, and in 4.10.1 it does not quite: a hot scan that fails answers
+from sealed rows alone with `tip_unavailable: true`, which is the field to read, while `source`
+still says `hot+sealed` and `degraded` stays false. That inconsistency is filed as nuthatch #1935.
 
 That final detail is representative of the design. A Nuthatch answer is useful not only because it
 contains a number, but because it can say which package decoded it, how far the cursor had reached
