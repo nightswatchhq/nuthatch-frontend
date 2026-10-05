@@ -9,9 +9,11 @@ which command and setting to use. This book explains why the machine is shaped a
 invariants it protects, and what each boundary buys you when something goes wrong at three in the
 morning.
 
-It describes Nuthatch 4.9.0. It is deliberately grounded in the running implementation, not a
-design sketch for a future product. Where the system has a limitation, it is named. A system that
-is honest about its edge is more useful than one that claims to be a universal solvent.
+It describes Nuthatch 4.10.1. It is deliberately grounded in the running implementation, not a
+design sketch for a future product: each mechanism a chapter narrates was read against the function
+that implements it in that release, and the worked examples in the first two appendices were re-run
+on its released binary. Where the system has a limitation, it is named. A system that is honest
+about its edge is more useful than one that claims to be a universal solvent.
 
 ## How to read it
 
@@ -49,7 +51,8 @@ quite another matter to implement correctly:
 11. [A reorganisation, walked through](/docs/book/a-reorganisation-walked-through/) - rollback at
    the hot boundary, and why a finality violation halts rather than guesses.
 12. [A lease handover, walked through](/docs/book/a-lease-handover-walked-through/) - the fencing
-   rule that makes two scaled workers safe.
+   rule that makes two scaled workers safe. Scaled mode is a separate Linux build, so this one is
+   read against the code and dated rather than re-run.
 
 The chapters are intended to stand up to a close read. The [RFC archive](/docs/contributing/rfcs/)
 and [implementation internals](/docs/contributing/internals/) remain the primary material for

@@ -16,9 +16,13 @@ to preserve.
 ## The authored inputs
 
 A normal nest directory contains `nuthatch.toml`, vendored files under `abis/`, and optionally SQL
-views, semantic descriptions and checks. The TOML names contracts and their start blocks. The ABI
-pins the event layout used to decode their logs. A view may turn raw rows into a consumer-shaped
-read without modifying the underlying historical facts.
+views, incremental entities, semantic descriptions and checks. The TOML names contracts and their
+start blocks. The ABI pins the event layout used to decode their logs. A view may turn raw rows into
+a consumer-shaped read without modifying the underlying historical facts. The TOML can also ask for
+a little more than logs: on a chain that reports its L1 block in every header, `[extract]
+l1_blocks = true` (4.6.0) adds a table recording, for each block that carried a decoded row, the L1
+block it settled against. That is an authored input like any other, so turning it on for a nest
+that has already indexed is refused rather than quietly applied from that point on.
 
 The ABI is deliberately vendored. An explorer API is useful when scaffolding a nest, but it is not
 an adequate long-term dependency for its definition. An explorer can change, a proxy can mislead,
@@ -27,9 +31,13 @@ the nest makes review and reproduction possible.
 
 From those files Nuthatch generates a decode registry and a schema. The registry maps the address
 and event signature it receives from a log to the columns it will write. The generated artefacts
-are checked rather than treated as private magic. If the same authored inputs do not recreate the
-expected registry, the machine should stop and say so. A stale decoder producing plausible rows is
-not a success condition.
+are checked rather than treated as private magic. A packaged nest carries the registry hash its
+inputs produced, and installing one regenerates the registry and refuses the package if the two
+differ. A nest run from a directory carries no such claim, so the check runs the other way round:
+at startup the identity its configuration produces is compared with the one recorded in its store,
+and a mismatch refuses to start. The schema file is treated as what it is, a derived artefact, and
+is regenerated when it has gone stale rather than argued with. A stale decoder producing plausible
+rows is not a success condition.
 
 ## Events first, then views
 
@@ -53,8 +61,9 @@ Nuthatch packages authored inputs into a canonical manifest. Hashed as it stands
 manifest gives the **bundle hash**, which also covers the version of nuthatch that wrote it. The nest
 identity, or NID, is hashed from the same manifest with that version replaced by a fixed placeholder
 and a domain prefix in front, so upgrading the binary alone never moves a nest's identity. The NID
-identifies what was authored, not which directory happens to contain it and not who mounted it. Two copies of the same inputs have the same identity. A one-byte
-change in an ABI, configuration or view creates a new identity.
+identifies what was authored, not which directory happens to contain it and not who mounted it. Two
+copies of the same inputs have the same identity. A one-byte change in an ABI, configuration or view
+creates a new identity.
 
 That is deliberately strict. The hash is not a version label chosen at a meeting. It is a statement
 that this exact package is what the runtime verified. Human names and versions remain useful for
