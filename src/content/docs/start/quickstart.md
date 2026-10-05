@@ -93,8 +93,9 @@ appears in that range - start from `/balances` if you want an address that defin
   columns (`block_number`, `tx_hash`, `log_index`, `address`, …) alongside the decoded fields.
 - **Hot + cold storage.** A redb tip store for point-reads, sealed content-addressed Parquet past
   finality, unified behind one SQL surface. See [Storage &amp; sealing](/docs/concepts/storage/).
-- **Derived state, no `eth_call`.** Add `nuthatch recipe add total_supply` for an ERC-20's supply
-  derived from Transfers - no archive node. See [Recipes](/docs/build/recipes/).
+- **Derived state, no `eth_call`.** `nuthatch recipe add total_supply` derives an ERC-20's supply from
+  its Transfers, no archive node. The shipped views expect `from`, `to` and `value`, so on WETH's
+  `src`, `dst` and `wad` you rename the columns first. See [Recipes](/docs/build/recipes/).
 - **An admin UI and metrics** at `/_admin/` and `/metrics`.
 - **An MCP server** so an agent can drive it offline. See [MCP](/docs/ai/mcp/).
 
