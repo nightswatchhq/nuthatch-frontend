@@ -29,20 +29,17 @@ if `ETHERSCAN_API_KEY` is set), vendors it locally, and generates the schema, vi
 no API key required for a verified contract.
 
 ```sh
-nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc --chain mainnet
+nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth --chain mainnet
 ```
 
 You now have a nest directory: `nuthatch.toml`, `abis/`, `schema.json`, `views/`, `llms.txt`.
 
-`--alias` is the table prefix, so this contract's events land in `usdc__transfer`, `usdc__approval`,
+`--alias` is the table prefix, so this contract's events land in `weth__transfer`, `weth__approval`,
 and so on. Leave it out and the alias is the contract name from the ABI in snake_case
 (`DelegationManager` becomes `delegation_manager`), falling back to `c0` only when the ABI names
 nothing usable.
 
-USDC is a proxy, and `init` says so: its current implementation was deployed at block 18,921,498,
-years after the proxy, and events before that block may use earlier implementations' ABIs, which this
-scaffold does not decode. That is fine for a first query. Before you trust historical supply or
-balances from it, vendor the earlier implementations' ABIs too.
+WETH is a plain contract with no proxy, so `init` has nothing to warn about and the decoded history is complete. Contracts behind a proxy get a warning from `init`, because events before the current implementation was deployed may use earlier ABIs this scaffold does not decode.
 
 ## 3. Run it
 
@@ -55,8 +52,7 @@ nuthatch dev --backfill 300
 ```
 
 `--backfill 300` starts 300 blocks behind the tip, about an hour of mainnet, so there are rows within
-seconds. Without the flag `dev` backfills from the contract's deployment block. For USDC that is 20
-million blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
+seconds. Without the flag `dev` backfills from the contract's deployment block. For WETH that is millions of blocks, a long backfill on free public endpoints and a job for your own RPC. When a from-deployment backfill is long, `init` prints a
 `nuthatch dev --backfill N` line under its `next:` hint and `dev` logs the span at cold start.
 
 > **Note - the default endpoints are free public RPCs.** nuthatch ships them so this page works with
@@ -70,7 +66,7 @@ million blocks, a long backfill on free public endpoints and a job for your own 
 Point-read an entity, run analytical SQL over the hot tip ∪ sealed history, or read a derived view.
 
 ```sh
-nuthatch sql 'SELECT "to", value FROM usdc__transfer ORDER BY block_number DESC LIMIT 5'
+nuthatch sql 'SELECT "to", value FROM weth__transfer ORDER BY block_number DESC LIMIT 5'
 ```
 
 `to` and `from` are SQL reserved words, so double-quote them. nuthatch spots this one and tells you
@@ -79,7 +75,7 @@ so rather than just failing.
 …or over HTTP:
 
 ```sh
-curl 'http://127.0.0.1:8288/sql?q=SELECT+count(*)+FROM+usdc__transfer'
+curl 'http://127.0.0.1:8288/sql?q=SELECT+count(*)+FROM+weth__transfer'
 curl 'http://127.0.0.1:8288/balances?limit=5'    # top holders - derived, no eth_call
 curl http://127.0.0.1:8288/balance/0xSomeHolder  # one address
 ```
