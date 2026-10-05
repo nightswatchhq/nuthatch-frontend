@@ -2,6 +2,7 @@
 title: Authoring modes
 description: Declarative incremental views (the default) and imperative WASM components (the escape hatch).
 order: 6
+checked: 4.10.1
 ---
 
 There are two ways to author what a nest computes. The default is declarative; the escape hatch is

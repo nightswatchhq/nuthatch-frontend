@@ -2,6 +2,7 @@
 title: What is a nest?
 description: A nest is a content-addressed specification of a question about on-chain data - a spec, not a program.
 order: 1
+checked: 4.10.1
 ---
 
 A **nest** is the unit of everything in nuthatch. It's a content-addressed, reproducible
@@ -38,6 +39,7 @@ my-nest/
   views/               # authored SQL derivations (a commented starter to uncomment)
   semantic.toml        # the meaning layer
   llms.txt             # a machine-readable index for coding agents
+  .claude/skills/      # a querying skill for a coding agent (nuthatch/SKILL.md)
   nuthatch.redb        # the hot store (runtime, not an input - excluded from the hash)
   segments/            # sealed Parquet past finality (runtime, content-addressed)
 ```
