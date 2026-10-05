@@ -11,9 +11,9 @@ const DS_CONTRACT = 'https://arbiscan.io/address/0x647D1Fd14AF2DE3947522B74F1de5
 const meets = [
   {
     k: '01 · Horizon data service',
-    tag: 'paused',
+    tag: 'reference',
     h: 'Nuthatch is a Graph Horizon data service',
-    p: 'A nest behind a paid, TAP-gated route on Arbitrum One. A provider advertises a nest identity, a query mode and an endpoint on chain, so a consumer buys a reproducible dataset rather than a server that says it does SQL. The first offering was an index of Horizon itself, and one bounded payment settled before the service was paused on 2026-09-12.',
+    p: 'A nest behind a paid, TAP-gated route on Arbitrum One. A provider advertises a nest identity, a query mode and an endpoint on chain, so a consumer buys a reproducible dataset rather than a server that says it does SQL. The nuthatch-ds README says plainly that the contract is deployed on Arbitrum One but there is currently no registered provider and no settled paid query.',
     links: [
       { href: '/blog/nuthatch-data-service-on-graph-horizon', text: 'the write-up' },
       { href: DS_REPO, text: 'nuthatch-ds', ext: true },
@@ -24,7 +24,7 @@ const meets = [
     k: '02 · Subgraph rebuilt',
     tag: 'shipped',
     h: 'A Graph subgraph, rebuilt as a nest',
-    p: 'The horizon-nest is a real Graph Horizon subgraph reproduced as a nest and checked field by field against the gateway. A public dashboard serves panels from Nuthatch nests today, next to the panels the gateway still serves.',
+    p: 'The horizon-nest is a real Graph Horizon subgraph reproduced as a nest and checked field by field against the gateway. A public dashboard serves its live panels from Nuthatch nests today and holds no Graph API key.',
     links: [
       { href: '/stories', text: 'the story' },
       { href: HORIZON_NEST, text: 'horizon-nest', ext: true },
@@ -113,14 +113,12 @@ const meets = [
             centralised data provider is to decentralise who serves you. Nuthatch's answer is that,
             for the contracts you own, you need not be served at all. Both are ways of not trusting
             one company's endpoint. Neither is wrong, and they are not exclusive: run your own nest
-            for the protocol you build, and query the network for the fifteen thousand contracts
+            for the protocol you build, and query the network for the contracts
             you do not.
           </p>
           <p>
-            And the people. Nuthatch was written by people who spent years inside The Graph's
-            ecosystem and still work there. The front page carries a comparison table with The
-            Graph in it, and it states facts rather than a verdict, because the authors know rather
-            precisely what the network does well.
+            The front page carries a comparison table with The Graph in it, and it states facts
+            rather than a verdict.
           </p>
 
           <h2>Where they part ways</h2>
