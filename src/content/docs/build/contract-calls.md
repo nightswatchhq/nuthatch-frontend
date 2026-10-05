@@ -2,6 +2,7 @@
 title: Contract calls and IPFS documents
 description: Pin a contract read to a block, or resolve and verify an IPFS document, without giving up determinism.
 order: 9
+checked: 4.10.1
 ---
 
 Two things a subgraph could do and a nest could not, until v2.6.0. Both are opt-in: a nest that
@@ -26,7 +27,17 @@ That samples `totalSupply()` every 100,000 blocks into a `grt_total_supply` tabl
 pruned node cannot answer it.
 
 Calls can also be built from the row that triggered them, which is the shape a subgraph writes as
-`contract.balanceOf(event.params.user)`.
+`contract.balanceOf(event.params.user)`. The row-driven form names the source table with `on` instead
+of `every`, the ABI signature to encode, and the row's columns as arguments:
+
+```toml
+[[calls]]
+name = "recipient_balance"
+on = "usdc__transfer"
+contract = "0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48"   # or contract_column = "{pool}" for a factory child
+signature = "balanceOf(address)"
+args = ["{to}"]
+```
 
 ### Why this is still deterministic
 

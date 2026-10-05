@@ -2,6 +2,7 @@
 title: The semantic layer
 description: Describe what tables and columns mean, so agents query correctly instead of guessing.
 order: 5
+checked: 4.10.1
 ---
 
 A schema tells you a column is named `value` and typed `uint256`. It doesn't tell you that `value` is
@@ -38,7 +39,8 @@ scale by decimals and exclude mints.
 `init` seeds `semantic.toml` from the ABI - placeholder descriptions per column plus the derived
 footguns (reserved words, and the big-int columns that need `_dec`). You curate from there: add the
 units, meanings, and domain knowledge only you have. If a description later references a column the
-decode registry no longer has, `dev` warns loudly at startup - stale semantics are worse than none.
+decode registry no longer has, `dev` warns at startup (``semantic.toml drift: semantic.toml describes
+`weth__transfer.nosuch`, which isn't a column of that table``) - stale semantics are worse than none.
 
 ## Next
 

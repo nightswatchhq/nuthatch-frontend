@@ -2,6 +2,7 @@
 title: Compliance pack
 description: Optional screening, flags, and alerts - a derive-only stage over decoded transfers.
 order: 7
+checked: 4.10.1
 ---
 
 Some nests need more than raw rows: screen addresses against a sanctions list, flag transfers that cross
@@ -27,6 +28,7 @@ velocity_window = 7200               # window in BLOCKS (≈24h at 12s blocks); 
 [[alerts]]
 kinds = ["threshold_flag", "sanction_hit"]   # which annotation kinds to deliver
 url = "https://your-service/alerts"
+# format = "raw"                             # default; "discord" posts a Discord-shaped message
 ```
 
 - **`[screening]`** - screen each transfer's `from`/`to` against pinned list snapshots. A match becomes
@@ -41,7 +43,8 @@ url = "https://your-service/alerts"
   count**, not wall-clock - an honest approximation, since the chain has no clock.
 - **`[[alerts]]`** - deliver annotations whose `kind` is in `kinds` to a `url`. The valid kinds are
   `threshold_flag` and `sanction_hit`, which match the emitted annotations exactly, and
-  `entity_fault`, which fires when an [incremental entity](/docs/build/entities/) faults.
+  `entity_fault`, which fires when an [incremental entity](/docs/build/entities/) faults. `format` is
+  `raw` (the default) or `discord`, for a Discord webhook URL.
 
 ## Determinism holds
 

@@ -2,6 +2,7 @@
 title: nuthatch.toml
 description: The one config file a nest has - the [nest] header and one or more [[contracts]].
 order: 1
+checked: 4.10.1
 ---
 
 A nest starts with `nuthatch.toml`. `init` generates it from a contract address; you
@@ -33,6 +34,7 @@ events = ["Transfer", "Approval"]  # empty = index every event the ABI defines
 | `chain` | The chain name, e.g. `mainnet`, `arbitrum-one`, `base`. |
 | `chain_id` | The chain id, e.g. `1`, `42161`, `8453`. |
 | `rpc_urls` | RPC endpoints, tried in order with round-robin failover. Point at your own node. |
+| `schema_version` | The config and data layout version, written by `init` and managed by nuthatch. |
 | `block_timestamps` | Whether rows carry `block_timestamp` (default `true`). Set at `init`; see [`block_timestamps`](/docs/reference/config/#block_timestamps). |
 
 ## `[[contracts]]`

@@ -2,6 +2,7 @@
 title: Recipes - the eth_call you usually do not need
 description: Derive contract reads like totalSupply and getReserves from indexed events - no eth_call, no archive node. When a read is not derivable, pinned calls are there.
 order: 6
+checked: 4.10.1
 ---
 
 The Foundation reports that **over 70% of subgraphs call `eth_call`**. But most of those reads aren't
@@ -40,9 +41,12 @@ just SQL over your tables.
 | `holder_count` | - | count of non-zero holders |
 | `reserves` | Uniswap-V2 `getReserves()` | the latest `Sync(uint112,uint112)` per pair |
 
-> **Requirements.** `total_supply` / `balances` / `holder_count` need a `Transfer` event; `reserves`
-> needs the pair's `Sync` event. If your nest doesn't index the source event yet, add it to
-> `nuthatch.toml` first.
+> **Requirements.** `total_supply` / `balances` / `holder_count` need a `Transfer` event whose fields
+> are named `from`, `to` and `value`, the ERC-20 convention the views are written against; `reserves`
+> needs the pair's `Sync` event. WETH names its fields `src`, `dst` and `wad`, so a recipe added to the
+> quickstart's nest fails `nuthatch check` with `no column from` until you rename the columns in the
+> view. A nest with several contracts takes `--alias` to say which table. If your nest doesn't index
+> the source event yet, add it to `nuthatch.toml` first.
 
 ## How `total_supply` works
 
