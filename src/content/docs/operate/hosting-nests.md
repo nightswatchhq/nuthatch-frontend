@@ -2,6 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
+checked: 4.10.1
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -80,8 +81,8 @@ nuthatch dev --dir /srv/runtime --listen 0.0.0.0:8288 --registry /srv/registry
   nothing could ever be mounted into it. `--no-admin` removes the routes everywhere.
 
 Every admin call below takes the token as `Authorization: Bearer <token>` (or `?token=<token>`);
-the examples set it once in a shell alias, with the `Content-Type: application/json` every JSON body needs
-(without it the API answers `415`):
+the examples set it once in a shell alias, with the `Content-Type: application/json` every `POST` needs,
+including the bodiless suspend and resume (without it the API answers `415`):
 
 ```sh
 alias nh='curl -s -H "Authorization: Bearer $NUTHATCH_ADMIN_TOKEN" -H "Content-Type: application/json"'

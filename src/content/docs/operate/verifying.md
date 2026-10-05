@@ -2,6 +2,7 @@
 title: "Verifying a deployment"
 description: An acceptance runbook that proves a deployment works, step by falsifiable step - and an honest table of what we have verified ourselves and what we have not.
 order: 7
+checked: 4.10.1
 ---
 
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
@@ -22,7 +23,7 @@ The full runbook lives in the repo at
 Levels 0 - 4 are automated:
 
 ```sh
-./scripts/verify.sh 0 4
+./scripts/verify.sh 0 1 2 3 4
 ```
 
 ## What we have verified

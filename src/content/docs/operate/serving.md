@@ -2,6 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
+checked: 4.10.1
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -45,8 +46,9 @@ raise:
 - **SELECT/WITH only.** The query surface is read-only by construction; the ingest thread is the
   only writer.
 
-The engine runs each session under a memory limit (`analytics.memory_limit`, 512 MB by default) and a
-bounded thread count, so the analytical path stays inside the [footprint budget](/docs/operate/metrics/).
+The engine runs each session under a memory limit (`NUTHATCH_ANALYTICS_MEMORY_LIMIT`, 512 MB by default)
+and a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so the analytical path stays inside the
+[footprint budget](/docs/operate/metrics/).
 A statement that needs more memory than its session has is refused with an out-of-memory error, not
 spilled: since 4.1 a hash join or final aggregate cannot spill to disk, though a sort can (4.3.0).
 
