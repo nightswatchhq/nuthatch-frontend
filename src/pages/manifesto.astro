@@ -21,7 +21,7 @@ import Layout from '../layouts/Layout.astro';
       <p>
         For most teams that layer arrives as a bill. You send your queries to someone else's
         service, you pay per request or per month, and the meter never stops. It works, and on
-        day one it is the fastest path. But you have handed a load-bearing part of your
+        day one it is the shortest path. But you have handed a load-bearing part of your
         application to a vendor, priced it as a subscription, and accepted that if the vendor
         changes terms, degrades, or disappears, your product goes with it. That is a choice. It
         is worth noticing that it is a choice, because it is usually made by default.
@@ -40,7 +40,7 @@ import Layout from '../layouts/Layout.astro';
         So Nuthatch is one binary. Point it at a contract address, and minutes later you
         have a live indexed API on your box: entities, read-only SQL, balances, and MCP, over an
         embedded store with no Postgres, no Docker, and no third-party data service in the path.
-        It runs against any RPC today, and - by design - your own node next. Nothing phones home,
+        It reads any JSON-RPC endpoint, your own node included. Nothing phones home,
         because there is nothing it needs to phone home about.
       </p>
 
