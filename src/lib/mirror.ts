@@ -8,6 +8,8 @@ export interface MirrorEntry {
   repo: string;
   dataset: string;
   commit: string;
+  devArgs?: string;
+  note?: string;
   chainId?: number;
   indexedFrom?: number;
   completeThrough?: number;

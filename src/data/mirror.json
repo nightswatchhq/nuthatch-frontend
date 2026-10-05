@@ -11,8 +11,10 @@
     {
       "nest": "graph-allocations-nest",
       "repo": "https://github.com/nightswatchhq/graph-allocations-nest",
-      "dataset": "",
-      "commit": ""
+      "dataset": "d6fd43c87dd9593872b5c0f414b7291b230d3da7b2fcdf3ba2ad49e5ec496e8b",
+      "commit": "7795a335a9106b9d065a5a58bb946b6a43b0ac45",
+      "devArgs": "--state-rpc <archive RPC URL>",
+      "note": "This nest samples contract state, so dev needs an archive endpoint for eth_call."
     },
     {
       "nest": "dips-nest",

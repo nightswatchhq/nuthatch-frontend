@@ -10,7 +10,10 @@ const day = (iso?: string) => (iso ? iso.slice(0, 10) : '-');
 const base = mirrorBase || 'https://mirror.nuthatch-indexer.com';
 const seedCommand = (e: (typeof entries)[number]) =>
   `git clone ${e.repo}\n${e.commit ? `git -C ${e.nest} checkout ${e.commit.slice(0, 12)}\n` : ''}nuthatch seed --from ${base} --dir ${e.nest}
-nuthatch dev --dir ${e.nest}`;
+nuthatch dev --dir ${e.nest}${e.devArgs ? ` ${e.devArgs}` : ''}`;
+// One real object, run against the bucket before this page shipped: 5,717 rows.
+const readQuery = `SELECT count(*), min(block_number), max(block_number)
+FROM read_parquet('${base}/494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7bf115a9b15c7/gns__subgraph_published/e03958df317ac9e39634669f04c7fc1c6e6caed29e7b5f37630235acd8c9f7f2.parquet');`;
 ---
 <Layout
   path="/mirror"
@@ -77,6 +80,7 @@ nuthatch dev --dir ${e.nest}`;
               <CodeCard code={seedCommand(e)} lang="bash" label="shell" />
               <a class="repolink" href={e.repo} rel="noopener">{e.repo.replace('https://github.com/', '')} ↗</a>
             </div>
+            {e.note && <p class="note">{e.note}</p>}
           </li>
         ))}
       </ul>
@@ -100,11 +104,26 @@ nuthatch dev --dir ${e.nest}`;
           </p>
         </section>
       </div>
+
+      <section class="read">
+        <h2>Read it without Nuthatch</h2>
+        <p>
+          The mirror is plain Parquet, so DuckDB, Trino or anything else that reads Parquet over HTTPS can
+          query it directly. A public bucket cannot be listed: each dataset's
+          <code>manifest.json</code> names its tables and, for every segment, a <code>hash</code>, and the
+          file is at <code>&lt;dataset&gt;/&lt;table&gt;/&lt;hash&gt;.parquet</code>. The manifest's
+          <code>file</code> field is the name inside a nest directory, not the address here.
+        </p>
+        <CodeCard code={readQuery} lang="sql" label="duckdb" />
+      </section>
     </div>
   </section>
 </Layout>
 
 <style>
+  .read { margin-top: 3rem; }
+  .read h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin-bottom: 0.6rem; }
+  .read p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.65; margin: 0 0 1rem; max-width: 72ch; }
   .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
   h1 { margin-bottom: 0.8rem; }
   .lede {
@@ -166,6 +185,7 @@ nuthatch dev --dir ${e.nest}`;
     font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted);
   }
   .repolink:hover { color: var(--accent); }
+  .note { margin: 0.8rem 0 0; font-size: 0.82rem; line-height: 1.55; color: var(--text-faint); }
   .notes {
     margin-top: 3.5rem; display: grid; gap: 2rem;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
