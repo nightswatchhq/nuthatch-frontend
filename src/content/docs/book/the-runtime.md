@@ -1,7 +1,7 @@
 ---
-title: "7. The runtime"
+title: "8. The runtime"
 description: "Mounts, tenants, one cursor per chain, the nest lifecycle, and how the same model extends to scaled mode."
-order: 8
+order: 9
 ---
 
 A nest is a portable description plus its dataset. A runtime is the process that makes one or more
@@ -37,10 +37,25 @@ and per-chain health.
 
 ## Capacity is a physical constraint
 
-Nuthatch has a default 2 GB resident-set budget per active-chain cursor. It estimates the impact of
-a mount before accepting it and exposes the actual footprint through metrics. The number is not a
-marketing density claim. A runtime with two chains has two cursors and therefore two separately
-bounded workloads. A high-rate nest can still be expensive even if it has very few neighbours.
+Nuthatch has a default 2 GB resident-set budget per active-chain cursor, `max_rss_mb` in
+`mounts.toml`. It estimates the impact of a mount before accepting it, at boot and again for every
+live mount, and refuses one that would push its cursor over. The actual footprint is exposed as
+`nuthatch_rss_bytes`, which is the whole process rather than one cursor, so a two-chain runtime
+reads it against the sum of its two budgets. The number is not a marketing density claim. A runtime
+with two chains has two cursors and therefore two separately bounded workloads. A high-rate nest can
+still be expensive even if it has very few neighbours.
+
+Since 4.10.0 the budget is also something the process can be held to rather than hoped about. The
+query engine counts the memory a scan holds against a pool the operator sizes, and startup adds that
+pool to an ingestion reservation and a runtime headroom and refuses the configuration if the sum does
+not fit the wall, naming the term that counted and the largest value that would. The two new terms
+are measured, not guessed: the reservation is the high-water mark of the process indexing with no
+queries, and the headroom is the most the process has held outside the pool under the real query
+set. On the nest that forced the work, a copy of kittiwake's QoS nest under its production queries,
+those came out at 372 MiB and up to 931 MiB, so the budget is written as a 704 MB pool, a 384 MB
+reservation and 960 MB of headroom, 2,048 in all; four runs under that budget inside a 2 GB cgroup
+peaked between 1,316 and 1,349 MiB. Before the engine counted scan memory the same nest peaked at
+1,746 MiB, which is the difference between a budget and a wish.
 
 The shared cursor pays for chain polling once. It does not make storage, decode work or analytical
 queries free. The runtime keeps those costs visible so density does not become a pleasant-sounding
@@ -57,9 +72,11 @@ outside the process has to unpack, verify or arrange anything.
 
 A mount that fetches and backfills can take far longer than a caller will hold an HTTP request open, so
 it is a job rather than a call. The job moves through accepted, fetching, joining and then live or
-failed (or reads suspended while an operator has paused it), and it is written to disk, so a restart in the middle picks it up again instead of forgetting
-it. The record of a job lives beside the runtime's lock rather than behind it: asking how a mount is
-going must never wait for the mount it is asking about.
+failed (or reads suspended while an operator has paused it). Every job short of live, and every
+failed one, is written to `mount-jobs.json` beside `mounts.toml`, so a restart in the middle picks
+it up again instead of forgetting it; a live job needs no record of its own, because `mounts.toml`
+is that record. The job list is kept beside the runtime's lock rather than behind it: asking how a
+mount is going must never wait for the mount it is asking about.
 
 Joining is the delicate step. A cursor advances from the slowest of its live nests, so a nest spliced in
 far behind would drag every neighbour back through history. The newcomer therefore catches up on its own,
@@ -82,11 +99,16 @@ moment at which the name is served by neither.
 
 ## When one process is not enough
 
-Scaled mode moves cursor ownership into a control plane backed by Postgres. Workers register,
-claim leases for chains and fence ownership with monotonically increasing values. A worker may only
-write while it owns the current lease. If it dies, another worker can take the lease and continue.
-The fence prevents a late former owner from writing as though nothing happened, which is the small
-but crucial detail separating failover from two machines cheerfully scribbling over the same state.
+Scaled mode moves the hot store into Postgres and puts a control plane beside it. The control plane
+holds what the fleet should run and which workers exist; it does not hold ownership. Ownership is
+a lease kept in the chain's own hot-store schema, next to the data it protects, and a worker claims
+it and fences its writes with a monotonically increasing value. A worker may only write while it
+holds the current fence. If it dies, another worker can take the lease and continue. The fence
+prevents a late former owner from writing as though nothing happened, which is the small but
+crucial detail separating failover from two machines cheerfully scribbling over the same state.
+None of this is in the default binary: scaled mode is a separate build, `--features
+postgres-store`, published as the `nuthatch-scaled` Linux tarball, because the embedded binary
+carries no database driver and that is non-negotiable.
 
 The data model remains recognisable: mounts identify datasets, cursors follow chains, hot data is
 reversible and sealed data is durable. Scaled mode changes who is allowed to perform the cursor
