@@ -7,6 +7,7 @@ export interface MirrorEntry {
   nest: string;
   repo: string;
   dataset: string;
+  commit: string;
   chainId?: number;
   indexedFrom?: number;
   completeThrough?: number;

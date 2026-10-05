@@ -5,22 +5,26 @@
     {
       "nest": "graph-gns-nest",
       "repo": "https://github.com/nightswatchhq/graph-gns-nest",
-      "dataset": "494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7bf115a9b15c7"
+      "dataset": "494ce630fa704ee504e6cdfb8f732c66d585843face32fbbc6b7bf115a9b15c7",
+      "commit": "33d010ff69b526a838f68384625144a7b421bc3a"
     },
     {
       "nest": "graph-allocations-nest",
       "repo": "https://github.com/nightswatchhq/graph-allocations-nest",
-      "dataset": ""
+      "dataset": "",
+      "commit": ""
     },
     {
       "nest": "dips-nest",
       "repo": "https://github.com/nightswatchhq/dips-nest",
-      "dataset": ""
+      "dataset": "",
+      "commit": ""
     },
     {
       "nest": "data-services-nest",
       "repo": "https://github.com/nightswatchhq/data-services-nest",
-      "dataset": ""
+      "dataset": "02bd0eba7421efe1e3f7736db8ef2533033cdc18dbebecf78ab1b695fff2f64a",
+      "commit": "9696cb4beb1d5220e21c09c05d5875e6ea02c3a3"
     }
   ]
 }

@@ -9,8 +9,7 @@ const chains: Record<number, string> = { 1: 'Ethereum', 42161: 'Arbitrum One', 8
 const day = (iso?: string) => (iso ? iso.slice(0, 10) : '-');
 const base = mirrorBase || 'https://mirror.nuthatch-indexer.com';
 const seedCommand = (e: (typeof entries)[number]) =>
-  `git clone ${e.repo}
-nuthatch seed --from ${base} --dir ${e.nest}
+  `git clone ${e.repo}\n${e.commit ? `git -C ${e.nest} checkout ${e.commit.slice(0, 12)}\n` : ''}nuthatch seed --from ${base} --dir ${e.nest}
 nuthatch dev --dir ${e.nest}`;
 ---
 <Layout
@@ -40,7 +39,7 @@ nuthatch dev --dir ${e.nest}`;
         <div class="steps">
           <div>
             <span class="cap">1 · the nest</span>
-            <p>Clone the nest exactly as published. The mirror is found by the nest's data identity, so an edited copy finds nothing.</p>
+            <p>Clone the nest and check out the commit it was published from. The mirror is found by the nest's data identity, so any other version finds nothing.</p>
           </div>
           <div>
             <span class="cap">2 · the history</span>
