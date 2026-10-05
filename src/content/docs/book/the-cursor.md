@@ -16,16 +16,27 @@ would multiply RPC work and make recovery needlessly inconsistent.
 
 ## Backfill is a controlled walk through history
 
-For a newly mounted nest, Nuthatch begins at each contract's declared deployment block and asks the
-RPC for logs in bounded windows. Providers impose limits on ranges, result counts and concurrency,
-so the process does not assume that a heroic `getLogs` call will be welcome. It splits work into
-windows, retries within its policy and records progress only after the rows have been accepted by
-the hot store.
+For a newly mounted nest, Nuthatch begins at the earliest start block its contracts declare and asks
+the RPC for logs in bounded windows. (A nest that declares none starts 5,000 blocks behind the tip,
+and `--backfill N` overrides either.) Providers impose limits on ranges, result counts and
+concurrency, so the process does not assume that a heroic `getLogs` call will be welcome. It splits
+work into windows, retries within its policy and records progress only after the rows have been
+accepted by the hot store: a window's rows, its block-hash checkpoint and the new last block land in
+one transaction, so there is no moment at which the store claims a block it does not hold.
 
 The details matter because RPCs are prone to giving an answer that is technically valid and
 operationally useless. A provider may time out, cap a response, or make a 10,000-block request feel
-like a personal insult. Nuthatch's window and concurrency controls let an operator fit the walk to
-the provider. Faster is useful, but only if every accepted block remains attributable and repeatable.
+like a personal insult. The window therefore adapts: it starts from the chain's measured default,
+shrinks when a request is refused and grows back when requests succeed, and `--window` is the
+ceiling an operator places on that. Concurrent fetching is reserved for the direct-seal backfill of
+history already past finality; the ordinary walk is one window at a time, because its results must
+enter the hot store in order. Faster is useful, but only if every accepted block remains attributable
+and repeatable.
+
+A window can carry more than logs. Where the nest declares `[extract] l1_blocks`, the cursor also
+fetches the header of every block that produced a decoded row and records the L1 block it reports.
+A header without that field refuses the whole window rather than storing a zero, because a row
+that says "settled against L1 block 0" is a lie with a plausible shape.
 
 Backfill catches a nest up to the present. It does not establish that the present is permanent.
 
@@ -52,7 +63,10 @@ In a multi-nest runtime the cursor obtains the union of needed logs and routes t
 that own their address and event signature. A log may be relevant to more than one nest, in which
 case each gets its own decoded rows. Fetching is shared; the nests' datasets are not silently
 merged. This distinction keeps ownership and rollback manageable while avoiding N copies of the
-same RPC polling.
+same RPC polling. One consequence is worth knowing when sizing a runtime: a factory nest cannot
+name its children's addresses in advance, so a cursor hosting one fetches by topic alone and the
+whole union loses its address filter. Its neighbours then pay, in logs fetched and discarded, for
+the factory's open-endedness.
 
 Different chains need different cursors. They have different heads, different finality rules and
 different failure domains. A runtime can host them, but it does not pretend that Arbitrum and
