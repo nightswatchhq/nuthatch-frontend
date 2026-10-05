@@ -31,8 +31,9 @@ an adjective to a SQL query.
 
 Incremental maintenance must be able to add a block and retract a block without rescanning all earlier
 ones. Projection, filtering, exact arithmetic, grouping, supported aggregates and inner equijoins have
-that shape. `ORDER BY`, `LIMIT`, window functions, outer joins, `DISTINCT`, percentiles and recursive
-queries do not belong in the first safe subset. They remain valid questions for views.
+that shape. `ORDER BY`, `LIMIT`, window functions, outer joins, `DISTINCT`, percentiles, recursive
+queries, `HAVING`, common table expressions and `count(x)` as opposed to `count(*)` do not belong in
+the first safe subset. They remain valid questions for views.
 
 The row bound is equally important. A maintained answer is state retained at the cursor, alongside
 the chain's hot data. `max_rows` participates in admission rather than being a hopeful comment, and
@@ -49,13 +50,22 @@ the removed facts with negative weight, so no bespoke author rollback can drift 
 After a restart, the relation is seeded from sealed segments and the hot tail already held locally. No
 historical RPC replay is involved.
 
-This is observable. Each entity has applied-through, current, row-count, faulted, unavailable and
-seconds-since-progress metrics. The reader's provenance and the operator's metrics answer the same
-question from opposite ends: is this result current, and if not, why are we still looking at it?
+This is observable. Each entity has applied-through, current, row-count, state-bytes, faulted,
+unavailable and seconds-since-progress metrics, labelled by nest and entity. The row count is the
+answer's rows, not the input rows `max_rows` bounds, so the two are not the same number. The
+reader's provenance and the operator's metrics answer the same question from opposite ends: is this
+result current, and if not, why are we still looking at it?
 
-There is one deliberately blunt 3.0 limitation. `--seal-direct` bypasses the ingest route used to
-maintain entities, so it is refused for a nest declaring one. It is better to reject an unsupported
-fast path than to finish a backfill with an elegant, empty answer.
+One ordering detail was wrong until 4.10.1 and is worth knowing because it is the kind of thing a
+circuit makes easy to get wrong: a window's facts were applied to the entity before the hot store
+had committed them, so for a moment the entity's watermark ran ahead of what `/sql` could read,
+and a window whose commit then failed had been folded all the same. The entity now applies a window
+only after the store has it.
+
+There is one deliberately blunt limitation, introduced in 3.0 and still standing. `--seal-direct`
+bypasses the ingest route used to maintain entities, so it is refused for a nest declaring one. It
+is better to reject an unsupported fast path than to finish a backfill with an elegant, empty
+answer.
 
 The practical authoring details are in the [entities guide](/docs/build/entities/). The next chapter
 returns to identity, where changing an entity definition has different consequences from changing the

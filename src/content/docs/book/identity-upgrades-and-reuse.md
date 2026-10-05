@@ -1,7 +1,7 @@
 ---
-title: "6. Identity, upgrades and reuse"
+title: "7. Identity, upgrades and reuse"
 description: "How immutable nest versions coexist with data that need not be indexed twice."
-order: 7
+order: 8
 ---
 
 Software versioning is often an agreement among humans: this release is called 2.5.0, and these
@@ -25,16 +25,31 @@ other authored input that does not affect event selection or decoding. The packa
 changed, so it must have a new NID. But forcing a complete backfill merely because a view changed
 would be an expensive ceremony with no new information in it.
 
-Nuthatch calculates a data identity from the inputs that actually determine decoded event rows. On
-migration or staged upgrade, it can compare this identity with existing datasets. If the data
-identity matches, it adopts the existing data into the new identity instead of indexing the chain
-again. The adoption is a staged, verified filesystem operation. The existing source remains; the
-new dataset gains the necessary package material and references the reusable sealed history.
+Nuthatch calculates a data identity from the inputs that actually determine decoded event rows: the
+schema version, the registry hash, and the path and digest of every authored file that can change a
+stored byte. What it leaves out is as deliberate as what it takes in. Views, entities and their
+declarations, the named-query allowlist, the semantic description, `llms.txt`, the README, the
+scaffolded agent skill and, since 4.9.0, any hidden file are all part of the NID and none of the
+data identity, because none of them is read on the indexing path. (That last one was learnt the
+hard way: a stray `.cache/` made two copies of one nest compute different identities, so neither
+could find the other's mirror.) Vendored ABIs and address labels stay in, because the decode and
+the exposure annotations do read them.
+
+On mounting a new identity, or on migration, Nuthatch compares that data identity with the datasets
+it already holds. If one matches, and its store records the same registry hash, it adopts that data
+into the new identity instead of indexing the chain again. On the mount path the adoption is staged:
+the existing dataset's hot store and catalogue are copied into a sibling directory, the new package
+material is laid over them, and the result is renamed into place, with the staging directory removed
+if anything fails before that rename. `nuthatch migrate` does the same copy without the staging
+step. In either case the existing source remains, and in a runtime the copied catalogue points into
+the shared segment store, so the sealed bytes are not duplicated; only the catalogue and the hot
+store are.
 
 This is not a claim that every update is free. If an ABI, event selection, contract range or decode
-rule changes, the decoded dataset may differ. That is a real data change. The runtime classifies
-the difference and requires an operator to acknowledge breaking changes rather than presenting an
-old table with a new label and hoping no one notices.
+rule changes, the decoded dataset may differ. That is a real data change. `nuthatch migrate` names
+the breaking change and refuses it unless the operator passes `--allow-breaking`, rather than
+presenting an old table with a new label and hoping no one notices. An adoption needs no such
+acknowledgement, because the identity match is the proof that nothing broke.
 
 ### The guarantee has to hold on the ordinary path too
 
@@ -55,11 +70,12 @@ about *what produced this data*. A wrong one is not an inconvenience, it is a li
 whose entire job is to be checkable. And it was a lie the system told about itself, in the direction
 that looks healthy.
 
-A nest now compares the registry recorded in its store against the registry its configuration
-produces, and refuses to start when they differ, naming both hashes and the remedy. A store written
-before the check existed has no recorded hash; refusing those would break every running deployment
-for a fault it may not have, so it adopts the hash and logs that it was **recorded rather than
-verified** - which is a different claim, and says so.
+A nest now compares the decode identity recorded in its store against the one its configuration
+produces, and refuses to start when they differ, naming both hashes and the remedy. The identity is
+the registry hash folded with the nest's `[[calls]]` and `[[ipfs]]` declarations, because those
+also decide what gets stored. A store written before the check existed has no recorded hash;
+refusing those would break every running deployment for a fault it may not have, so it adopts the
+hash and logs that **it was recorded, not verified** - which is a different claim, and says so.
 
 ## Reuse at two levels
 
@@ -70,10 +86,11 @@ There are two distinct wins:
 2. Data equality across package versions: distinct NIDs can adopt data that has the same data
    identity. The packages remain distinct, but the indexer avoids useless re-ingestion.
 
-Sealed segments are immutable content, so they are the natural part of history to share. The hot
-store remains dataset-local because it must participate in live writes and reversible reorg
-handling. This keeps a new package from accidentally inheriting a mutable working store it does not
-fully understand.
+Sealed segments are immutable content, so they are the natural part of history to share, and in a
+runtime they already live in one content-addressed store that every dataset's catalogue points
+into. The hot store remains dataset-local because it must participate in live writes and reversible
+reorg handling; an adoption copies it rather than sharing it. This keeps a new package from
+accidentally inheriting a mutable working store another mount is still writing.
 
 ## Grafting, honestly
 

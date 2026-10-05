@@ -29,40 +29,76 @@ bug, where it is more expensive and less visible.
 
 ## Sealing is a commitment
 
-When rows are final enough, Nuthatch writes them to Parquet segments and records them in a seal
-manifest. A segment is immutable content with a bounded block range, table identity and hash. The
-manifest describes the set of segments that make up the sealed historical view and is itself part of
-the evidence an operator can inspect.
+When rows are final enough, Nuthatch writes them to Parquet segments and records them in the
+segment catalogue, `segments/manifest.json`. A segment is immutable content with a bounded block
+range, table identity and hash; the hash is the SHA-256 of the file's bytes, and it is also the
+file's name. The catalogue describes the set of segments that make up the sealed historical view
+and is itself part of the evidence an operator can inspect.
 
-The operation is not “move some old rows to a different folder and hope for the best”. The system
-writes staged output, verifies it and only then makes the new sealed state visible. If a process
-dies at an inconvenient moment, the previous committed manifest remains coherent. Recovery may be
-boring, which is the highest compliment available to storage machinery.
+"Final enough" is decided per chain, in the binary's chain table rather than in the nest's
+configuration. Ethereum mainnet seals 64 blocks behind the tip; the L2s that serve a `finalized`
+tag use it, with a fixed depth to fall back on when an endpoint will not answer; a chain the table
+does not know gets 64 blocks. Finality says when a row *may* be sealed, not when it *is*. The
+sealer cuts a segment once the finalised rows reach 20,000 or 64 MiB, or once they span the
+chain's seal span (1,800 blocks on mainnet), whichever comes first, because a segment per poll
+would be a catalogue of crumbs. Until a cut, finalised rows stay in the hot store with the
+watermark pinned at a checkpoint, and a finalised range with no rows at all simply advances the
+watermark. A cut that leaves a table with fewer than 1,000 rows writes a segment marked
+provisional, which the table's next seal folds in and replaces; a quiet table is not condemned to a
+thousand tiny files.
 
-Because segments are immutable, they can be shared safely where their data identity matches. This
-does not mean every nest shares every table. It means the runtime can avoid retaining identical
-sealed history twice while preserving each dataset's package and query surface. The distinction
-becomes important during upgrades.
+The operation is not "move some old rows to a different folder and hope for the best". Each
+segment is written to a temporary name, fsynced, renamed into place and its directory fsynced;
+only then is the catalogue rewritten the same way and swapped in with one rename. If a process
+dies at an inconvenient moment, the previous committed catalogue remains coherent and the orphaned
+file is just a file. What this path does not do is read its output back: the hash is computed
+from the bytes in memory before they are written. Verification is a separate job, done at every
+startup, when each catalogued segment is re-hashed and a damaged one quarantined, and on demand by
+`nuthatch doctor`. Recovery may be boring, which is the highest compliment available to storage
+machinery.
+
+Because segments are immutable and named by their content, a runtime keeps them in one shared
+store, `segments/<hash>.parquet` beside its datasets, and each dataset's catalogue points into it.
+A second nest sealing byte-identical rows finds the file already there. This does not mean every
+nest shares every table. It means the runtime can avoid retaining identical sealed history twice
+while preserving each dataset's package and query surface. The distinction becomes important
+during upgrades.
+
+Content addressing is also what lets sealed history leave the machine. `nuthatch publish` mirrors a
+nest's non-provisional segments, schema and catalogue to an object store under its data identity,
+and `nuthatch seed` (4.9.0) fills a nest that has never indexed from such a mirror, checking every
+file against the hash the catalogue names before installing it. The hashes prove the files are
+the ones the catalogue describes. They prove nothing about who wrote the catalogue.
 
 ## One query surface
 
 Burrmill, the embedded query engine on DataFusion, reads sealed Parquet and the current hot rows
-together. Nuthatch builds a read-only SQL surface over the union. A query for a block range that straddles the finality boundary
-does not require the caller to issue two requests or reconcile duplicate rows. The storage boundary
-is an implementation detail, albeit one worth understanding when diagnosing performance.
+together: each table is the sealed segments unioned with the hot rows above the sealed watermark.
+Nuthatch builds a read-only SQL surface over that union; only `SELECT` and `WITH` are admitted. A
+query for a block range that straddles the finality boundary does not require the caller to issue
+two requests or reconcile duplicate rows. The storage boundary is an implementation detail, albeit
+one worth understanding when diagnosing performance. (Burrmill has been the engine since 4.1.0,
+released 2026-10-02. DuckDB served from the first release until then, and appears in this book
+only as that history.)
 
-There are guards around this freedom. Queries have concurrency, time, row and unsealed-row bounds.
-Those guards protect the node from an enthusiastic analytical query becoming a denial-of-service
-tool. They do not provide customer identity, quotas or billing. Those belong at the gateway, where
-there is actually an authenticated caller to reason about.
+There are guards around this freedom. Queries have concurrency, time, row and unsealed-row bounds:
+two statements at a time per cursor unless the operator raises it, thirty seconds, 50,000 rows, and
+two million hot rows or 64 MiB of them, past which a query is refused rather than quietly answered
+from sealed history alone. Since 4.10.0 the engine also counts the memory a scan holds against a
+pool the operator sizes, and startup refuses a configuration whose pool, ingestion reservation and
+headroom do not fit the cursor's budget, naming the largest value that would. Those guards protect
+the node from an enthusiastic analytical query becoming a denial-of-service tool. They do not
+provide customer identity, quotas or billing. Those belong at the gateway, where there is actually
+an authenticated caller to reason about.
 
 ## The full life of an event
 
 Take one `Transfer` log. The cursor sees it in a block, selects the ABI decoder and writes a row
 with its chain coordinates into the hot store. A reader can now query it, knowing it remains inside
-the reorg window. After finality, the sealer writes the row into a Parquet segment, commits the
-updated manifest and removes the corresponding hot copy. The SQL view continues to return it,
-because it reads hot plus sealed history as one logical table.
+the reorg window. After finality, and once enough finalised rows have gathered for a cut, the
+sealer writes the row into a Parquet segment, commits the updated catalogue, and then in one hot
+store transaction prunes the corresponding hot copy and advances the sealed watermark. The SQL view
+continues to return it, because it reads hot plus sealed history as one logical table.
 
 The row changes physical home exactly once under normal operation. Its meaning does not change at
 all. That is the point of keeping decoding separate from storage and of treating finality as a
