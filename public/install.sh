@@ -58,8 +58,16 @@ install -m 0755 "${tmp}/nuthatch" "${dir}/nuthatch"
 echo "nuthatch: installed to ${dir}/nuthatch"
 case ":$PATH:" in
   *":$dir:"*) : ;;
-  *) echo "nuthatch: add ${dir} to your PATH to run 'nuthatch'" ;;
+  *)
+    echo "nuthatch: ${dir} is not on your PATH. Add it:"
+    echo ""
+    if [ "$dir" = "$HOME/.local/bin" ]; then
+      echo '  export PATH="$HOME/.local/bin:$PATH"'
+    else
+      echo "  export PATH=\"${dir}:\$PATH\""
+    fi ;;
 esac
 echo ""
-echo "  next:  nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48 --alias usdc"
+echo "  next:  nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth"
 echo "         nuthatch dev --backfill 300"
+echo "         nuthatch sql \"SELECT count(*) FROM weth__transfer\""

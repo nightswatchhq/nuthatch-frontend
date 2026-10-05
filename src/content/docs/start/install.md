@@ -41,12 +41,12 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.4.0 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.7.0 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`4.4.0-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`4.7.0-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source
@@ -78,7 +78,7 @@ Then take the two-minute path: [Quickstart](/docs/start/quickstart/) - from a co
 live, queryable API.
 
 ```sh
-nuthatch init 0xA0b86991c6218b36c1D19D4a2e9Eb0cE3606eB48   # USDC - chain auto-detected
+nuthatch init 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 --alias weth   # WETH - chain auto-detected
 nuthatch dev --backfill 300
 ```
 
