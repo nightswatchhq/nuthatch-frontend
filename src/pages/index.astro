@@ -18,7 +18,7 @@ const rows = [
   <!-- 1. HERO -->
   <section class="hero">
     <div class="wrap">
-      <p class="hero-eyebrow rise rise-1"><span class="tag">v4.9.0 · MIT OR Apache-2.0</span></p>
+      <p class="hero-eyebrow rise rise-1"><span class="tag">v4.10.1 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
         Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres,
@@ -50,7 +50,7 @@ const rows = [
     <div class="wrap">
       <Terminal />
       <p class="demo-caption">
-        A real run, start to finish. <code>init</code> resolves the ABI and scaffolds the
+        A real run of 4.10.1, with the log trimmed to the lines that matter. <code>init</code> resolves the ABI and scaffolds the
         project; <code>dev</code> follows the tip, seals finalized ranges to Parquet, and serves it.
         <code>--backfill 300</code> starts 300 blocks behind the tip, so there are rows within
         seconds; without it <code>dev</code> backfills from deployment, which for a contract with a
@@ -65,15 +65,15 @@ const rows = [
       <div class="proof-grid">
         <div class="card proof-card">
           <div class="proof-stat">&lt; 1.8 GiB peak <span class="tag proof-tag">measured</span></div>
-          <p>The largest nest we run, answering the 74 statements its dashboard and jobs send, two at a time under its production limits on Linux: 1,595 to 1,788 MiB over four runs of 4.7.0, inside the 2 GB budget. <a href="https://github.com/nightswatchhq/nuthatch/releases/tag/v4.7.0" rel="noopener">Release notes</a>.</p>
+          <p>The largest nest we run, answering the 74 statements its dashboard and jobs send, two at a time under its production limits on Linux: 1,595 to 1,788 MiB over four runs of 4.4.0, inside the 2 GB budget. <a href="https://github.com/nightswatchhq/nuthatch/releases/tag/v4.4.0" rel="noopener">Release notes</a>.</p>
         </div>
         <div class="card proof-card">
-          <div class="proof-stat">74.8 s <span class="tag proof-tag">measured</span></div>
-          <p>Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a> case 1 - 22.2M blocks of Ethereum, 294,278 events - in 321 RPC requests and 320 MB. Someone else's benchmark, run against a real provider.</p>
+          <div class="proof-stat">4.67 s <span class="tag proof-tag">measured</span></div>
+          <p>Sentio's <a href="https://github.com/sentioxyz/open-blockchain-indexer-benchmark" rel="noopener">OBIB</a> case 6, the Uniswap V2 factory over 10,001 blocks with 232 pairs discovered as it ran: 35,271 events in 14 RPC requests and 229 MB, median of five runs of the published 4.7.0 binary against a keyless public gateway. Someone else's benchmark, not a ranking. <a href="https://github.com/nightswatchhq/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md" rel="noopener">The run's record</a>.</p>
         </div>
         <div class="card proof-card">
-          <div class="proof-stat">&lt; 2 minutes <span class="tag proof-tag">target</span></div>
-          <p>Contract address to live indexed API. Timed from <code>init</code> to first query.</p>
+          <div class="proof-stat">10 to 11 s <span class="tag proof-tag">measured</span></div>
+          <p>Contract address to a live indexed API: the README quickstart run as written in a clean <code>ubuntu:24.04</code> container. <a href="https://github.com/nightswatchhq/nuthatch/releases/tag/v4.8.0" rel="noopener">4.8.0 release notes</a>.</p>
         </div>
         <div class="card proof-card">
           <div class="proof-stat">0 telemetry</div>
@@ -216,7 +216,7 @@ const rows = [
         <div class="card ai-card">
           <span class="ai-kicker">For agents</span>
           <ul class="ai-list">
-            <li>A built-in MCP server - 12 tools, 3 resources, and 3 prompts: schema discovery, SQL, entity and balance lookup, plus flags, exposure, and sanctions screening.</li>
+            <li>A built-in MCP server: nine tools, three resources and two prompts on every nest, covering schema discovery, SQL, entity and balance lookup. Flags, exposure, sanctions screening and a third prompt appear when the compliance pack is configured.</li>
             <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and a failed query comes back as a fix hint (<code>explain</code> checks a query before it runs) - so the agent gets it right first try.</li>
             <li>Ships <code>llms.txt</code> and a Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
             <li>Works fully offline against your local instance.</li>
@@ -227,8 +227,6 @@ const rows = [
           <ul class="ai-list">
             <li><code>init</code> resolves the ABI and scaffolds the project: config, <code>llms.txt</code>, and a Claude Code skill.</li>
             <li>The skill hands the tool the real query surface, so it uses actual endpoints, not guesses.</li>
-            <li><em>Planned:</em> generated schema, views, and tests from an ABI, reviewed through the deterministic core.</li>
-            <li><em>Planned:</em> local models via Ollama or your own key - no AI feature will require the cloud.</li>
           </ul>
         </div>
       </div>
@@ -238,7 +236,7 @@ const rows = [
   <!-- CLOSING CTA -->
   <section class="close">
     <div class="wrap narrow close-inner">
-      <h2>Two minutes. One binary. No one to ask.</h2>
+      <h2>Under two minutes. One binary. No one to ask.</h2>
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="close-alt"><a href="/install">Full install options</a> · <a href="/manifesto">Read the manifesto</a></p>
     </div>
