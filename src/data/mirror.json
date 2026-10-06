@@ -31,10 +31,10 @@
     {
       "nest": "betswirl-bnb-nest",
       "repo": "https://github.com/nightswatchhq/betswirl-bnb-nest",
-      "dataset": "505b1d73515cebb067867cbd25a8dfd20ca69826cda8cd048d03fbde794c9aa1",
-      "commit": "befc855f8855be0147da1b70812dfacaf1a6626d",
+      "dataset": "f00657c71f08fbf5c0badbfe236aaa467960d865380be29dff40abae84786c31",
+      "commit": "92d6588a3ad33c3e774f9244e6709b3f8ebc31ce",
       "devArgs": "--state-rpc <BNB archive RPC URL>",
-      "note": "The first subgraph stopgap nest (BNB Chain). Run it with the nuthatch-graph download from 4.11.0 or later, which serves its GraphQL; the default binary indexes it but has no /graphql route."
+      "note": "The first subgraph stopgap nest (BNB Chain). Run it with the nuthatch-graph download from 4.12.0 or later, which serves its GraphQL; the default binary indexes it but has no /graphql route."
     }
   ]
 }
