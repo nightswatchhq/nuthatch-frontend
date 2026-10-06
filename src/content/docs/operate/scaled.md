@@ -87,6 +87,10 @@ Every write carries a fence, and a stale fence is rejected inside the same trans
 worker that checked its own lease before writing would be checking a fact that can expire between the
 check and the write; this cannot.
 
+The worker stops on its own as well. Since 4.11.0, a worker whose tick finds a cursor's lease held by
+another worker aborts that cursor's ingestion on the same tick and keeps running the cursors it still
+holds. Before, it carried on fetching and only the fence refused its writes.
+
 That is why `--scale writer=N` is safe.
 
 ### The control plane and the lease are independent, on purpose

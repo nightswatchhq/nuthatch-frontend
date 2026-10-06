@@ -65,8 +65,13 @@ The default command binds `0.0.0.0:8288` *inside* the container. Publish it to `
 as above and put a proxy in front, exactly as on bare metal. `docker stop` sends SIGTERM, which drains
 and checkpoints cleanly.
 
-Pin the version tag rather than `:latest` for anything you care about. `linux/amd64` only for now - a
-multi-arch image needs an aarch64-linux build we do not yet produce.
+Pin the version tag rather than `:latest` for anything you care about. The image is `linux/amd64`
+only. From 4.11.1 an aarch64 Linux box has release binaries, default and graph, so run the binary
+under systemd there rather than the image under emulation.
+
+**GraphQL is not in any image.** The image carries the default binary, which has no `/graphql` route.
+A nest that serves Graph-dialect GraphQL runs on the `nuthatch-graph-<target>` release download, under
+systemd as above.
 
 **Scaled mode needs the `-scaled` tag.** The default image is the embedded build and carries no
 database driver. `worker` and `control` still appear in its `--help` (the CLI surface is shared), but

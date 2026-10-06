@@ -40,6 +40,16 @@ Levels 0 - 4 are automated:
 Level 5 is where independent verification is worth the most, and where we have most recently been
 wrong - see below.
 
+Level 0 is one you can run on your own download in a line. Every release tarball, the
+`nuthatch-graph-<target>` builds included since 4.11.0, carries a SHA-256 sidecar and a GitHub build
+provenance attestation:
+
+```sh
+gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nightswatchhq/nuthatch
+```
+
+It exits `0` when the file was built by the release workflow in that repository, at a release tag.
+
 ## Level 5 is worth reading before you trust it
 
 Until v0.9.3, **the writer pool did not write.** A worker registered, took a cursor lease, loaded

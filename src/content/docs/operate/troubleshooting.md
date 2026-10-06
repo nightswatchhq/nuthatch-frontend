@@ -34,8 +34,10 @@ and a frozen line is the concurrency stall above.
 
 A *sparse* contract over millions of blocks isn't stuck, just inefficient - each window comes back
 near-empty. Widen it: `--window 50000` turns tens of thousands of near-empty requests into a few.
-Keep the window under your provider's `getLogs` block-range cap; the concurrent backfill fails a
-too-big range loudly rather than silently shrinking it.
+A window over your provider's `getLogs` cap is not fatal: a refused range is split and the halves
+retried, and a refusal that names the range it would serve (`eth_getLogs is limited to 0 - 50 blocks
+range`, since 4.11.0) is split there. Only a single block over the cap stops the run (below). Each
+split is another request, though, so `nuthatch doctor` (above) gives a window that needs none.
 
 ## Free public RPCs: stalls and empty results
 
@@ -51,7 +53,22 @@ and the failure mode is worth knowing because **it does not always look like an 
 - **Deep backfills crawl or stop.** Full history over a busy contract is millions of `eth_getLogs`
   calls; expect throttling long before it finishes.
 - **No archive guarantees.** Many free endpoints prune old state, so a backfill from a 2020 deploy block
-  can fail partway.
+  can fail partway. When no endpoint in the pool keeps the blocks asked for, the backfill stops on the
+  first refusal and says what to supply, rather than retrying:
+
+  ```text
+  Error: backfill cannot fetch blocks 60000000..=60000079
+  Caused by:
+      no configured RPC endpoint keeps blocks this old (https://bsc-rpc.publicnode.com); supply an
+      archive-capable RPC with `--rpc` or `rpc_urls`. Last answer: HTTP 403 Forbidden: ... "Archive
+      requests require a personal token. ..."
+  ```
+- **Address limits.** Some endpoints refuse an `eth_getLogs` that names too many addresses: BSC's and
+  Polygon's publicnode refuse ten or more with `Request blocked`, and an address-less one with `Please
+  specify an address`. Since 4.11.0 neither is read as a credentials problem. The address list is halved
+  until the endpoint accepts it, and the size is remembered (`eth_getLogs naming 10 addresses was
+  refused (...); asking in groups of at most 5` in the log), and a factory nest keeps asking by
+  address rather than by event signature alone.
 
 **Symptoms:** `nuthatch_last_block` barely moves while `nuthatch_rpc_requests_total` climbs; `/ready`
 reports `stalled` (no successful poll within the stall window); the log names each endpoint that
@@ -115,6 +132,18 @@ if you're tight, lower query concurrency rather than the per-query cap.
 ABI changed. Fix the file or run `nuthatch schema` to regenerate the derived artifacts; the
 footguns are always recomputed, and only the authored descriptions are yours to maintain. Stale
 semantics are worse than none, so `dev` warns loudly.
+
+## "unknown chain" at `init`
+
+`--chain` takes a built-in name, and the error lists every one of them (monad and robinhood included
+since 4.11.0):
+
+```text
+Error: unknown chain 'avalanche' (try: mainnet, arbitrum-one, base, optimism, polygon, bsc, gnosis,
+monad, robinhood) - or pass --rpc <url> to point nuthatch at a chain it doesn't ship built-in
+```
+
+For any other EVM chain, pass `--rpc` with an endpoint on it; the chain id is read from the endpoint.
 
 ## ABI won't resolve at `init`
 

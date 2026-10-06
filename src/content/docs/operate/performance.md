@@ -152,6 +152,20 @@ change was not made for speed: measured on a production nest on 2026-10-01, Burr
 language in the binary and exact arithmetic that refuses rather than wraps. See
 [Replacing DuckDB, after all](/blog/replacing-duckdb-after-all).
 
+## A repeated statement
+
+`/sql` remembers answers. A statement whose inputs have not changed is answered from memory, marked
+`"cached": true`, and never stale: the key is the statement, its row cap, the authored files and the
+rows and segments it reads, so a committed row or a newly sealed segment in a table it reads means the
+next request computes. Since 4.11.0 the key covers only what the statement reads, not every cursor
+poll, so a quiet nest at the tip answers a repeat from memory. The 4.11.0
+[release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.11.0) measured a repeated
+`bets` query on the BetSwirl stopgap nest at 10.4 s before and 3 ms after; the first run of a
+statement is as slow as it was ([#1951](https://github.com/nightswatchhq/nuthatch/issues/1951) is
+open for that). The memo is bounded by `NUTHATCH_SQL_MEMO_BYTES` (default 64 MiB, `0` turns it off),
+lives in the process and is cleared by a restart. Statements that call `now()`, `random()` and the
+like are never remembered.
+
 ## Measuring your own
 
 ```sh
@@ -163,5 +177,7 @@ seal-direct arms resolve those reads in 2.7.0, and the benchmark refuses to run 
 rather than silently measuring a cheaper workload. The URL is redacted from output so a report does
 not publish an API key along with the result.
 
-Benchmarks are CI artifacts here, not blog posts: backfill events/sec, tip lag, entity point-read
-p50/p99 and RSS are tracked per commit, and a regression fails the build.
+Benchmarks are CI artifacts here, not blog posts. Peak RSS (one nest and a dense multi-nest runtime),
+entity point-read p50 and the tip's after-seen p50 fail the build on a regression. Backfill events/sec,
+total tip lag and the p99s are measured on every PR and tracked, not gated: the CI fixture could not see
+a 4x decode cost ([#1723](https://github.com/nightswatchhq/nuthatch/issues/1723)).

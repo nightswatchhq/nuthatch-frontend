@@ -28,6 +28,14 @@ covered: the off-by-default cargo features `graph`, `folds`, `counter` and `exex
 UI's HTML; and the `postgres-store` build's internal schema. The full contract is in the operator
 guide's [stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
 
+## Upgrading to 4.11
+
+Replace the binary and restart. There is no storage migration and no re-index: a nest indexed by 4.10.1
+resumes at its last block under 4.11.0 and answers the same rows. The one thing to choose is the
+download. GraphQL lives only in the `nuthatch-graph-<target>` tarball each release now carries; the
+default binary has no GraphQL route and answers `/graphql` with `404`, as it always has. A nest that
+serves a subgraph's client queries runs on the graph download, and every other nest needs nothing new.
+
 ## Upgrading to 3.0.0
 
 This is a binary swap. Stop the service, replace the binary, and start it again. On-disk state is

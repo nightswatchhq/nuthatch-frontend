@@ -31,14 +31,19 @@ like slowness: max `eth_getLogs` width, max JSON-RPC batch size, and archive dep
 largest safe `--window` for that endpoint. With `--dir`, it probes the full declared contract set,
 not merely the first address, so the advice matches the filter the backfill will actually issue.
 
-Two failure modes worth knowing before they cost you an afternoon:
+Three failure modes worth knowing before they cost you an afternoon:
 
 - **Archive depth.** Several well-known free endpoints answer only ~100 blocks behind tip and return
   an "archive requests require a token" error beyond that. Such an endpoint cannot serve a backfill at
-  all, however fast it looks on a tip query.
+  all, however fast it looks on a tip query. Since 4.11.0 a backfill that meets that refusal stops at
+  once and says to supply an archive-capable endpoint, rather than retrying.
 - **Range caps.** Providers refuse an oversized range in inconsistent ways, sometimes with a 400 that
   reads like a client error. nuthatch splits and adapts around these, but an endpoint with a tight cap
   and no batching will be slow no matter what you set.
+- **Address caps.** Some endpoints refuse an `eth_getLogs` naming too many addresses (publicnode on
+  BSC: 10 or more). A nest with several contracts, or a factory nest, asks by address, so since 4.11.0
+  nuthatch halves the address list until the endpoint accepts it, rather than reading the refusal as a
+  credentials error.
 
 Pass `--address` so the probe matches what a real nest asks for; some endpoints cap an unfiltered
 query harder than a filtered one.
