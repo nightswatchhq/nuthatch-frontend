@@ -19,7 +19,8 @@ the MCP `schema` tool - it contains:
 - **The contracts**: every alias and address the nest indexes.
 - **The tables**: one line per `{alias}__{event}` table with its columns.
 - **The live HTTP API**: the handful of endpoints that matter (`/`, `/tables`,
-  `/table/{name}`, `/entity/{id}`, `/sql?q=…`, `/balances`, `/balance/{address}`).
+  `/table/{name}`, `/entity/{id}`, `/sql?q=…`, `/balances`, `/balance/{address}`, `/queries`,
+  `/derived`).
 - **The MCP pointer**: run `nuthatch mcp` for the [tool surface](/docs/reference/mcp/), fully
   offline.
 
