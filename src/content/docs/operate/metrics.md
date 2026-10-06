@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -33,7 +33,8 @@ Process-level counters:
 | `nuthatch_reorgs_total` | Reorg detections (the hot store rolled back and converged). |
 | `nuthatch_http_requests_total` | Every served request - the operator's billing/usage signal. |
 | `nuthatch_sql_queries_total` | Analytical queries served. |
-| `nuthatch_sql_rejections_total` | Queries refused by the guards (timeout, interrupt, bad SQL). |
+| `nuthatch_sql_rejections_total` | Queries refused by the guards. The unlabelled series is the total; the `reason` label splits it into `busy`, `too_large`, `invalid`, `bounded`, `admission`, `timeout` and `out_of_memory`. |
+| `nuthatch_sql_memo_hits_total`, `nuthatch_sql_memo_misses_total` | `/sql` answers served from the answer cache, and those computed. Since 4.11.0 the cache keys on the rows and segments a statement reads, so a repeated statement over unchanged data is a hit even while the cursor polls. |
 | `nuthatch_rpc_requests_total` | Upstream RPC calls made. |
 
 With [many nests in one runtime](/docs/operate/many-nests/), the height and poll gauges above
@@ -64,6 +65,19 @@ Each declared authored incremental entity adds seven gauges, labelled by nest an
 and `nuthatch_entity_state_bytes`. Page on `faulted`; investigate a `current` gauge that stays
 zero or a progress age that keeps climbing. This is the difference between a maintained answer that is
 fresh and one that merely happens to have a table-shaped name.
+
+A nest started with `--publish-target` adds the mirror's series, labelled by nest:
+
+| Series | Meaning |
+|---|---|
+| `nuthatch_publish_lag_blocks` | Blocks spanned by final local segments the mirror does not hold, summed over tables. `0` means every sealed segment is published. |
+| `nuthatch_publish_sealed_through` | The highest block the published catalogue covers. |
+| `nuthatch_publish_pending_segments` | Segments the current pass has still to upload. |
+| `nuthatch_publish_bytes_total`, `nuthatch_publish_errors_total` | Bytes uploaded, and passes that failed, since start. |
+| `nuthatch_publish_dead_letter` | `1` once the same object has failed repeatedly; clears on the next success. |
+
+Alert on `nuthatch_publish_lag_blocks` staying above zero. Before 4.11.0 it was the seal watermark
+less the mirror's highest block, which read millions on a quiet nest whose mirror was complete.
 
 ## The footprint budget
 

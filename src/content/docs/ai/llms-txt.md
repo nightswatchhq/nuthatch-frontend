@@ -2,7 +2,7 @@
 title: "llms.txt"
 description: "The machine-readable index scaffolded projects ship for coding agents."
 order: 2
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 Every nest `init` scaffolds includes an `llms.txt` - a one-page, plain-text index of the project
@@ -19,7 +19,8 @@ the MCP `schema` tool - it contains:
 - **The contracts**: every alias and address the nest indexes.
 - **The tables**: one line per `{alias}__{event}` table with its columns.
 - **The live HTTP API**: the handful of endpoints that matter (`/`, `/tables`,
-  `/table/{name}`, `/entity/{id}`, `/sql?q=…`, `/balances`, `/balance/{address}`).
+  `/table/{name}`, `/entity/{id}`, `/sql?q=…`, `/balances`, `/balance/{address}`, `/queries`,
+  `/derived`).
 - **The MCP pointer**: run `nuthatch mcp` for the [tool surface](/docs/reference/mcp/), fully
   offline.
 

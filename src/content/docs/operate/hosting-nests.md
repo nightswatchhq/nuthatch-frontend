@@ -2,7 +2,7 @@
 title: Host nests for others
 description: Run one runtime that other people's nests are mounted into over an API - publish, price, mount by identity, pause, move, reclaim and meter, with no orchestration on your side.
 order: 8.5
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 This is the guide for running nuthatch **as a host**: one runtime, started with nothing in it, that
@@ -19,6 +19,15 @@ What stays outside the runtime, by design: who your callers are, what they may d
 how the process is supervised. nuthatch sees a tenant as an opaque label and knows nothing else about
 it. Sign-in, plans, per-tenant authorisation, quotas and billing belong to a gateway in front of the
 runtime; process supervision belongs to systemd or a container restart policy.
+
+Hosting is for operators. Nightswatch, which builds nuthatch, runs no hosted nest service, with one
+exception approved on 2026-10-06: it serves
+[subgraph stopgap nests](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
+for BNB Chain and Polygon subgraphs The Graph network does not serve, until an indexer picks each one
+up. Each is the stock binary run as any operator would run it, with no billing, no accounts and no
+platform. The first is BetSwirl on BNB Chain, and its
+[handback](https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md) says how
+to run it yourself and how to go back to the network.
 
 ## The moving parts
 

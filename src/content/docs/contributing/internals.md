@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -43,7 +43,11 @@ tracking. Two behaviours are worth calling out because they were both learned th
 **Failures are classified, not merely retried.** A rate limit, a transport blip, an oversized-range
 refusal and a rejected credential are four different things. An auth rejection is cooled down loudly
 rather than retried forever; a 429 escalates across the pool; an oversized range is split and retried,
-taking the provider's own suggested range when it offers one.
+taking the provider's own suggested range when it offers one. A refusal of the filter's address
+list (publicnode on BSC and Polygon refuses ten or more addresses in one `eth_getLogs`) is a fifth
+kind: the list is halved until the endpoint accepts it, and that group size is remembered, rather
+than the endpoint being cooled down as if its credentials had been refused. An archive refusal stops
+a backfill at once with a hint to supply an archive endpoint.
 
 **A failure we cannot classify is split once anyway.** Providers phrase the same refusal a dozen ways
 and invent new phrasings without telling anyone. Running Sentio's OBIB benchmark found the cost of
@@ -59,7 +63,9 @@ on demand and reports what an endpoint will actually serve.
 
 ## Decode - `registry.rs`
 
-The decode registry is the determinism boundary. Given each contract's resolved ABI, it builds one
+`registry.rs` is a thin re-export; the decode logic lives in the `nuthatch-decode` crate under
+`decode/`, so fuzz targets build without the rest of the binary. The decode registry is the
+determinism boundary. Given each contract's resolved ABI, it builds one
 immutable map from `topic0` → decoders, filtered by emitting address, and turns any log into a typed
 row keyed to a per-`(alias, event)` table.
 
@@ -164,8 +170,16 @@ includes only segments at or below `sealed_through`, hot only rows above it. The
 overlap, even during the brief window between sealing and pruning.
 
 Results carry **provenance**: the `as_of` and `sealed_through` watermarks, the nest's `nid` and
-`registry_hash`, and each referenced entity's watermark, so a number can be cited and re-derived. It
-names the dataset and the cut, not the individual segments.
+`registry_hash`, each referenced entity's watermark, and `source`, which is `hot+sealed` normally and
+`sealed` when the tip could not be scanned and the answer is cold-only. A number can be cited and
+re-derived. It names the dataset and the cut, not the individual segments.
+
+Answers are remembered by `sqlmemo.rs`, and the memo is not a TTL cache. Its key is every input the
+answer depends on: the statement and its row cap, the sealed segments it is served, a generation that
+moves only when a commit changes hot rows, each entity's watermark, and the authored files. A cursor
+poll that commits no rows leaves the key alone, so a quiet nest at the tip answers a repeated
+statement from memory (`"cached": true`), and a degraded answer is never remembered. It is bounded
+by `NUTHATCH_SQL_MEMO_BYTES` (64 MiB by default, `0` turns it off) and cleared by a restart.
 
 `/sql` is a genuine analytical surface exposed to callers, so it is guarded: a 30-second timeout, a
 50,000-row cap, a 64 MiB result ceiling, 2 concurrent analytical queries, a 16 KiB query-length limit,
@@ -182,8 +196,12 @@ Uniswap-class protocols are unindexable without dynamic data sources: the childr
 you write the config. A *factory* watches an event (`PoolCreated`) and indexes the child it announces
 under a *template* ABI, into shared `{template}__*` tables.
 
-At the tip this is a topic0-only fetch, so N discovered children cost roughly one child's RPC budget
-rather than N.
+Each window asks for logs by the factory and child addresses, in the backfill, the tip loop and a
+runtime's cursor alike, until 500 children have been discovered. Past that the fetch flips to
+topic0-only and discards non-children locally, so N children cost roughly one child's RPC budget
+rather than N. A chain whose shipped endpoint refuses address-less `eth_getLogs` (BSC) keeps asking by
+address past 500, and an endpoint that refuses a topic0-only fetch at runtime switches the cursor to
+addresses.
 
 ## Packaging - `blob.rs`, `distribution.rs`
 
@@ -232,7 +250,9 @@ binary carries no database driver.
 
 **Ownership is enforced by the store, not by agreement.** Every write carries a fence; a stalled
 worker that wakes to find its lease reassigned has its writes *refused* inside the same transaction as
-the write. That is what makes `--scale writer=N` safe.
+the write. That is what makes `--scale writer=N` safe. The worker does not lean on the fence alone:
+each tick takes what it holds from the leases it actually renewed or acquired, never from memory, and
+stops ingesting a cursor whose lease was taken on that tick while its other cursors carry on.
 
 The control plane and the lease are **deliberately independent**: a control-plane outage stops
 *rescheduling*, not *ingestion*. Measured - 377 blocks indexed through a 90-second outage.

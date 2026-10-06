@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -27,6 +27,14 @@ covered: the off-by-default cargo features `graph`, `folds`, `counter` and `exex
 `/sql`, which changed with the engine in 4.1; segment hashes across `arrow-rs` versions; the admin
 UI's HTML; and the `postgres-store` build's internal schema. The full contract is in the operator
 guide's [stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
+
+## Upgrading to 4.11
+
+Replace the binary and restart. There is no storage migration and no re-index: a nest indexed by 4.10.1
+resumes at its last block under 4.11.0 and answers the same rows. The one thing to choose is the
+download. GraphQL lives only in the `nuthatch-graph-<target>` tarball each release now carries; the
+default binary has no GraphQL route and answers `/graphql` with `404`, as it always has. A nest that
+serves a subgraph's client queries runs on the graph download, and every other nest needs nothing new.
 
 ## Upgrading to 3.0.0
 

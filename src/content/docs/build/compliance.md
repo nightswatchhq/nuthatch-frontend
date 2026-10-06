@@ -2,7 +2,7 @@
 title: Compliance pack
 description: Optional screening, flags, and alerts - a derive-only stage over decoded transfers.
 order: 7
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 Some nests need more than raw rows: screen addresses against a sanctions list, flag transfers that cross

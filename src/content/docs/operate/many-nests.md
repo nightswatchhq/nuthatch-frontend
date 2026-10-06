@@ -2,7 +2,7 @@
 title: Run many nests
 description: One runtime hosting many nests across one or more chains, with one isolated cursor per chain and tenancy handled by the runtime itself.
 order: 8
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 One **runtime** hosts one nest or many. Nests on the same chain share a single cursor and one
@@ -134,9 +134,10 @@ deterministic tests, and for operators who would rather a process die loudly tha
 
 ## Multichain
 
-To span more than one chain, drop the top-level `chain`/`chain_id`/`rpc_urls` and list chains under
-`[[chains]]` (a top-level array beside `[runtime]`); each nest declares its own `chain` in its
-`nuthatch.toml`:
+To span more than one chain, add a second entry under `[[chains]]` (a top-level array beside
+`[runtime]`); each nest declares its own `chain` in its `nuthatch.toml`. A second chain is a second
+cursor. The pre-2.0 form, with `chain`/`chain_id`/`rpc_urls` directly under `[runtime]`, is refused at
+startup with a pointer to `nuthatch migrate`, which rewrites it:
 
 ```toml
 [runtime]

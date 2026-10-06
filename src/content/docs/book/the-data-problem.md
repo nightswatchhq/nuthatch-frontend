@@ -83,7 +83,10 @@ and independently operated fallback for the read it cannot afford to lose.
 
 This is not an ideological replacement programme. It is a good operational shape: use the rich
 surface you have, and keep the irreplaceable event data somewhere you control. The practical
-[subgraph fallback guide](/docs/build/subgraph-fallback/) walks through that exercise.
+[subgraph fallback guide](/docs/build/subgraph-fallback/) walks through that exercise. Where the
+dashboard's queries ask only for event-shaped fields, the separate `nuthatch-graph` download
+(attached to every release since 4.11.0) can answer the subgraph's own GraphQL for them and refuse
+anything else by name; the default binary serves no GraphQL at all.
 
 The next question is how that small description remains trustworthy after it has left your laptop.
 That is the work of the authored nest.

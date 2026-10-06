@@ -28,7 +28,10 @@ The details matter because RPCs are prone to giving an answer that is technicall
 operationally useless. A provider may time out, cap a response, or make a 10,000-block request feel
 like a personal insult. The window therefore adapts: it starts from the chain's measured default,
 shrinks when a request is refused and grows back when requests succeed, and `--window` is the
-ceiling an operator places on that. Concurrent fetching is reserved for the direct-seal backfill of
+ceiling an operator places on that. A provider can also object to the filter rather than the
+range: publicnode on BNB Chain and Polygon refuses a request naming ten or more addresses, and since
+4.11.0 that is recognised as a refused filter rather than misread as a credentials failure, and the
+address list is split in halves until a request is accepted. Concurrent fetching is reserved for the direct-seal backfill of
 history already past finality; the ordinary walk is one window at a time, because its results must
 enter the hot store in order. Faster is useful, but only if every accepted block remains attributable
 and repeatable.
@@ -64,9 +67,11 @@ that own their address and event signature. A log may be relevant to more than o
 case each gets its own decoded rows. Fetching is shared; the nests' datasets are not silently
 merged. This distinction keeps ownership and rollback manageable while avoiding N copies of the
 same RPC polling. One consequence is worth knowing when sizing a runtime: a factory nest cannot
-name its children's addresses in advance, so a cursor hosting one fetches by topic alone and the
-whole union loses its address filter. Its neighbours then pay, in logs fetched and discarded, for
-the factory's open-endedness.
+name its children's addresses in advance. Since 4.11.0 a cursor hosting one asks by the factory's
+address and every child discovered so far, rediscovering as it goes, until the union passes 500
+addresses; past that it fetches by topic alone, and the whole union loses its address filter. Its
+neighbours then pay, in logs fetched and discarded, for the factory's open-endedness. An endpoint
+that refuses an address-less `eth_getLogs` keeps the cursor asking by address whatever the count.
 
 Different chains need different cursors. They have different heads, different finality rules and
 different failure domains. A runtime can host them, but it does not pretend that Arbitrum and

@@ -2,7 +2,7 @@
 title: "Verifying a deployment"
 description: An acceptance runbook that proves a deployment works, step by falsifiable step - and an honest table of what we have verified ourselves and what we have not.
 order: 7
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 Most projects tell you what they support. This tells you **how to prove it on your own hardware**, and
@@ -39,6 +39,16 @@ Levels 0 - 4 are automated:
 
 Level 5 is where independent verification is worth the most, and where we have most recently been
 wrong - see below.
+
+Level 0 is one you can run on your own download in a line. Every release tarball, the
+`nuthatch-graph-<target>` builds included since 4.11.0, carries a SHA-256 sidecar and a GitHub build
+provenance attestation:
+
+```sh
+gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nightswatchhq/nuthatch
+```
+
+It exits `0` when the file was built by the release workflow in that repository, at a release tag.
 
 ## Level 5 is worth reading before you trust it
 

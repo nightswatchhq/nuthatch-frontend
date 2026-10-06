@@ -17,7 +17,7 @@ and `owner_fence`, a monotonically increasing number that identifies one particu
 ownership. Putting the lease next to the data it protects is what lets every write check it in the
 same transaction.
 
-This appendix is read against the 4.10.1 source and dated rather than re-run. Scaled mode is a
+This appendix is read against the 4.11.0 source and dated rather than re-run. Scaled mode is a
 separate build, `--features postgres-store`, shipped as the `nuthatch-scaled` Linux tarball; the
 default binary answers `nuthatch worker` with a refusal that says so. The two-machine run it
 describes is the one that accompanied RFC-0022.
@@ -47,14 +47,15 @@ lost-ownership error, including A's attempt to renew. Worker A cannot resume and
 claim merely because its process remained alive long enough to regain connectivity. The lease has
 moved on.
 
-A correctly written worker would also stop its local ingestion task when it learns that it has lost
-the lease, to save the work and narrow the time during which it attempts stale operations. In
-4.10.1 it does not. A tick whose renewal is refused is logged as a failed tick, with the note that
-held cursors keep working, and the ingestion task runs on, polling the RPC and decoding windows
-whose every commit the fence then refuses, until the worker is restarted. That is filed as nuthatch
-#1934. The data is safe throughout, which is the point of the next sentence: the fence is necessary
-because process shutdown and network delivery are not atomic events. It is the backstop that makes
-delayed messages, slow death and, as it turns out, a worker that has not noticed, harmless.
+A worker should also stop its local ingestion task when it learns that it has lost the lease, to
+save the work and narrow the time during which it attempts stale operations. Since 4.11.0 it does:
+a renewal the store refuses because the fence has moved is recorded as a lost cursor rather than a
+failed tick, the worker logs that another holder has it, and stops that cursor's nests on the same
+tick while its other cursors carry on. Up to 4.10.1 the ingestion task ran on, polling the RPC and
+decoding windows whose every commit the fence then refused, until the worker was restarted
+(nuthatch #1934). The data was safe even then, which is the point of the next sentence: the fence
+is necessary because process shutdown and network delivery are not atomic events. It is the
+backstop that makes delayed messages, slow death and a worker that has not yet noticed harmless.
 
 ## Control plane outage is not automatic eviction
 

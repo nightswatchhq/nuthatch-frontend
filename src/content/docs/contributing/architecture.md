@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the transform runtime."
 order: 1
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -43,13 +43,19 @@ The crate is a library (`lib.rs`) so a second front-end - notably a colocated re
 and both drive the pipeline through the `Source` trait (`source.rs`).
 
 - **Ingest & decode**: `rpc` (batched extraction, failover, the adaptive getLogs window), `chunker`,
-  `abi`, `chains`, `factory` (dynamic child discovery), `indexer` (the loop), `progress`.
-- **Storage**: `store` (redb hot store), `seal` (Parquet segments), `blob` + `distribution` +
-  `registry` (content-addressed bundles and the nest registry).
+  `abi`, `chains`, `factory` (dynamic child discovery), `registry` (the decode registry, re-exported
+  from the `nuthatch-decode` crate in `decode/`), `indexer` (the loop), `progress`.
+- **Storage**: `store` (redb hot store), `seal` (Parquet segments), `blob` + `distribution`
+  (content-addressed bundles and the nest registry), `publish` + `seed` (mirroring sealed segments to
+  a bucket, and filling a nest from one).
 - **Derivation & query**: `views` (the DBSP IVM core, e.g. balances), `entities` (authored
   incremental entities), `recipes`, `analytics` (read-only SQL over hot ∪ sealed, and authored SQL
-  views), `engine` + `engine_burrmill` (the engine trait, with Burrmill behind it), `serve` (the HTTP
+  views), `sqlmemo` (the `/sql` answer cache, keyed on the rows and segments a statement reads),
+  `engine` + `engine_burrmill` (the engine trait, with Burrmill behind it), `serve` (the HTTP
   surface), `sql_errors` (errors-as-prompts), `transform` (the WASIp2 component runtime).
+- **Subgraph porting**: `subgraph_import` (`init --from-subgraph`), `port_emit` + `port_report` (the
+  per-field coverage report), `graph_schema` + `graph_query` (the Graph-dialect GraphQL read surface,
+  routed only in a `--features graph` build, which each release ships as `nuthatch-graph-<target>`).
 - **Meaning & agents**: `semantic` (the governed semantic layer), `mcp`, `skill` (the generated
   CLI reference), `metadata`.
 - **Compliance**: `labels`, `lists`, `screen`, `flags`, `velocity`, `exposure`, `alerts`,

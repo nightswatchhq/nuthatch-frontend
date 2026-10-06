@@ -9,10 +9,10 @@ which command and setting to use. This book explains why the machine is shaped a
 invariants it protects, and what each boundary buys you when something goes wrong at three in the
 morning.
 
-It describes Nuthatch 4.10.1. It is deliberately grounded in the running implementation, not a
+It describes Nuthatch 4.12.0. It is deliberately grounded in the running implementation, not a
 design sketch for a future product: each mechanism a chapter narrates was read against the function
 that implements it in that release, and the worked examples in the first two appendices were re-run
-on its released binary. Where the system has a limitation, it is named. A system that is honest
+on the 4.11.0 release binary; 4.12.0 changed the engine's plans and shutdown, not what they show. Where the system has a limitation, it is named. A system that is honest
 about its edge is more useful than one that claims to be a universal solvent.
 
 ## How to read it

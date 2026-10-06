@@ -2,7 +2,7 @@
 title: "Serving & the admin UI"
 description: "The HTTP API, entity point-reads, /sql, and the built-in admin UI."
 order: 1
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 `nuthatch dev` *is* the serve command: it backfills, follows the tip, and serves the HTTP API on
@@ -51,6 +51,23 @@ and a bounded thread count (`NUTHATCH_ANALYTICS_THREADS`, 2), so the analytical 
 [footprint budget](/docs/operate/metrics/).
 A statement that needs more memory than its session has is refused with an out-of-memory error, not
 spilled: since 4.1 a hash join or final aggregate cannot spill to disk, though a sort can (4.3.0).
+
+## Repeated statements
+
+A statement that repeats is answered from an answer cache when nothing it reads has changed, and the
+response says so with `"cached": true`. It is not a TTL cache and never serves a stale answer: the key
+is the statement and its row cap, the sealed segments it is served, the hot rows, each maintained
+entity's watermark and the nest's authored files. Since 4.11.0 the key follows the segments and rows a
+statement reads rather than every cursor poll, so a quiet nest at the tip answers a repeat from the
+cache, while a busy one computes again once a new row lands. A statement that calls a volatile
+function such as `now()` or `random()`, and a degraded answer, are never remembered. The cache is
+process-local, cleared by a restart, and bounded at 64 MiB (`NUTHATCH_SQL_MEMO_BYTES`; `0` turns it
+off).
+
+Every result also carries `provenance`: `as_of` (the head the answer is current to), `sealed_through`,
+the `registry_hash` it was decoded under, the `nid` of the dataset that answered, and `source`.
+`source` is `hot+sealed` normally. When the hot store would not scan and the answer came from sealed
+segments alone, `tip_unavailable` is `true` and, since 4.11.0, `source` says `sealed` too.
 
 ## When cold data is damaged (2.2.0)
 

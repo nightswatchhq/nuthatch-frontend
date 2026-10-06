@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -77,6 +77,10 @@ entity circuit.
   bundle must compute to that NID.
 - **`nuthatch nest publish <bundle> --registry <store>`** - publish under `name@version`, advancing
   `latest`, and index it by NID; prints the hash and the NID.
+- **`nuthatch nest rename-alias <old> <new>`** - re-key a contract alias in `nuthatch.toml`, the ABI
+  file and `semantic.toml`.
+- **`nuthatch seed --from <mirror>`** - fill a nest that has not indexed from a published mirror (a
+  path, `s3://bucket/prefix` or a public `https://` address) instead of backfilling over RPC.
 - **`nuthatch nest nid --dir <nest>`** - print the NID the nest's data is stored under (`data/<nid>/`), without
   running it.
 - **`nuthatch publish sync|status|verify|finalise --target <prefix>`** - mirror sealed segments to a

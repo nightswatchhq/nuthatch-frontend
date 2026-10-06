@@ -2,7 +2,7 @@
 title: Authored incremental entities
 description: A bounded keyed relation that Nuthatch maintains as blocks arrive rather than recomputing per query.
 order: 4
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 An entity is a relation a nest elects to maintain while it indexes. Its source facts are still the
@@ -93,7 +93,7 @@ rather than a dashboard discovering it later.
 
 ## A limitation that still holds
 
-Since 3.0.0, and still in 4.10.1, `nuthatch dev --seal-direct` refuses a nest that declares an entity
+Since 3.0.0, and still in 4.12.0, `nuthatch dev --seal-direct` refuses a nest that declares an entity
 (`--seal-direct cannot be combined with authored incremental entities`). Direct sealing bypasses the ingest
 path through which the relation is maintained; completing with an empty entity would be a particularly
 polite form of data corruption. Run the normal path for such a nest.

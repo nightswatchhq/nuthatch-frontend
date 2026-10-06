@@ -2,7 +2,7 @@
 title: "The SQL surface"
 description: "Querying the hot ∪ cold union, derived columns, and views."
 order: 5
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
@@ -71,8 +71,16 @@ binder knows the nearest table name, the quoting rule, and the `_dec` convention
 - **Provenance-stamped.** Results carry `as_of` (the block the answer is current to),
   `sealed_through`, `source`, the nest's `nid` and its `registry_hash`, plus each entity's own
   watermark when the query read one, so a number can be cited against a fixed watermark and
-  re-derived by anyone. A separate `tip_unavailable` flag says when the hot tail could not be read.
-  The stamp does not list the individual segments read.
+  re-derived by anyone. A separate `tip_unavailable` flag says when the hot tail could not be read,
+  and since 4.11.0 `source` then says `sealed` rather than `hot+sealed`. The stamp does not list the
+  individual segments read.
+- **Answers are remembered, never stale.** A repeated statement is answered from a process-local
+  cache, marked `"cached": true`. The entry is keyed on what the answer depends on: the statement and
+  its row cap, the sealed segments it can read, the hot rows, each entity's watermark and the authored
+  files. Since 4.11.0 a cursor poll that commits no new row does not change the key, so a quiet nest at
+  the tip answers a repeat from the cache; a committed row, a newly sealed segment or an edited view
+  does, and the next request computes. A degraded answer is never remembered. It is bounded by
+  `NUTHATCH_SQL_MEMO_BYTES` (64 MiB by default, `0` turns it off) and cleared by a restart.
 
 ```sql
 -- the shape of a typical answer (block_timestamp is epoch seconds; to_timestamp() makes it a time)

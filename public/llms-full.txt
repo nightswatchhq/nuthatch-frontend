@@ -2,14 +2,14 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v4.10.1**, released 2026-10-05, on the stable 4.x line. Licence:
+"Be your own indexer." Status: **v4.12.0**, released 2026-10-06, on the stable 4.x line. Licence:
 MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the released binary does
 from what is designed and not built. Do not present a design target as a present-tense capability,
 and do not infer customers, star counts or testimonials from it. It was rewritten from the
-documentation checked against 4.10.1, and every command it contains was run against the released
-4.10.1 binary. The short index is https://www.nuthatch-indexer.com/llms.txt.
+documentation read against 4.11.0, and every command it contains was run against the released
+4.11.0 binary. The short index is https://www.nuthatch-indexer.com/llms.txt.
 
 ## The problem it addresses
 
@@ -28,7 +28,10 @@ operational weight of the tooling, which is an engineering problem.
   first run needs no setup; they are not for production.
 - No gateway, no metered data API, no API tokens, no telemetry. Nothing phones home.
 - Free, licensed MIT OR Apache-2.0 at your option. There is no hosted tier, no token and no pricing
-  page. Nightswatch, the company behind it, does not run a hosted nest service.
+  page. Nightswatch, the company behind it, does not run a hosted nest service, with one exception
+  approved 2026-10-06: it serves stopgap nests for BNB Chain and Polygon subgraphs The Graph network
+  does not serve, until an indexer picks each one up. Each is the stock binary run as any operator
+  would run it, with no billing and no accounts.
 
 ## What it does today
 
@@ -112,7 +115,11 @@ operational weight of the tooling, which is an engineering problem.
 8. **Factories.** `[[templates]]` and `[[factories]]` index the child contracts a factory deploys at
    runtime, tip and backfill and reorg-safe. All children of a template share its tables,
    distinguished by the `address` column; `events` on a template chooses what is decoded. It indexes
-   Uniswap.
+   Uniswap. Since 4.11.0 logs are asked for by the factory and child addresses until 500 children,
+   in the backfill, the tip loop and a runtime's cursor alike, then by topic0; an endpoint that
+   refuses a topic0-only fetch keeps the cursor on addresses. An endpoint that refuses too many
+   addresses in one `eth_getLogs` (publicnode on BSC: ten or more) has the list halved until it
+   accepts, rather than being read as a credentials refusal.
 9. **The compliance pack** (RFC-0008, opt-in, zero cost when absent). Sanctions screening against
    content-addressed list snapshots (`nuthatch lists fetch ofac-sdn|eu-consolidated`, `nuthatch
    screen`), replayable `sanction_hit` annotations, threshold and velocity flags at `/flags`,
@@ -180,8 +187,9 @@ operational weight of the tooling, which is an engineering problem.
     Seeding a clean clone of graph-gns-nest from the public bucket took 2.4 s for 23 segments and
     18.9 MB, then six RPC calls to the tip. The public mirror at
     https://www.nuthatch-indexer.com/mirror holds four Graph Protocol nests (graph-gns-nest,
-    graph-allocations-nest, dips-nest, data-services-nest) on a Cloudflare R2 bucket, readable by
-    anything that reads Parquet over HTTPS.
+    graph-allocations-nest, dips-nest, data-services-nest) and the first subgraph stopgap nest
+    (betswirl-bnb-nest, BNB Chain, which needs the `nuthatch-graph` download to serve its GraphQL)
+    on a Cloudflare R2 bucket, readable by anything that reads Parquet over HTTPS.
 16. **Audit and extraction.** `nuthatch audit sealed --rpc <second endpoint> --dir <nest>` (4.5.0)
     re-fetches a sample of sealed ranges from an endpoint the nest does not index from and compares
     them row by row; `dev --audit-rpc` does it in the background and reports on `/metrics`.
@@ -235,7 +243,11 @@ and a 2 GB analytics spill cap (507). The engine runs each session under a memor
 (`NUTHATCH_ANALYTICS_THREADS`, 2); since 4.4.0 every session over one nest draws on one pool
 (`NUTHATCH_BURRMILL_MEMORY_LIMIT`), and a statement that needs more is refused rather than spilled.
 A damaged sealed segment reduces its own table and the response says so (`degraded`,
-`degraded_tables`). `nuthatch_sql_rejections_total` counts refusals.
+`degraded_tables`). `nuthatch_sql_rejections_total` counts refusals. A repeated statement is
+answered from a process-local cache (`"cached": true`), keyed since 4.11.0 on the rows and segments
+it reads, so a cursor poll that commits nothing leaves the entry valid; `NUTHATCH_SQL_MEMO_BYTES`
+bounds it (64 MiB, `0` turns it off). A provenance stamp's `source` reads `sealed` rather than
+`hot+sealed` when the tip could not be read (`tip_unavailable`).
 
 The guards are node self-protection, not a security boundary. The API has no authentication of its
 own and binds `127.0.0.1` by default. Expose it behind a reverse proxy with TLS and auth, and decide
@@ -280,7 +292,8 @@ Opt-in at build time (`--features postgres-store`), shipped as the `nuthatch-sca
 the `:<version>-scaled` image, so the default binary carries no database driver. The same crates run
 as three roles: `nuthatch control --db <postgres>` holds desired state; `nuthatch worker` takes one
 lease per chain cursor, with the fence enforced inside the store's own write transaction, so a
-stalled worker that wakes finds its writes refused; `nuthatch serve --hot-store <postgres>` is an
+stalled worker that wakes finds its writes refused, and since 4.11.0 a worker that loses a cursor's
+lease stops ingesting it on that tick; `nuthatch serve --hot-store <postgres>` is an
 independently scaled query tier. Workers pull the nests they are assigned from a registry, by
 content address when a `bundle_hash` is pinned. The control plane refuses to start off-localhost
 without `NUTHATCH_CONTROL_TOKEN`. Verified across three real machines: lease handover under
@@ -353,10 +366,15 @@ from a network of indexers, while a nest puts a contract's history in a database
 machine. At Arbitrum One block 510,395,917 a nest built only from on-chain events reported the same
 14,415 active allocations as The Graph Network subgraph, matched by id. GraphQL (RFC-0053) shipped
 in 3.7.0 as a partial read surface, exact for a subgraph's event-shaped fields and a named refusal
-for the rest; it is parked, and since 3.10.0 only a build with `--features graph` serves it. The
-published binaries and images answer `POST /graphql` and the `/subgraphs/…` routes with 404. An
-analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for one
-unanswerable field. Do not describe it as a drop-in replacement.
+for the rest; it is parked, and only a build with `--features graph` serves it. Since 4.11.0 every
+release attaches that build as `nuthatch-graph-<target>.tar.gz`, beside the default binary; the
+default binary and the container images answer `POST /graphql` and the `/subgraphs/…` routes with
+404. A collection the nest has no view for, or an unknown introspection field, is refused by name.
+An analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for one
+unanswerable field. Do not describe it as a drop-in replacement. The stopgap nests above run on it:
+https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/ explains them, and
+https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md is the first
+one's handback.
 
 ## Worked example (/example)
 
@@ -366,7 +384,7 @@ https://www.nuthatch-indexer.com/example indexes USDC on Ethereum mainnet from i
 dev` backfills from the deployment block, 20 million blocks for USDC, which wants your own
 archive-capable RPC); every declared event becomes a table (`usdc__transfer`) queryable through
 read-only SQL over HTTP and MCP; the page then chooses between an authored view and a maintained
-entity. It is the current, executable path on v4.10.1.
+entity. It is the current, executable path on v4.12.0.
 
 ## Who runs it (/stories)
 
@@ -410,20 +428,23 @@ nuthatch --version
 ```
 
 The script downloads the matching release binary, verifies its SHA-256 checksum and installs it to
-`~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS Apple Silicon and
-Linux x86_64; Intel Mac is deliberately not built. Each release carries
-`nuthatch-aarch64-apple-darwin.tar.gz`, `nuthatch-x86_64-unknown-linux-gnu.tar.gz` and
-`nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each with a `.sha256` beside it
+`~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS Apple Silicon,
+Linux x86_64 and, from 4.12.0, Linux arm64; Intel Mac is deliberately not built, and on a target
+with no prebuilt binary the script stops and prints the source-build command. Each release carries
+`nuthatch-aarch64-apple-darwin.tar.gz`, `nuthatch-x86_64-unknown-linux-gnu.tar.gz`,
+`nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.12.0),
+`nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz` and, since 4.11.0, the GraphQL-serving
+`nuthatch-graph-<target>.tar.gz` for each default target, each with a `.sha256` beside it
 (`sha256sum -c nuthatch-<target>.tar.gz.sha256`) and a GitHub build-provenance attestation since
 3.0 (`gh attestation verify <tarball> --repo nightswatchhq/nuthatch`; the `--repo` clause is what
-stops an attestation from any repository being accepted). The Linux binary is dynamically linked,
+stops an attestation from any repository being accepted). The Linux binaries are dynamically linked,
 needs glibc 2.35 or newer from 4.1.0 (Debian 12 and Ubuntu 22.04 qualify; RHEL 9 and Amazon Linux
 2023 ship 2.34 and need the source build) and no C++ runtime. Container images:
-`ghcr.io/nightswatchhq/nuthatch:4.10.1` (embedded) and `:4.10.1-scaled`, `linux/amd64` only, the
-same binary as the release.
+`ghcr.io/nightswatchhq/nuthatch:4.12.0` (embedded) and `:4.12.0-scaled`, `linux/amd64` only, the
+same binary as the release; no image carries the graph build.
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.10.1 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.12.0 --version
 rustup toolchain install 1.95.0
 cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
 ```
@@ -452,7 +473,8 @@ point); 4.3.1 fixed a join that could drop matches under a memory budget in 4.3.
 `SUM` and `AVG` reproducible, so an answer can move by its last bit. 4.9.0 stopped hidden files
 counting toward the data identity, which moves the mirror prefix of a nest that held one. 4.10.1
 refuses a window whose block timestamps are missing or zero instead of storing 0, and binds an
-entity after its window has committed. Older boundaries that still bind: from 3.9.0 an entity's SQL
+entity after its window has committed. 4.11.0 is a binary swap with no re-index; GraphQL from then
+on means the `nuthatch-graph` download. Older boundaries that still bind: from 3.9.0 an entity's SQL
 must live in `entities/<name>.sql`, and an `eth_call` error that is not a revert stalls the nest
 rather than being stored; from 3.10.0 the GraphQL routes need `--features graph`; from 3.13.0 a
 mount over the admin API answers `202` unless `?wait=true`. Coming from 3.13.3, 4.0.0 is a binary
@@ -463,7 +485,8 @@ swap with no storage migration, config change, NID change or re-index.
 In scope: EVM chains; embedded mode (the product) and scaled mode (built, opt-in at build time);
 multi-nest tenancy in the runtime, where a tenant is an opaque label with no identity,
 authentication, quotas or metering; mirrors and seeding. Out of scope: any gateway, auth, metering
-or billing layer in the core; a hosted service run by Nightswatch; any token, staking or
+or billing layer in the core; a hosted service run by Nightswatch (the subgraph stopgap nests are
+the one exception, the stock binary run as an operator would); any token, staking or
 decentralised-network feature; telemetry; non-EVM chains before EVM is airtight; TEE attestation or
 zero-knowledge proofs; Kubernetes manifests. An operator charging at their own endpoint is their
 choice, not a property of the binary.

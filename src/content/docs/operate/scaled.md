@@ -2,7 +2,7 @@
 title: "Scaled mode: a fleet"
 description: When one machine is no longer enough - a writer pool, an independently-scaled serving tier, and a control plane.
 order: 11
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 Everything else in these docs is **embedded mode**: one binary, no external services, the thing
@@ -86,6 +86,10 @@ When the original wakes up, **its writes are refused by the store**, not merely 
 Every write carries a fence, and a stale fence is rejected inside the same transaction as the write. A
 worker that checked its own lease before writing would be checking a fact that can expire between the
 check and the write; this cannot.
+
+The worker stops on its own as well. Since 4.11.0, a worker whose tick finds a cursor's lease held by
+another worker aborts that cursor's ingestion on the same tick and keeps running the cursors it still
+holds. Before, it carried on fetching and only the fence refused its writes.
 
 That is why `--scale writer=N` is safe.
 

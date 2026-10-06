@@ -2,17 +2,36 @@
 title: "Build a subgraph fallback"
 description: "Keep the event-derived part of a GraphQL data path available when a subgraph is unavailable."
 order: 6
-checked: 4.10.1
+checked: 4.12.0
 ---
 
 Nuthatch is not automatically a drop-in GraphQL replacement. It indexes deterministic on-chain event
 data and exposes it as read-only SQL over HTTP. That is enough to make a useful fallback for many
-subgraph reads, provided the boundary is made explicit before an outage. Since 3.10.0 the GraphQL
-routes exist only in a build with `--features graph`; the release binaries and images answer them
-with `404`.
+subgraph reads, provided the boundary is made explicit before an outage.
+
+The default binary and image have no GraphQL route: `POST /graphql` answers `404`. Since 4.11.0 every
+release also attaches a `nuthatch-graph-<target>.tar.gz` download, built with `--features graph`, which
+serves a nest's Graph-dialect GraphQL at `/graphql` and `/subgraphs/id/<deployment>`. It is a partial
+read surface: a field derived from events answers exactly, and anything else is refused by name
+(``"`transfers` is not served by this nest: it has no `transfer` view"``), never answered with a
+substitute. GraphQL fails a whole query for one refused field, so an analytics client that asks for
+prices or running totals will usually not work unmodified; a bot or an event reader usually will.
 
 The useful question is not “can we replace this entire subgraph?” It is: **which reads cannot afford to
 disappear, and are they derivable from chain logs?**
+
+## The stopgap nests
+
+Nightswatch runs no hosted nest service, with one exception. From 2026-10-08 Studio traffic for BNB
+Smart Chain and Polygon moves onto The Graph network, and a deployment no network indexer picks up
+stops answering. For those, Nightswatch serves **stopgap nests**: the stock `nuthatch-graph` binary, run as
+any operator would, answering the subgraph's event-derived fields until an indexer serves the
+deployment and its developer points back at the network. There is no billing and no account. The
+first is BetSwirl on BNB Chain; [its handback package](https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md)
+says what it answers, how to run it yourself and how to go back.
+[The dispatch on learn-thegraph.com](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
+explains how many deployments were stranded, what a stopgap nest is and is not, and how its answers
+were checked.
 
 ## 1. Start with the reads that matter
 
@@ -38,6 +57,14 @@ Create a nest from the deployment, then narrow it to the events the affected que
 ```sh
 nuthatch init 0xYourContract --chain arbitrum-one --alias protocol
 ```
+
+`nuthatch init --from-subgraph <CID>` scaffolds instead from the deployment's manifest, with its
+contracts, templates, ABIs and start blocks. `nuthatch port-emit --dir <subgraph source> --out <nest>`
+then copies in `graph/schema.graphql` and writes `[[calls]]`, a view per exact field, checks, and a
+README naming every field it did not emit. It reads
+the AssemblyScript mappings, so point it at the subgraph's source repository: a deployment CID carries
+only compiled WASM, and since 4.11.0 `port-emit` says nothing was classified and exits non-zero rather
+than reporting full coverage.
 
 In `nuthatch.toml`, use each contract's `events` list to avoid indexing unrelated ABI events. Vendor
 the ABI with the nest. The ABI is part of the authored package, so anyone running the fallback decodes
