@@ -2,7 +2,7 @@
 title: "HTTP API"
 description: "Every endpoint the served nest exposes."
 order: 3
-checked: 4.10.1
+checked: 4.11.1
 ---
 
 Everything a running nest serves, on `--listen` (default `127.0.0.1:8288`). The data API is read-only:

@@ -7,7 +7,7 @@
 Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
 process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
 licensed
-MIT OR Apache-2.0. Status: v4.10.1, released 2026-10-05, on the stable 4.x line.
+MIT OR Apache-2.0. Status: v4.11.1, on the stable 4.x line.
 
 The 4.x line is a promise about upgrades, not a claim of completeness: from 4.0.0 to the last 4.x
 release a config keeps working with the same meaning, a data directory opens in place on a later
@@ -179,7 +179,7 @@ and, from 4.11.1, Linux arm64 (glibc 2.35 or newer from 4.1.0; no C++ runtime), 
 `nuthatch-graph-<target>` sibling that serves GraphQL; `cargo +1.95.0 install --git
 https://github.com/nightswatchhq/nuthatch nuthatch` builds elsewhere, and the toolchain pin is
 required because `rust-toolchain.toml` does not apply to `cargo install`. Images:
-`ghcr.io/nightswatchhq/nuthatch:4.10.1` and `:4.10.1-scaled`, `linux/amd64` only. Every artifact
+`ghcr.io/nightswatchhq/nuthatch:4.11.1` and `:4.11.1-scaled`, `linux/amd64` only. Every artifact
 has a `.sha256` and a GitHub build-provenance attestation (`gh attestation verify <tarball> --repo
 nightswatchhq/nuthatch`).
 
@@ -212,7 +212,7 @@ function name the guard did not match) and v0.6.2 fixed an arbitrary file write 
 - [Upgrading a nest](https://www.nuthatch-indexer.com/docs/operate/upgrades/), [verifying a deployment](https://www.nuthatch-indexer.com/docs/operate/verifying/), [troubleshooting](https://www.nuthatch-indexer.com/docs/operate/troubleshooting/).
 - [Scaled mode](https://www.nuthatch-indexer.com/docs/operate/scaled/): the fleet.
 - [Agent-grade MCP](https://www.nuthatch-indexer.com/docs/ai/mcp/), [llms.txt in a nest](https://www.nuthatch-indexer.com/docs/ai/llms-txt/), [the builder skill](https://www.nuthatch-indexer.com/docs/ai/builder-skill/).
-- [The book](https://www.nuthatch-indexer.com/docs/book/): why the machine is shaped as it is, read against 4.10.1.
+- [The book](https://www.nuthatch-indexer.com/docs/book/): why the machine is shaped as it is, read against 4.11.1.
 - [Architecture](https://www.nuthatch-indexer.com/docs/contributing/architecture/) and [RFCs](https://www.nuthatch-indexer.com/docs/contributing/rfcs/).
 
 ## Links
