@@ -34,7 +34,7 @@
       "dataset": "505b1d73515cebb067867cbd25a8dfd20ca69826cda8cd048d03fbde794c9aa1",
       "commit": "befc855f8855be0147da1b70812dfacaf1a6626d",
       "devArgs": "--state-rpc <BNB archive RPC URL>",
-      "note": "The first subgraph stopgap nest (BNB Chain). Its views need nuthatch built from main, and its GraphQL endpoint a --features graph build with nightswatchhq/nuthatch#1949; 4.10.1 seeds and indexes it but cannot load the bet and token views."
+      "note": "The first subgraph stopgap nest (BNB Chain). Run it with the nuthatch-graph download from 4.11.0 or later, which serves its GraphQL; the default binary indexes it but has no /graphql route."
     }
   ]
 }
