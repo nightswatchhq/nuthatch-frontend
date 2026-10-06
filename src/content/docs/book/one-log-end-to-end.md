@@ -129,9 +129,10 @@ information so a caller can tell how current the answer is and whether the hot c
 available. A count over the table in the run came back with `provenance` naming `as_of` 26128681,
 `sealed_through` 0, `source` `hot+sealed`, the registry hash `0xce63…f128` and the nest's NID, and
 with `tip_unavailable: false`. A hot-store failure must not quietly make a query look complete
-while returning only sealed history, and in 4.10.1 it does not quite: a hot scan that fails answers
-from sealed rows alone with `tip_unavailable: true`, which is the field to read, while `source`
-still says `hot+sealed` and `degraded` stays false. That inconsistency is filed as nuthatch #1935.
+while returning only sealed history. A hot scan that fails answers from sealed rows alone with
+`tip_unavailable: true`, which is the field to read, and since 4.11.0 `source` agrees with it and
+says `sealed`; up to 4.10.1 it still said `hot+sealed` (nuthatch #1935). `degraded` stays false in
+that case, because it reports incomplete sealed history, not a missing tip.
 
 That final detail is representative of the design. A Nuthatch answer is useful not only because it
 contains a number, but because it can say which package decoded it, how far the cursor had reached

@@ -91,6 +91,16 @@ the node from an enthusiastic analytical query becoming a denial-of-service tool
 provide customer identity, quotas or billing. Those belong at the gateway, where there is actually
 an authenticated caller to reason about.
 
+Because an answer is a function of its inputs, a repeated statement can be remembered without ever
+being stale. The answer cache keys an entry on what the answer depends on: the statement, the sealed
+segments it is served, the generation of the nest's hot rows, each entity's watermark and the
+authored files. A committed row or an admitted segment changes the key, and the next request
+computes. Up to 4.10.1 the key followed the store's write counter and the seal watermark, both of
+which move on every cursor poll; since 4.11.0 it follows the rows and segments themselves, so a nest
+that is quiet at the tip answers a repeated statement from the cache. It is bounded by
+`NUTHATCH_SQL_MEMO_BYTES` (64 MiB by default, `0` turns it off), and a degraded answer is never
+remembered.
+
 ## The full life of an event
 
 Take one `Transfer` log. The cursor sees it in a block, selects the ABI decoder and writes a row

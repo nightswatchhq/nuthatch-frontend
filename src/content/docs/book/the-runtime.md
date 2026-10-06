@@ -103,7 +103,8 @@ Scaled mode moves the hot store into Postgres and puts a control plane beside it
 holds what the fleet should run and which workers exist; it does not hold ownership. Ownership is
 a lease kept in the chain's own hot-store schema, next to the data it protects, and a worker claims
 it and fences its writes with a monotonically increasing value. A worker may only write while it
-holds the current fence. If it dies, another worker can take the lease and continue. The fence
+holds the current fence. If it dies, another worker can take the lease and continue, and since
+4.11.0 a worker that finds its lease taken stops that cursor's nests on the same tick. The fence
 prevents a late former owner from writing as though nothing happened, which is the small but
 crucial detail separating failover from two machines cheerfully scribbling over the same state.
 None of this is in the default binary: scaled mode is a separate build, `--features
