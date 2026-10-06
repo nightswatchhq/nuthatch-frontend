@@ -69,9 +69,24 @@ surface appears under its `/<name>/…` prefix, byte-identical to a solo nest.
 - `GET /ipfs/gave-up` - the `[[ipfs]]` documents resolution gave up on, in block order. Each is
   absent from sealed history.
 
-The GraphQL routes (`POST /graphql`, `/subgraphs/id/{id}`, `/subgraphs/name/…`) and `GET /graph/status`
-are registered only in a binary built with `--features graph`. The published binaries and images are
-not, and answer them with 404.
+## GraphQL (the graph download only)
+
+The GraphQL routes are registered only in a binary built with `--features graph`. Since 4.11.0 every
+release attaches one, `nuthatch-graph-<target>.tar.gz`, beside the default download. The default
+binary and the container image have no GraphQL route and answer these with 404.
+
+- `POST /graphql`, `POST /subgraphs/id/{id}`, `POST /subgraphs/name/{name}` - a Graph-dialect query
+  against the nest's `graph/schema.graphql`, which `port-emit` writes. The subgraph URL forms exist so
+  a client needs only its host changed. Each entity collection is answered from the authored view of
+  the same name.
+- `GET /graph/status` - whether a historical read policy is configured, and fresh.
+
+It is a partial read surface, not a subgraph replacement: every field either answers exactly or is
+refused by name, and GraphQL refuses the whole query for one refused field. A collection the nest has
+no view for answers `` `tokens` is not served by this nest: it has no `token` view ``, and an unknown
+introspection field is refused by name. `__schema { queryType { fields } }` answers. An unsupplied
+nullable variable is an absent argument, as graph-node reads it; a missing non-null one is refused.
+See [Build a subgraph fallback](/docs/build/subgraph-fallback/).
 
 ## Admin & runtime
 

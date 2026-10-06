@@ -128,7 +128,9 @@ start = 12369621              # optional: ignore discoveries before this block
 
 All children of one template share tables (`{template}__{event}`), distinguished by the implicit
 `address` column. `filter = "topic0"` is a strategy override for templates known to have many
-children; omit it for the automatic address-list → topic0 flip (around ~500 children). See
+children; omit it and logs are asked for by factory and child addresses until the template has 500
+children, then by topic0. Since 4.11.0 that holds from the first backfill window and at the tip, and
+an endpoint that refuses a topic0-only fetch keeps the cursor on addresses. See
 [Factories](/docs/build/factories/).
 
 `events` chooses **what is decoded**, where `filter` chooses **how the range is fetched** - two
