@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v4.11.1**, on the stable 4.x line. Licence:
+"Be your own indexer." Status: **v4.12.0**, on the stable 4.x line. Licence:
 MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the released binary does
@@ -384,7 +384,7 @@ https://www.nuthatch-indexer.com/example indexes USDC on Ethereum mainnet from i
 dev` backfills from the deployment block, 20 million blocks for USDC, which wants your own
 archive-capable RPC); every declared event becomes a table (`usdc__transfer`) queryable through
 read-only SQL over HTTP and MCP; the page then chooses between an authored view and a maintained
-entity. It is the current, executable path on v4.11.1.
+entity. It is the current, executable path on v4.12.0.
 
 ## Who runs it (/stories)
 
@@ -429,10 +429,10 @@ nuthatch --version
 
 The script downloads the matching release binary, verifies its SHA-256 checksum and installs it to
 `~/.local/bin` (`NUTHATCH_INSTALL_DIR` overrides). Prebuilt binaries cover macOS Apple Silicon,
-Linux x86_64 and, from 4.11.1, Linux arm64; Intel Mac is deliberately not built, and on a target
+Linux x86_64 and, from 4.12.0, Linux arm64; Intel Mac is deliberately not built, and on a target
 with no prebuilt binary the script stops and prints the source-build command. Each release carries
 `nuthatch-aarch64-apple-darwin.tar.gz`, `nuthatch-x86_64-unknown-linux-gnu.tar.gz`,
-`nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.11.1),
+`nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.12.0),
 `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz` and, since 4.11.0, the GraphQL-serving
 `nuthatch-graph-<target>.tar.gz` for each default target, each with a `.sha256` beside it
 (`sha256sum -c nuthatch-<target>.tar.gz.sha256`) and a GitHub build-provenance attestation since
@@ -440,11 +440,11 @@ with no prebuilt binary the script stops and prints the source-build command. Ea
 stops an attestation from any repository being accepted). The Linux binaries are dynamically linked,
 needs glibc 2.35 or newer from 4.1.0 (Debian 12 and Ubuntu 22.04 qualify; RHEL 9 and Amazon Linux
 2023 ship 2.34 and need the source build) and no C++ runtime. Container images:
-`ghcr.io/nightswatchhq/nuthatch:4.11.1` (embedded) and `:4.11.1-scaled`, `linux/amd64` only, the
+`ghcr.io/nightswatchhq/nuthatch:4.12.0` (embedded) and `:4.12.0-scaled`, `linux/amd64` only, the
 same binary as the release; no image carries the graph build.
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.11.1 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.12.0 --version
 rustup toolchain install 1.95.0
 cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
 ```

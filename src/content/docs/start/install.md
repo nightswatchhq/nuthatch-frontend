@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 4.11.1
+checked: 4.12.0
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -19,9 +19,9 @@ installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It
 [readable on GitHub](https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh) -
 audit it first if `curl | sh` makes you itch.
 
-Prebuilt binaries cover **macOS (Apple Silicon)**, **Linux x86_64** and, from 4.11.1, **Linux arm64**.
+Prebuilt binaries cover **macOS (Apple Silicon)**, **Linux x86_64** and, from 4.12.0, **Linux arm64**.
 Intel Mac is deliberately not built. Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
-`nuthatch-x86_64-unknown-linux-gnu.tar.gz`, `nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.11.1)
+`nuthatch-x86_64-unknown-linux-gnu.tar.gz`, `nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.12.0)
 and, for [scaled mode](/docs/operate/scaled/), `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each
 with a `.sha256` beside it. On a platform with no prebuilt binary, or on Linux arm64 while the latest
 release has none, the installer stops and prints the source-build command below rather than install
@@ -48,7 +48,7 @@ The `--repo` constraint matters. Without it, an attestation from any repository 
 The default binary has no GraphQL route: `POST /graphql` answers 404. From 4.11.0 every release also
 carries `nuthatch-graph-<target>.tar.gz`, built with `--features graph` and attested like the others,
 for `aarch64-apple-darwin` and `x86_64-unknown-linux-gnu`, and for `aarch64-unknown-linux-gnu` from
-4.11.1. It serves a nest's Graph-dialect GraphQL at `/graphql` and `/subgraphs/id/<deployment>`, and has
+4.12.0. It serves a nest's Graph-dialect GraphQL at `/graphql` and `/subgraphs/id/<deployment>`, and has
 every command the default binary has. The installer does not fetch it:
 
 ```sh
@@ -65,13 +65,13 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.11.1 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.12.0 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
 binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`4.11.1-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`4.12.0-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source

@@ -2,7 +2,7 @@
 title: "Deploy it"
 description: systemd, Docker, and a reverse proxy - the whole distance from "it works on my laptop" to "it is running on my box".
 order: 2
-checked: 4.11.1
+checked: 4.12.0
 ---
 
 `nuthatch dev` **is** the serve command. It backfills, follows the tip, and serves the API in one
@@ -53,7 +53,7 @@ unexpected regression is killed and restarted rather than taking the box with it
 docker run -d --name nuthatch --restart unless-stopped \
   -v "$PWD/mynest:/nest" -p 127.0.0.1:8288:8288 \
   -e NUTHATCH_ADMIN_TOKEN=change-me \
-  ghcr.io/nightswatchhq/nuthatch:4.11.1
+  ghcr.io/nightswatchhq/nuthatch:4.12.0
 ```
 
 The image ships the **same binary attached to the GitHub Release** rather than a separate from-source
@@ -66,7 +66,7 @@ as above and put a proxy in front, exactly as on bare metal. `docker stop` sends
 and checkpoints cleanly.
 
 Pin the version tag rather than `:latest` for anything you care about. The image is `linux/amd64`
-only. From 4.11.1 an aarch64 Linux box has release binaries, default and graph, so run the binary
+only. From 4.12.0 an aarch64 Linux box has release binaries, default and graph, so run the binary
 under systemd there rather than the image under emulation.
 
 **GraphQL is not in any image.** The image carries the default binary, which has no `/graphql` route.
