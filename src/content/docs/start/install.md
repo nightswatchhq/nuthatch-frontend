@@ -19,13 +19,17 @@ installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It
 [readable on GitHub](https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh) -
 audit it first if `curl | sh` makes you itch.
 
-Prebuilt binaries cover **macOS (Apple Silicon)** and **Linux x86_64**. Intel Mac is deliberately not
-built. Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
-`nuthatch-x86_64-unknown-linux-gnu.tar.gz` and, for [scaled mode](/docs/operate/scaled/),
-`nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each with a `.sha256` beside it.
+Prebuilt binaries cover **macOS (Apple Silicon)**, **Linux x86_64** and, from 4.11.1, **Linux arm64**.
+Intel Mac is deliberately not built. Each release carries `nuthatch-aarch64-apple-darwin.tar.gz`,
+`nuthatch-x86_64-unknown-linux-gnu.tar.gz`, `nuthatch-aarch64-unknown-linux-gnu.tar.gz` (from 4.11.1)
+and, for [scaled mode](/docs/operate/scaled/), `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each
+with a `.sha256` beside it. On a platform with no prebuilt binary, or on Linux arm64 while the latest
+release has none, the installer stops and prints the source-build command below rather than install
+something that will not run.
 
-The Linux binary is dynamically linked and needs **glibc 2.35 or newer**, measured off the published
-artifact with `objdump -T`: from 4.1.0 it references `hypot` at `GLIBC_2.35`. It links `libc`, `libm`
+The Linux binaries are dynamically linked and need **glibc 2.35 or newer**, measured off the published
+artifact with `objdump -T`: from 4.1.0 the x86_64 binary references `hypot` at `GLIBC_2.35`, and the
+arm64 binary, built natively on Ubuntu 22.04, references nothing newer. It links `libc`, `libm`
 and `libgcc` and no C++ runtime; releases before 4.1 embedded DuckDB, needed only glibc 2.34, and also
 needed libstdc++ from GCC 11. Debian 12 and Ubuntu 22.04 clear it. RHEL 9 and Amazon Linux 2023 ship
 glibc 2.34 and ran 4.0.x; from 4.1.0 they need the source build.
@@ -39,6 +43,25 @@ gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatc
 
 The `--repo` constraint matters. Without it, an attestation from any repository may be accepted.
 
+## The graph build
+
+The default binary has no GraphQL route: `POST /graphql` answers 404. From 4.11.0 every release also
+carries `nuthatch-graph-<target>.tar.gz`, built with `--features graph` and attested like the others,
+for `aarch64-apple-darwin` and `x86_64-unknown-linux-gnu`, and for `aarch64-unknown-linux-gnu` from
+4.11.1. It serves a nest's Graph-dialect GraphQL at `/graphql` and `/subgraphs/id/<deployment>`, and has
+every command the default binary has. The installer does not fetch it:
+
+```sh
+gh release download --repo nightswatchhq/nuthatch -p 'nuthatch-graph-aarch64-apple-darwin.tar.gz*'
+shasum -a 256 -c nuthatch-graph-aarch64-apple-darwin.tar.gz.sha256
+tar -xzf nuthatch-graph-aarch64-apple-darwin.tar.gz    # one binary, named nuthatch
+```
+
+A nest answers GraphQL only once it carries a `graph/schema.graphql`, which `nuthatch port-emit`
+writes; until then the route says so. What it answers is a partial read surface, exact for a
+subgraph's event-shaped fields and a refusal by name for the rest, not a drop-in replacement for a
+subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
+
 ## Container image
 
 ```sh
@@ -46,7 +69,8 @@ docker run --rm ghcr.io/nightswatchhq/nuthatch:4.10.1 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
-only for now. The image carries the **same binary attached to the GitHub Release**, so the two cannot
+only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
+binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
 drift. Scaled mode needs the `-scaled` tag (`4.10.1-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
