@@ -68,7 +68,7 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   restart, so onboarding one tenant doesn't restart every co-tenant.
 - **0028 Adaptive log-range control** *(Implemented)* - a fix pack for `eth_getLogs` range control:
   classify RPC failures properly rather than retrying an auth rejection forever.
-- **0029 The fastest indexer** *(Implemented; all 5 slices)* - found by running someone else's
+- **0029 A backfill that finishes** *(Implemented; all 5 slices)* - found by running someone else's
   benchmark, Sentio's OBIB. Case 1 did not merely run slowly, it **never finished**: Alchemy returns
   its oversized-range refusal as HTTP 400, which the classifier did not enumerate, so a window that
   needed splitting was retried unchanged forever. It now completes with the record count Sentio's own
@@ -126,7 +126,9 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
 - **0052 The mirrored nest** *(Accepted; being implemented)* - `nuthatch publish` mirrors sealed
   segments to object storage for external engines.
 - **0053 Graph-subgraph compatibility** *(Parked 2026-09-12)* - a partial GraphQL read surface, not a
-  drop-in replacement; only in a `--features graph` build.
+  drop-in replacement, served only by the `graph` build. From 4.11.0 that build is a release download
+  (`nuthatch-graph-<target>`) for the subgraph stopgap, which fixes what shipped and starts no new
+  slices.
 - **0054 The head count** *(Draft; blocked)* - an opt-in ping at `init`.
 - **0055 The Dune view emitter** *(Withdrawn)* - `emit dune`, DuneSQL models over a mirrored nest.
   Shipped in 3.7.0 and removed in 4.1 with DuckDB, whose parser it depended on.
