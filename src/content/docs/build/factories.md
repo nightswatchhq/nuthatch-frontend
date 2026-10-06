@@ -57,6 +57,23 @@ uses the same adaptive narrowing as the ordinary contract fetch. A provider resp
 shrinks the window and retries; it does not abort the factory backfill. This was made consistent in
 2.7.0 after a mainnet Uniswap V2 run found the one uncaught path in the field.
 
+## How children are fetched
+
+From 4.11.0 a factory nest asks `eth_getLogs` for the factory's address and its discovered children's
+addresses, in the default backfill, the tip loop and a runtime's cursor alike. Past 500 children it
+flips to a topic0-only fetch and keeps only the logs a known child emitted, because a very long
+address list is slower than discarding non-children locally. `filter = "topic0"` on a template forces
+the flip from the start. Before 4.11.0 a factory nest fetched by topic0 alone from the first window.
+
+Public endpoints refuse parts of this, and the fetch adapts rather than failing:
+
+- An endpoint that refuses an address-less `eth_getLogs` switches the cursor to asking by address. On
+  `bsc`, whose shipped endpoint refuses it, the nest stays on addresses past 500 children and says so
+  at load; `--rpc` at an endpoint that allows topic0-only fetches is cheaper for a large factory.
+- An endpoint that refuses too many addresses in one request (publicnode on BSC and Polygon refuses
+  ten or more) gets the list in halves until a group is accepted, and the size is remembered. This is
+  no longer mistaken for a credentials refusal.
+
 ## Runaway factories are bounded
 
 A factory that discovers a vast number of children is exactly the kind of thing that could blow the
