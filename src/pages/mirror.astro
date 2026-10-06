@@ -5,7 +5,10 @@ import { mirrorBase, mirrorEntries, mirrorLive } from '../lib/mirror';
 
 const entries = await mirrorEntries();
 const fmt = (n?: number) => (n === undefined ? '-' : n.toLocaleString('en-GB'));
-const chains: Record<number, string> = { 1: 'Ethereum', 42161: 'Arbitrum One', 8453: 'Base' };
+const chains: Record<number, string> = {
+  1: 'Ethereum', 42161: 'Arbitrum One', 8453: 'Base', 56: 'BNB Chain', 137: 'Polygon',
+  100: 'Gnosis', 10: 'Optimism', 143: 'Monad', 4663: 'Robinhood Chain',
+};
 const day = (iso?: string) => (iso ? iso.slice(0, 10) : '-');
 const base = mirrorBase || 'https://mirror.nuthatch-indexer.com';
 const seedCommand = (e: (typeof entries)[number]) =>

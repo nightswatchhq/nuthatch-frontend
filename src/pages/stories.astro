@@ -45,8 +45,9 @@ const mcpConfig = `{
         <code>init --from</code>, read-only <code>/sql</code>, and the MCP server all ship today - as
         do factories, the compliance pack, the admin UI, and webhooks. GraphQL is not one of the front
         doors: it shipped in 3.7.0 only as a partial read surface, exact for a subgraph's event-shaped fields
-        and a named refusal for the rest, it is parked, and since 3.10.0 it needs a build with
-        <code>--features graph</code>. The personas are illustrative. See the <a href="/roadmap">roadmap</a> for the dividing line.
+        and a named refusal for the rest, it is parked, and the default binary has no GraphQL route:
+        it is served only by the <code>nuthatch-graph</code> download attached to every release since
+        4.11.0. The personas are illustrative. See the <a href="/roadmap">roadmap</a> for the dividing line.
       </p>
 
       <div class="in-production">
@@ -91,7 +92,9 @@ const mcpConfig = `{
           day, the app needed about 120,000, and Arc Testnet has no paid tier to buy. The nests were
           serving within two hours of the builder asking for a higher limit. They were testnet nests
           that Nightswatch ran for the hackathon, and they were stopped on 2026-09-29, when
-          Nightswatch stopped running nests for anyone.
+          Nightswatch stopped running nests for others. The one exception since, stopgap nests for
+          BNB and Polygon subgraphs the network does not serve, is on
+          <a href="/the-graph">Nuthatch &amp; The Graph</a>.
           <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, kept as a
           record, and the nest itself is
           <a href="https://github.com/nightswatchhq/arcaidia-nest" rel="noopener">published</a>.

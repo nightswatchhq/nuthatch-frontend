@@ -41,7 +41,17 @@ const meets = [
     ],
   },
   {
-    k: '04 · init --from-subgraph',
+    k: '04 · Stopgap nests',
+    tag: 'october 2026',
+    h: 'Stranded BNB and Polygon subgraphs keep answering',
+    p: 'For a deployment the network does not serve, Nightswatch runs a stopgap nest on the nuthatch-graph download until an indexer picks it up. The first, BetSwirl BNB Chain, answers its client’s own queries exactly and refuses anything else by name.',
+    links: [
+      { href: 'https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/', text: 'the dispatch', ext: true },
+      { href: 'https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md', text: 'the handback', ext: true },
+    ],
+  },
+  {
+    k: '05 · init --from-subgraph',
     tag: 'shipped',
     h: 'A subgraph manifest scaffolds a nest',
     p: 'Point Nuthatch at a manifest CID and it maps each data source to a contract, vendors the ABIs the manifest pins, and carries the start blocks and event handlers across. It was the project’s first external contribution, from inside the Graph community.',
@@ -51,7 +61,7 @@ const meets = [
     ],
   },
   {
-    k: '05 · Hackathon bounty',
+    k: '06 · Hackathon bounty',
     tag: 'july 2026',
     h: 'The Graph named Nuthatch in a bounty',
     p: 'ETHGlobal Lisbon’s Best AI Tooling track listed a self-hosted indexer such as Nuthatch as an accepted data backend, alongside Subgraph Studio, in the qualification rules rather than the examples. Somebody wrote that sentence on purpose.',
@@ -129,7 +139,9 @@ const meets = [
             same bytes, which is a strong property for one operator and a different property from
             a decentralised one. It does not speak full GraphQL: since 3.7.0 it carries a partial read surface for
             subgraph-shaped clients, exact for event-shaped fields and a named refusal for the rest,
-            and it is <a href="/roadmap">parked</a>; since 3.10.0 only a build with <code>--features graph</code> serves it. Contract reads and IPFS documents are pinned and verified rather than fetched
+            and it is <a href="/roadmap">parked</a>. The default binary has no GraphQL route; since
+            4.11.0 every release attaches a separate <code>nuthatch-graph-&lt;target&gt;</code>
+            download that serves it. Contract reads and IPFS documents are pinned and verified rather than fetched
             freely, so a subgraph that leans on either needs its query surface reviewed rather than
             assumed. And it does not pretend to serve a hundred thousand subgraphs to strangers
             from one box. If your application reads from protocols you do not own, across chains
@@ -141,6 +153,19 @@ const meets = [
             Nightswatch does not run a hosted nest service. The GraphQL read surface is parked:
             an analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for
             one field it cannot answer.
+          </p>
+          <p>
+            One exception, made on 6 October 2026: as BNB Chain and Polygon subgraphs move onto the
+            network, Nightswatch serves stopgap nests for deployments the network does not serve,
+            until an indexer picks each one up. Each is the stock <code>nuthatch-graph</code>
+            download run as any operator would run it: no billing, no accounts, no platform. A
+            stopgap nest answers the fields a subgraph derives from decoded events exactly and
+            refuses the rest by name, so it is not a replacement for the subgraph, and its handback
+            says how to run it yourself and how to go back to the network.
+            <a href="https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/" rel="noopener">The dispatch</a>
+            explains why, and
+            <a href="https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">the BetSwirl BNB Chain handback</a>
+            is the first.
           </p>
           <p>
             <a href="https://graphops.xyz" rel="noopener">GraphOps</a>, an indexer and core developer on
