@@ -18,7 +18,7 @@ column, or MCP tool is removed, renamed or retyped. Downgrades, the off-by-defau
 This file is written for language models and coding agents. It separates what the released binary
 does from what is designed and not built. The longer version is
 https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run against the released
-4.10.1 binary when this file was written.
+4.11.0 binary when this file was written.
 
 ## What it does today
 
@@ -55,7 +55,10 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   blocks (or one call per row of a table), needing `--state-rpc` against an archive node; an
   `[[ipfs]]` block resolves a CID named in a column and refuses any body that does not hash to it.
 - Factories: `[[templates]]` and `[[factories]]` index the children a contract deploys at runtime,
-  sharing one table per template, distinguished by `address`. It indexes Uniswap.
+  sharing one table per template, distinguished by `address`. It indexes Uniswap. Since 4.11.0 it
+  asks for logs by factory and child addresses until 500 children, then by topic0, and an endpoint
+  that caps the addresses in one `eth_getLogs` has the list halved rather than read as a credentials
+  refusal.
 - The compliance pack (opt-in): sanctions screening against content-addressed list snapshots,
   threshold and velocity flags at `/flags`, counterparty exposure at `/exposure/{address}`, alert
   and row webhooks over a durable at-least-once outbox, and a signed pack manifest with
@@ -85,7 +88,7 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   status` check it, and `publish finalise` (4.8.0) marks a stopped nest's provisional tails final.
   `nuthatch seed --from <mirror> --dir <nest>` (4.9.0) fills a nest that has not indexed from such a
   mirror, checking every file against its hash, and the next `dev` follows the chain from where the
-  mirror ends. A public mirror of four Graph Protocol nests is at
+  mirror ends. A public mirror of four Graph Protocol nests and one subgraph stopgap nest is at
   https://www.nuthatch-indexer.com/mirror.
 - Sealed-history audit (4.5.0): `nuthatch audit sealed --rpc <second endpoint>` re-fetches a sample
   of sealed ranges and compares them row by row; `dev --audit-rpc` does it in the background.
@@ -114,7 +117,8 @@ answered from sealed data alone). The engine runs each session under a memory li
 session over one nest draws on one pool (`NUTHATCH_BURRMILL_MEMORY_LIMIT`); a statement that needs
 more is refused, not spilled. 4.10.0 added `NUTHATCH_RUNTIME_HEADROOM` and a lower
 `NUTHATCH_INGESTION_RESERVATION`, and the startup check refuses a configuration that does not fit
-the cursor's budget, naming the largest value that would. The API has no authentication of its own:
+the cursor's budget, naming the largest value that would. A repeated statement is answered from a
+cache (`"cached": true`) keyed since 4.11.0 on the rows and segments it reads. The API has no authentication of its own:
 bind localhost (the default) and put a proxy in front, or set `sql = "allowlist"` on a mount so
 callers get named queries at `/q/{name}` and never send SQL.
 
@@ -143,8 +147,15 @@ a synced node) and firehose-class extraction on top of it; streaming subscribe (
 (Ollama) or bring-your-own-key; effectful HTTP egress for WASM transforms (a `kv` grant ships);
 wildcard signature-scoped indexing; a Homebrew tap. GraphQL (RFC-0053) shipped in 3.7.0 as a
 partial read surface, exact for a subgraph's event-shaped fields and a named refusal for the rest;
-it is parked, and since 3.10.0 only a build with `--features graph` serves it. The published
-binaries answer those routes with 404. Do not describe it as a drop-in subgraph replacement.
+it is parked, and only the `nuthatch-graph-<target>` download attached to every release since
+4.11.0 serves it. The default binary and the images answer those routes with 404. Do not describe
+it as a drop-in subgraph replacement.
+
+Nightswatch runs no hosted nest service, with one exception approved 2026-10-06: it serves stopgap
+nests on the graph download for BNB Chain and Polygon subgraphs The Graph network does not serve,
+until an indexer picks each one up, with no billing and no accounts
+(https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/; the first handback is
+https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md).
 
 ## Install and first run
 
@@ -163,8 +174,9 @@ nuthatch mcp --print-config
 archive-capable RPC. WETH names its transfer fields `src`, `dst` and `wad`; most ERC-20s use
 `from`, `to` and `value`, and `from` must be double-quoted in SQL. `nuthatch recipe add
 total_supply` on this WETH nest fails `nuthatch check` with `no column from` until the view's
-columns are renamed, as the docs say. Prebuilt binaries cover macOS Apple Silicon and Linux x86_64
-(glibc 2.35 or newer from 4.1.0; no C++ runtime); `cargo +1.95.0 install --git
+columns are renamed, as the docs say. Prebuilt binaries cover macOS Apple Silicon, Linux x86_64
+and, from 4.11.1, Linux arm64 (glibc 2.35 or newer from 4.1.0; no C++ runtime), each with a
+`nuthatch-graph-<target>` sibling that serves GraphQL; `cargo +1.95.0 install --git
 https://github.com/nightswatchhq/nuthatch nuthatch` builds elsewhere, and the toolchain pin is
 required because `rust-toolchain.toml` does not apply to `cargo install`. Images:
 `ghcr.io/nightswatchhq/nuthatch:4.10.1` and `:4.10.1-scaled`, `linux/amd64` only. Every artifact
