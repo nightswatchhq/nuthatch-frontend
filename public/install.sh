@@ -26,6 +26,7 @@ case "$os" in
   Linux)
     case "$arch" in
       x86_64 | amd64) target="x86_64-unknown-linux-gnu" ;;
+      aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
       *) echo "nuthatch: no prebuilt binary for Linux '$arch' yet - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
     esac ;;
   *)
@@ -37,7 +38,10 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
 echo "nuthatch: downloading ${tarball}…"
-curl -fsSL "${BASE}/${tarball}" -o "${tmp}/${tarball}"
+# Releases up to 4.11.0 carry no aarch64 Linux tarball (#1961).
+if ! curl -fsSL "${BASE}/${tarball}" -o "${tmp}/${tarball}"; then
+  echo "nuthatch: the latest release has no ${tarball} - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1
+fi
 curl -fsSL "${BASE}/${tarball}.sha256" -o "${tmp}/${tarball}.sha256"
 
 echo "nuthatch: verifying checksum…"
