@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v4.12.0**, released 2026-10-06, on the stable 4.x line. Licence:
+"Be your own indexer." Status: **v4.15.0**, released 2026-10-08, on the stable 4.x line. Licence:
 MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the released binary does
@@ -26,7 +26,8 @@ operational weight of the tooling, which is an engineering problem.
   no Docker, no IPFS, no account.
 - It reads any JSON-RPC endpoint, your own node included. The bundled public endpoints exist so the
   first run needs no setup; they are not for production.
-- No gateway, no metered data API, no API tokens, no telemetry. Nothing phones home.
+- No gateway, no metered data API, no API tokens, no telemetry by default. The one opt-in is a head
+  count after `nuthatch init`, off until you say yes (`nuthatch count`); nothing else is ever sent.
 - Free, licensed MIT OR Apache-2.0 at your option. There is no hosted tier, no token and no pricing
   page. Nightswatch, the company behind it, does not run a hosted nest service, with one exception
   approved 2026-10-06: it serves stopgap nests for BNB Chain and Polygon subgraphs The Graph network
@@ -417,7 +418,7 @@ promised; order is.
   lifted in full; RFC-0058 (cross-nest SQL), RFC-0059 (checkpointed folds, built in part behind the
   off-by-default `folds` feature) and RFC-0060 (the Network Subgraph endpoint) were accepted and
   then parked on 2026-09-26.
-- Not planned: a token or decentralised-network features; telemetry of any kind; a
+- Not planned: a token or decentralised-network features; telemetry beyond the opt-in head count; a
   Kubernetes-first deployment; any gateway, auth or metering layer in the core.
 
 ## Install and upgrade
@@ -487,7 +488,7 @@ multi-nest tenancy in the runtime, where a tenant is an opaque label with no ide
 authentication, quotas or metering; mirrors and seeding. Out of scope: any gateway, auth, metering
 or billing layer in the core; a hosted service run by Nightswatch (the subgraph stopgap nests are
 the one exception, the stock binary run as an operator would); any token, staking or
-decentralised-network feature; telemetry; non-EVM chains before EVM is airtight; TEE attestation or
+decentralised-network feature; telemetry on by default; non-EVM chains before EVM is airtight; TEE attestation or
 zero-knowledge proofs; Kubernetes manifests. An operator charging at their own endpoint is their
 choice, not a property of the binary.
 
