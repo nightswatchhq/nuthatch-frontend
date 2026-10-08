@@ -129,7 +129,8 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   drop-in replacement, served only by the `graph` build. From 4.11.0 that build is a release download
   (`nuthatch-graph-<target>`) for the subgraph stopgap, which fixes what shipped and starts no new
   slices.
-- **0054 The head count** *(Draft; blocked)* - an opt-in ping at `init`.
+- **0054 The head count** *(Accepted 2026-10-08, shipped in 4.15.0)* - an opt-in ping at `init`, off
+  until you say yes. The totals are at [/count](/count).
 - **0055 The Dune view emitter** *(Withdrawn)* - `emit dune`, DuneSQL models over a mirrored nest.
   Shipped in 3.7.0 and removed in 4.1 with DuckDB, whose parser it depended on.
 - **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Draft)*.
@@ -139,6 +140,9 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   the off-by-default `folds` and `graph` features; parked in full 2026-09-26 after 0059's S3)* - what
   was built stays in the tree; nothing further is started.
 - **0061 256-bit values stay decimal text** *(Accepted 2026-09-23)* - no segment-format change.
+- **0062 Maintained views** *(Accepted 2026-10-07, shipped in 4.14.0; S3 and S4 not pursued)* - a
+  join-heavy view answered from a stored copy of its own evaluation, reused only while every input hashes
+  the same.
 
 ## Conventions
 

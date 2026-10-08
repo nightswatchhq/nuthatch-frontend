@@ -64,6 +64,8 @@ One block per contract. Repeat it to index many contracts in one nest.
   IPFS documents](/docs/build/contract-calls/).
 - `entities.toml` - bounded keyed relations maintained as blocks arrive. See [Authored incremental
   entities](/docs/build/entities/).
+- `maintained.toml` - views kept as stored copies of their own answer, rebuilt as the chain moves. See
+  [Maintaining an answer](/docs/book/maintaining-an-answer/).
 
 Absent stages cost nothing - a nest with none of them is a plain, fast log indexer.
 
