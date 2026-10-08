@@ -1,0 +1,219 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeCard from '../../components/CodeCard.astro';
+import CopyBlock from '../../components/CopyBlock.astro';
+import { stopgaps, ENDPOINT_BASE, type Stopgap } from '../../data/stopgaps';
+
+export function getStaticPaths() {
+  return stopgaps.map((s) => ({ params: { id: s.deployment }, props: { s } }));
+}
+
+const { s } = Astro.props as { s: Stopgap };
+const endpoint = ENDPOINT_BASE + s.deployment;
+const first = s.examples[0];
+
+const curl = `curl -s ${endpoint} \\
+  -H 'content-type: application/json' \\
+  -d '{"query": "{ tokens { id name } }"}'`;
+
+const fetchSnippet = `const res = await fetch('${endpoint}', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ query, variables }),
+});
+const { data, errors } = await res.json();`;
+
+const clientSnippet = `// Apollo, urql or graphql-request: only the URL changes.
+const client = new ApolloClient({
+  uri: '${endpoint}',
+  cache: new InMemoryCache(),
+});`;
+
+const agentPrompt = `The subgraph ${s.name} (deployment ${s.deployment}, on ${s.chain}) is served at:
+${endpoint}
+
+It speaks The Graph's GraphQL dialect: POST {"query": ..., "variables": ...} as JSON, the same
+queries a graph-node endpoint takes, including where filters, orderBy, first and skip, and _meta.
+Introspection works, so read the schema from it before writing queries.
+
+Entities: ${s.entities.join(', ')}.
+Not served, and refused by name if asked for: ${s.refused.map((r) => r.field).join(', ')}.
+
+Point the app's subgraph URL at the address above. Nothing else about the queries needs to change.`;
+---
+
+<Layout
+  path={`/subgraphs/${s.deployment}`}
+  title={`${s.name} - stopgap subgraph - Nuthatch`}
+  description={`GraphQL for the ${s.name} subgraph on ${s.chain}, served from a nuthatch nest while no indexer on The Graph network serves it.`}
+>
+  <section class="page">
+    <div class="wrap">
+      <p class="section-label">Stopgap subgraph</p>
+      <h1>{s.name}</h1>
+      <p class="mono dep">{s.deployment} · {s.chain}</p>
+      <p class="lede">
+        No indexer on The Graph network serves this deployment, so its queries are answered from a nuthatch nest
+        built from the same contracts. Point your app at the endpoint below and the queries it already sends keep
+        working. When an indexer allocates to the deployment, switch back to the gateway.
+      </p>
+
+      <div class="status" id="status" data-endpoint={endpoint}>
+        <div><span class="cap">status</span><span class="val" id="st-state">checking…</span></div>
+        <div><span class="cap">indexed to block</span><span class="val" id="st-block">-</span></div>
+        <div><span class="cap">block time</span><span class="val" id="st-time">-</span></div>
+        <div><span class="cap">last contract activity</span><span class="val">{s.lastActivity}</span></div>
+      </div>
+
+      <h2>Endpoint</h2>
+      <CopyBlock command={endpoint} prompt={false} label="Copy endpoint" />
+
+      <h2>Try it</h2>
+      <p class="muted">
+        A full GraphQL playground. The schema is introspected live, so autocomplete knows every entity and field.
+      </p>
+      <div id="playground" class="playground"
+           data-endpoint={endpoint} data-query={first.query} data-variables={first.variables ?? ''}>
+        <p class="muted pad">Loading the playground…</p>
+      </div>
+
+      <h2>Use it in your app</h2>
+      <div class="grid2">
+        <CodeCard code={fetchSnippet} lang="js" label="fetch" />
+        <CodeCard code={clientSnippet} lang="js" label="apollo" />
+      </div>
+      <CodeCard code={curl} lang="bash" label="shell" />
+
+      <h2>Tell your agent this</h2>
+      <p class="muted">Paste it into Claude Code, Cursor or any coding agent working on the app.</p>
+      <CodeCard code={agentPrompt} lang="bash" label="prompt" />
+
+      <h2>Example queries</h2>
+      <ul class="examples">
+        {s.examples.map((e) => (
+          <li>
+            <div class="ex-top">
+              <h3>{e.title}</h3>
+              <button type="button" class="open-ex" data-query={e.query} data-variables={e.variables ?? ''}>open in playground</button>
+            </div>
+            <CodeCard code={e.query} lang="graphql" />
+          </li>
+        ))}
+      </ul>
+
+      <h2>What it answers</h2>
+      <p class="muted">
+        Every field of {s.entities.length} entities, derived from the contracts' events by the same rules the subgraph's
+        mappings apply. Two things are not served, and a query that asks for one gets an error naming it rather than a
+        made-up value:
+      </p>
+      <ul class="refused">
+        {s.refused.map((r) => <li><code>{r.field}</code>: {r.why}.</li>)}
+      </ul>
+
+      <h2>Limits</h2>
+      <p class="muted">
+        One machine serves this, with no uptime promise, no proof of indexing and no dispute path. It costs you nothing
+        and asks for no account. Ask in The Graph's <code>#indexers</code> channel for an allocation on
+        <code>{s.deployment}</code>; when one exists, point your app back at
+        <code>https://gateway.thegraph.com/api/&lt;key&gt;/deployments/id/{s.deployment}</code>.
+        The investigation and the record are in <a href={s.record} rel="noopener">{s.record.replace('https://github.com/', '')}</a>.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<link rel="stylesheet" href="https://unpkg.com/graphiql@3.7.1/graphiql.min.css" />
+<script is:inline src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script is:inline src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script is:inline src="https://unpkg.com/graphiql@3.7.1/graphiql.min.js" crossorigin></script>
+<script is:inline>
+  (function () {
+    const el = document.getElementById('playground');
+    const endpoint = el.dataset.endpoint;
+    function mount(query, variables) {
+      if (!window.GraphiQL || !window.React) {
+        el.innerHTML = '<p class="muted pad">The playground could not load. The endpoint still works: use the snippets below.</p>';
+        return;
+      }
+      const fetcher = GraphiQL.createFetcher({ url: endpoint });
+      ReactDOM.createRoot(el).render(
+        React.createElement(GraphiQL, {
+          fetcher, defaultQuery: query, defaultVariables: variables || undefined,
+          query, variables: variables || undefined, defaultEditorToolsVisibility: !!variables,
+        })
+      );
+    }
+    mount(el.dataset.query, el.dataset.variables);
+    document.querySelectorAll('.open-ex').forEach((b) => b.addEventListener('click', () => {
+      el.innerHTML = '';
+      mount(b.dataset.query, b.dataset.variables);
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+
+    const st = document.getElementById('status');
+    async function status() {
+      try {
+        const r = await fetch(st.dataset.endpoint, {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ query: '{ _meta { block { number timestamp } hasIndexingErrors } }' }),
+        });
+        const m = (await r.json()).data._meta;
+        const behind = Math.max(0, Math.round(Date.now() / 1000 - m.block.timestamp));
+        document.getElementById('st-block').textContent = m.block.number.toLocaleString('en-GB');
+        document.getElementById('st-time').textContent = new Date(m.block.timestamp * 1000).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+        const state = document.getElementById('st-state');
+        state.textContent = m.hasIndexingErrors ? 'indexing errors' : behind < 300 ? `live, ${behind} s behind the chain` : `behind by ${Math.round(behind / 60)} min`;
+        state.className = 'val ' + (m.hasIndexingErrors || behind >= 300 ? 'warn' : 'ok');
+      } catch (e) {
+        const state = document.getElementById('st-state');
+        state.textContent = 'unreachable';
+        state.className = 'val warn';
+      }
+    }
+    status();
+    setInterval(status, 30000);
+  })();
+</script>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 9vw, 6.5rem); }
+  h1 { margin-bottom: 0.3rem; overflow-wrap: anywhere; }
+  h2 { font-size: clamp(1.15rem, 2.2vw, 1.35rem); margin: 2.6rem 0 0.8rem; }
+  h3 { font-size: 0.98rem; color: var(--text); margin: 0; }
+  .dep { color: var(--text-faint); font-size: 0.8rem; overflow-wrap: anywhere; margin-bottom: 1.2rem; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .lede { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; max-width: 66ch; margin-bottom: 1.8rem; }
+  .muted { color: var(--text-muted); font-size: 0.94rem; line-height: 1.65; max-width: 72ch; }
+  .pad { padding: 1.2rem; }
+  code {
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; font-size: 0.85em; overflow-wrap: anywhere;
+  }
+  .status {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); padding: 1.1rem 1.25rem;
+  }
+  .cap {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-faint); margin-bottom: 0.35rem;
+  }
+  .val { font-family: 'JetBrains Mono', monospace; font-size: 0.86rem; color: var(--text); }
+  .val.ok { color: var(--ok); }
+  .val.warn { color: var(--warn); }
+  .playground {
+    height: 640px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    background: var(--bg-elev);
+  }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .examples { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.2rem; }
+  .ex-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.4rem; }
+  .open-ex {
+    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); background: none; border: 1px solid var(--border);
+    border-radius: 9999px; padding: 0.2rem 0.6rem; cursor: pointer;
+  }
+  .open-ex:hover { border-color: var(--border-hi); }
+  .refused { color: var(--text-muted); font-size: 0.94rem; line-height: 1.65; max-width: 72ch; }
+  @media (max-width: 640px) { .playground { height: 520px; } }
+</style>
