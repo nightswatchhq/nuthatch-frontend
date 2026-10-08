@@ -111,5 +111,6 @@ nuthatch dev --backfill 300
 backfills from the contract's deployment block, which for a contract with a long history wants your
 own archive-capable RPC.
 
-Nothing phones home: no telemetry, no API token, no gated data service. AI features are BYO-key or
+Nothing phones home unasked: no telemetry by default, no API token, no gated data service. The one
+opt-in is a [head count](/count) after `init`, off until you say yes. AI features are BYO-key or
 local models and degrade gracefully offline.
