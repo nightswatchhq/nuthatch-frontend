@@ -2,7 +2,7 @@
 title: "Architecture"
 description: "The pipeline, storage, the IVM core, and the transform runtime."
 order: 1
-checked: 4.12.0
+checked: 4.15.2
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with

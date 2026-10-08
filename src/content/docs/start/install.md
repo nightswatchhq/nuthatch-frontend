@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 4.12.0
+checked: 4.15.2
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -65,7 +65,7 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.12.0 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:4.15.2 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
