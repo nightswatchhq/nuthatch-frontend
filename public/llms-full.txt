@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v4.15.0**, released 2026-10-08, on the stable 4.x line. Licence:
+"Be your own indexer." Status: **v4.15.2**, released 2026-10-08, on the stable 4.x line. Licence:
 MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the released binary does
@@ -63,7 +63,7 @@ operational weight of the tooling, which is an engineering problem.
    per-endpoint health), `--rpc-fallback` (asked only while every other endpoint fails),
    `--seal-direct` (write finalised history straight to Parquet; `--concurrency 8` to `16` against
    your own node), `--window` (the widest `getLogs` range; a sparse contract can take 50000),
-   `--poll-interval` (default: the chain's block time, never under 2 s), `--finality-only`,
+   `--poll-interval` (default: 5 minutes since 4.15.2; before that the chain's block time, never under 2 s), `--finality-only`,
    `--state-rpc` (archive endpoints for `[[calls]]`), `--ipfs`, `--cors`, `--no-admin`,
    `--publish-target`, `--audit-rpc`, `--registry`, `--fail-fast`. `/ready` reports whether the
    nest is serving and advancing, with `lag_blocks`; it is not a caught-up check.

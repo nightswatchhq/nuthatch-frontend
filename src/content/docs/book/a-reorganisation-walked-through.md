@@ -88,8 +88,9 @@ what the operator will need when deciding what to do next.
 
 Detection is not instantaneous. The cursor learns that the chain changed when a reorg check runs, and
 until then it answers from what it last indexed, as it does for an ordinary reorg near the tip. A check
-runs when a poll sees the tip move; a fork that keeps the tip height is re-checked at most every twelve
-seconds while idle, and a failing RPC delays it further, so there is no fixed bound. The two runs above
+runs when a poll sees the tip move; a fork that keeps the tip height is re-checked on the first poll at
+least twelve seconds after the last check: every twelve seconds for a nest polling that often, every five
+minutes at the default since 4.15.2. A failing RPC delays it further, so there is no fixed bound. The two runs above
 show both ends of that: 0.65 seconds when the tip moved, 9.8 seconds when it did not. Measured once
 before, on 3.13.3 against a forked chain at a one-second poll interval, the sealed rows of the abandoned
 branch were served for about half a second before the halt. No read-time setting removes the window,

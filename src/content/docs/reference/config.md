@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml and mounts.toml, field by field."
 order: 2
-checked: 4.12.0
+checked: 4.15.2
 ---
 
 Four files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `entities.toml` declares

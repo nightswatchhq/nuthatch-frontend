@@ -2,7 +2,7 @@
 title: "What it costs to run"
 description: "RPC requests are the bill RAM doesn't show - what following tip costs per day, why block_timestamps is the reason, and the honest number for a nest nobody reads."
 order: 6
-checked: 4.12.0
+checked: 4.15.2
 ---
 
 [Metrics & footprint](/docs/operate/metrics/) covers RAM. This page covers a different bill: **RPC
@@ -15,8 +15,8 @@ this cost disappear; it means you are the one who sees it.
 Following tip costs requests on every poll, whether or not a block carried an event: a tip call,
 and when a window commits, a reorg check, a checkpoint and a `finalized` probe. On a chain producing
 345,600 blocks a day (Arbitrum's rate), a cursor polling every two seconds paid roughly one header per
-block for as long as it ran. Since 3.11 the default poll interval is the chain's block time, never
-under 2 s, and an idle poll skips the reorg check.
+block for as long as it ran. From 3.11 the default poll interval was the chain's block time, never
+under 2 s; since 4.15.2 it is 5 minutes. An idle poll skips the reorg check.
 
 ## `block_timestamps` is the reason
 
@@ -91,7 +91,9 @@ which argues for letting an operator trade freshness for money rather than payin
 bill for a dashboard nobody reads hourly. It shipped in 3.5.0 as two `nuthatch dev` flags:
 `--poll-interval <DURATION>` sets how long a caught-up cursor waits before asking for the tip again,
 and `--finality-only` caps the cursor at the chain's finality boundary so nothing it indexes can be
-reorged. `/ready` reports both in its `freshness` object.
+reorged. `/ready` reports both in its `freshness` object. Since 4.15.2 an unset `--poll-interval` means 5
+minutes, so a new row can take that long to appear; pass a shorter interval, such as `2s`, for a nest
+whose readers need the tip closely.
 
 ## What that costs against a priced endpoint
 

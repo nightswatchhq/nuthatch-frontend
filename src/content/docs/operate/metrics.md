@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 4.12.0
+checked: 4.15.2
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;
@@ -102,11 +102,13 @@ groups:
   - name: nuthatch
     rules:
       - alert: NuthatchCursorStalled
-        expr: time() - nuthatch_last_poll_unixtime{job="nuthatch"} > 180
+        # Three poll intervals, as /ready counts a stall: 900 s at the default 5-minute poll.
+        # Scale it down for a nest run with a shorter --poll-interval.
+        expr: time() - nuthatch_last_poll_unixtime{job="nuthatch"} > 900
         for: 5m
         labels: { severity: page }
         annotations:
-          summary: "Nuthatch has not polled its chain for five minutes"
+          summary: "Nuthatch has not polled its chain for fifteen minutes"
 
       - alert: NuthatchFallingBehind
         expr: nuthatch_tip_lag_blocks{job="nuthatch"} > 50
