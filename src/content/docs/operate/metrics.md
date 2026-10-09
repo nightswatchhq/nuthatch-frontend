@@ -2,7 +2,7 @@
 title: "Metrics & footprint"
 description: "Prometheus /metrics and the ≤2 GB-per-cursor footprint budget."
 order: 5
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 Every running nest exposes Prometheus text at `GET /metrics`. Gauges are set to the latest value;

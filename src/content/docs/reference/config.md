@@ -2,7 +2,7 @@
 title: "Configuration"
 description: "nuthatch.toml and mounts.toml, field by field."
 order: 2
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 Four files, all TOML. `nuthatch.toml` is written by `init` and yours to edit; `entities.toml` declares
@@ -143,24 +143,22 @@ when the nest loads rather than surfacing as an empty table after the backfill.
 `--from-subgraph` fills this in for you: a subgraph declares `eventHandlers` per template, so an
 imported nest decodes what the subgraph decoded rather than a superset of it.
 
-### Screening, flags, alerts (RFC-0008)
+### Flags, alerts (RFC-0008)
 
 ```toml
-[screening]
-lists = ["<list-hash>"]           # snapshot hashes from `nuthatch lists fetch`
-
 [flags]                           # amounts are token BASE UNITS as decimal strings (i128)
 threshold = "1000000000000"       # flag any single transfer ≥ this
 velocity_amount = "5000000000000" # flag an address whose windowed outbound volume ≥ this
 velocity_window = 7200            # window in BLOCKS (default 7200 ≈ 24h of 12s mainnet blocks)
 
 [[alerts]]                        # route annotations to webhook sinks
-kinds = ["sanction_hit", "threshold_flag"]
+kinds = ["threshold_flag"]
 url = "https://…"
 format = "raw"                    # optional: "raw" (default) | "discord"
 ```
 
-All three are opt-in: absent means no screening, no flags, no alerts, zero cost. Alert delivery is
+Both are opt-in: absent means no flags, no alerts, zero cost. A `[screening]` table is refused at
+load since 5.0.0, which removed live screening; delete it. Alert delivery is
 at-least-once via a durable outbox; a stalled sink never blocks indexing. Note `velocity_window` is
 a **block count**, not wall-clock - an honest approximation, since the chain has no clock.
 

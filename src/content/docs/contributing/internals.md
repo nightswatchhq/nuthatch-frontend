@@ -2,7 +2,7 @@
 title: "Internals: how it actually works"
 description: A component-by-component walk through the binary - the ingest loop, the decode registry, the two storage layers, reorg handling, the IVM core, and what changes in scaled mode.
 order: 2
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 This is the long version, for people who need to know *why* it is safe rather than *that* it is. It
@@ -260,20 +260,6 @@ The control plane and the lease are **deliberately independent**: a control-plan
 Scaled mode is younger than embedded and has not carried a production workload for anyone. Until
 v0.9.3 the writer pool took leases and ran no indexing at all; see
 [verifying a deployment](/docs/operate/verifying/) for what that cost and how it is checked now.
-
-## The transform escape hatch - `transform.rs`
-
-For logic that declarative views cannot express, a `wasm32-wasip2` component exporting
-`nuthatch:transform/stage`. The host grants it **zero capabilities** - base WASI only, stderr for
-logging, no filesystem, no network, no key-value.
-
-That is the point. **A component with no capabilities is deterministic by construction**, and only
-zero-capability components may feed entity derivation. Effectful components produce *annotations*,
-never canonical entities, and purity is checkable from the composition manifest rather than by reading
-code.
-
-Interfaces take **batches** - lists of events or Arrow IPC buffers - never one event per call, because
-a per-event boundary cannot survive backfill throughput.
 
 ## Where to start reading
 

@@ -1,14 +1,14 @@
 ---
 title: Authoring modes
-description: Declarative incremental views (the default) and imperative WASM components (the escape hatch).
+description: Incremental entities and request-time SQL views - both declarative, both deterministic.
 order: 6
-checked: 4.15.2
+checked: 5.0.0
 ---
 
-There are two ways to author what a nest computes. The default is declarative; the escape hatch is
-imperative. Both feed the same deterministic core.
+There are two ways to author what a nest computes, and both are declarative. One is maintained as
+blocks arrive; the other is evaluated when a reader asks. Both sit over the same deterministic core.
 
-## Declarative (default)
+## Incremental (maintained as blocks arrive)
 
 Entities are **incremental views over decoded events**, maintained by the IVM core (DBSP / Feldera
 crates). You *state* a derivation - "balance = Σ(in) − Σ(out)" - as a circuit, and it's maintained
@@ -19,38 +19,25 @@ This is the differentiator. You never hand-write "on transfer, load balance, add
 answer, and reorgs, backfills, and tip-following all fall out of the same statement. Your own
 maintained relations are [incremental entities](/docs/build/entities/), declared in `entities.toml`.
 
+## Request-time (evaluated when asked)
+
 [Authored SQL views](/docs/build/views/) and [recipes](/docs/build/recipes/) are declarative too, but
-not incremental: they are named queries evaluated when a reader asks, over hot and sealed data. Between
-them, the happy path needs zero user-written components.
+not incremental: they are named queries evaluated when a reader asks, over hot and sealed data. A
+join-heavy view can be listed in `maintained.toml`, which answers it from a stored copy of its own
+evaluation, reused only while every input hashes the same.
 
-## Imperative (the escape hatch)
+## No imperative escape hatch
 
-For logic a view can't express, a nest may use **WASM component handlers** - a transform runtime ported
-from the *liminal* prototype (Wasmtime, the component model, WASIp2). The contract is strict:
+Until 4.15.2 a nest could also run WASM components (Wasmtime, WASIp2) over stored transfers. 5.0.0
+removed that layer, with `nuthatch transform`, the `wit/` interfaces and the components: no
+production nest used it, and it was never in the indexing path. Logic a view cannot express is now
+written as an entity, a view, or a change to nuthatch itself.
 
-- **Components are pure functions** - `batch of blocks → batch of facts`. All state lives host-side.
-- **The boundary is batched.** WIT interfaces take *lists* of events or Arrow IPC buffers - never one
-  event per call. Arrow is the interchange format everywhere.
-- **Components never see reorgs** and have no rollback interface; the host handles reorg via hot-store
-  rollback and IVM retractions.
-- **Capabilities are injected per component** at composition time - `wasi:http`, key-value, filesystem -
-  never per pipeline.
-
-## Purity by construction
-
-The rule that ties it together: **only zero-capability components may feed entity derivation.** A
-component granted no capabilities is deterministic by definition, so its output can be a canonical
-entity. An *effectful* component (an HTTP enricher, say) produces **annotations only** - never canonical
-entities. Purity is checkable from the composition manifest - no code inspection required.
-
-This is what keeps the [determinism](/docs/concepts/determinism/) guarantee intact even with an imperative
-escape hatch: effects live at the edge and are labelled; the data path stays pure.
-
-> Components are the escape hatch, not the front door. A freshly-`init`-ed nest is a working indexer with
-> **zero user-written components** - generated decode plus declarative views.
+> A freshly-`init`-ed nest is a working indexer with nothing hand-written - generated decode plus
+> declarative views.
 
 ## Next
 
-- [Authored SQL views](/docs/build/views/) - the declarative logic layer
-- [Recipes](/docs/build/recipes/) - derive contract reads with no eth_call
-- [Determinism](/docs/concepts/determinism/) - the purity rule this enforces
+- [Authored SQL views](/docs/build/views/) - the request-time logic layer
+- [Incremental entities](/docs/build/entities/) - relations maintained as blocks arrive
+- [Determinism](/docs/concepts/determinism/) - why the data path stays pure

@@ -1,8 +1,8 @@
 ---
 title: "Architecture"
-description: "The pipeline, storage, the IVM core, and the transform runtime."
+description: "The pipeline, storage, the IVM core, and the module map."
 order: 1
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 One codebase, two modes. **Embedded mode** (the default, and the product) is a single process with
@@ -16,7 +16,7 @@ reorg cannot reach sealed history - see [Internals](/docs/contributing/internals
 ## The pipeline
 
 ```text
-RPC ingestion                     (a colocated reth ExEx mode is planned, RFC-0003)
+RPC ingestion                     (a colocated reth ExEx mode is designed, not built, RFC-0003)
   → deterministic decode          (ABI → typed rows; the decode registry)
   → redb hot store                (the mutable tip: entity point-reads, reorg rollback)
   → sealed Parquet segments       (immutable, content-addressed, past finality)
@@ -52,14 +52,14 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
   incremental entities), `recipes`, `analytics` (read-only SQL over hot ∪ sealed, and authored SQL
   views), `sqlmemo` (the `/sql` answer cache, keyed on the rows and segments a statement reads),
   `engine` + `engine_burrmill` (the engine trait, with Burrmill behind it), `serve` (the HTTP
-  surface), `sql_errors` (errors-as-prompts), `transform` (the WASIp2 component runtime).
+  surface), `sql_errors` (errors-as-prompts).
 - **Subgraph porting**: `subgraph_import` (`init --from-subgraph`), `port_emit` + `port_report` (the
   per-field coverage report), `graph_schema` + `graph_query` (the Graph-dialect GraphQL read surface,
   routed only in a `--features graph` build, which each release ships as `nuthatch-graph-<target>`).
 - **Meaning & agents**: `semantic` (the governed semantic layer), `mcp`, `skill` (the generated
   CLI reference), `metadata`.
-- **Compliance**: `labels`, `lists`, `screen`, `flags`, `velocity`, `exposure`, `alerts`,
-  `webhooks`, `pack`, `audit`.
+- **Compliance**: `labels`, `lists`, `flags`, `velocity`, `exposure`, `alerts`, `webhooks`, `pack`,
+  `audit`, `sealed_audit`.
 - **Lifecycle & ops**: `config`, `project` (init/add/scaffolding), `lifecycle` (the
   compatible-vs-breaking classifier), `migrate`, `prune`, `runtime`, `metrics`, `bench`, `check`,
   `cli`.
@@ -68,5 +68,5 @@ and both drive the pipeline through the `Source` trait (`source.rs`).
 
 `CLAUDE.md` states the non-negotiables every change is judged against (single static binary; the
 2 GB budget; no phone-home; determinism; MIT OR Apache-2.0). The [RFC series](/docs/contributing/rfcs/) is
-the design record - each module's header comments name the RFC that shaped it. The progress log in
-`docs/` narrates how it actually went.
+the design record - each module's header comments name the RFC that shaped it. The release notes in
+`docs/releases/` say what each version changed.

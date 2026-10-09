@@ -7,13 +7,16 @@
 Nuthatch turns an EVM contract's events into tables in a local database. Embedded mode is one
 process with no external services: no Postgres, no Docker, no IPFS, no account. It is free and
 licensed
-MIT OR Apache-2.0. Status: v4.15.2, released 2026-10-08, on the stable 4.x line.
+MIT OR Apache-2.0. Status: v5.0.0, released 2026-10-09, on the stable 5.x line.
 
-The 4.x line is a promise about upgrades, not a claim of completeness: from 4.0.0 to the last 4.x
+The 5.x line is a promise about upgrades, not a claim of completeness: from 5.0.0 to the last 5.x
 release a config keeps working with the same meaning, a data directory opens in place on a later
 release with no re-index or migration command, and no HTTP route, response field, generated table or
 column, or MCP tool is removed, renamed or retyped. Downgrades, the off-by-default cargo features
-(`graph`, `folds`, `counter`, `exex`) and the SQL dialect behind `/sql` are not covered.
+(`graph`, `folds`, `counter`) and the SQL dialect behind `/sql` are not covered. 5.0.0 removed the
+WASM transform layer and live screening: the `transform`, `screen` and `audit replay` subcommands
+and the `screen_status` MCP tool are gone, and a `nuthatch.toml` with a `[screening]` table
+is refused at load until the table is deleted.
 
 This file is written for language models and coding agents. It separates what the released binary
 does from what is designed and not built. The longer version is
@@ -59,14 +62,13 @@ https://www.nuthatch-indexer.com/llms-full.txt. Every command below was run agai
   asks for logs by factory and child addresses until 500 children, then by topic0, and an endpoint
   that caps the addresses in one `eth_getLogs` has the list halved rather than read as a credentials
   refusal.
-- The compliance pack (opt-in): sanctions screening against content-addressed list snapshots,
-  threshold and velocity flags at `/flags`, counterparty exposure at `/exposure/{address}`, alert
-  and row webhooks over a durable at-least-once outbox, and a signed pack manifest with
-  `audit replay`.
-- A built-in MCP server (`nuthatch mcp`, stdio, bridging to a running `dev`): 12 tools in all, of
+- The compliance pack (opt-in): content-addressed label and list snapshots, threshold and velocity
+  flags at `/flags`, counterparty exposure at `/exposure/{address}`, alert and row webhooks over a
+  durable at-least-once outbox, a signed pack manifest, and `audit report` over the threshold flags.
+- A built-in MCP server (`nuthatch mcp`, stdio, bridging to a running `dev`): 11 tools in all, of
   which seven (`status`, `schema`, `tables`, `table`, `sql`, `explain`, `entity`) are advertised on
-  every nest, `balance` and `top_balances` where the nest decodes transfers, and `flags`,
-  `exposure` and `screen_status` where compliance is configured; three resources
+  every nest, `balance` and `top_balances` where the nest decodes transfers, and `flags` and
+  `exposure` where compliance is configured; three resources
   (`nuthatch://schema|tables|status`); three prompts (`profile-contract`, `verify-a-number`, and
   `investigate-address` where compliance is configured). A token nest therefore advertises nine
   tools and two prompts. Results carry a provenance stamp (`as_of`, `sealed_through`, `nid`,
@@ -142,10 +144,9 @@ callers get named queries at `/q/{name}` and never send SQL.
 
 ## Not built (design targets)
 
-reth ExEx tip ingestion against a colocated node (the Source trait and bridge are in; wiring needs
-a synced node) and firehose-class extraction on top of it; streaming subscribe (SSE); local models
-(Ollama) or bring-your-own-key; effectful HTTP egress for WASM transforms (a `kv` grant ships);
-wildcard signature-scoped indexing; a Homebrew tap. GraphQL (RFC-0053) shipped in 3.7.0 as a
+reth ExEx tip ingestion against a colocated node (the Source trait is in; the ExEx is designed, not
+built, and wiring it needs a synced node) and firehose-class extraction on top of it; streaming subscribe (SSE); local models
+(Ollama) or bring-your-own-key; wildcard signature-scoped indexing; a Homebrew tap. GraphQL (RFC-0053) shipped in 3.7.0 as a
 partial read surface, exact for a subgraph's event-shaped fields and a named refusal for the rest;
 it is parked, and only the `nuthatch-graph-<target>` download attached to every release since
 4.11.0 serves it. The default binary and the images answer those routes with 404. Do not describe

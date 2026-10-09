@@ -2,7 +2,7 @@
 title: "CLI guide"
 description: "The everyday Nuthatch commands, with the generated full reference linked below."
 order: 1
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
@@ -113,13 +113,10 @@ entity circuit.
 ## The compliance pack (RFC-0008)
 
 - **`nuthatch labels import|list`** - labeled address sets as content-addressed snapshots.
-- **`nuthatch lists fetch|list`** - sanctions/watch lists (`ofac-sdn`, `eu-consolidated` have
-  default URLs; any other name takes `--url` or `--file`).
-- **`nuthatch screen --list <hash> --from N --to N`** - screen sealed transfers, recording
-  replayable `sanction_hit` annotations.
+- **`nuthatch lists fetch|list`** - sanctions/watch lists as pinned address snapshots (`ofac-sdn`,
+  `eu-consolidated` have default URLs; any other name takes `--url` or `--file`).
 - **`nuthatch pack keygen|build|verify`** - the signed compliance-pack manifest (ed25519).
-- **`nuthatch audit replay|report`** - re-prove the annotations from scratch, or summarise them
-  over a range (`--json`).
+- **`nuthatch audit report`** - summarise the threshold flags over a range (`--json`).
 - **`nuthatch audit sealed --rpc <url>`** - re-fetch a sample of sealed ranges from a second endpoint
   and compare them row by row; `dev --audit-rpc` does the same in the background.
 
@@ -132,5 +129,3 @@ entity circuit.
   redacted in output because they often contain credentials.
 - **`nuthatch bench query`** - the read path: entity point-read p50/p99 and the `/sql` hot∪cold
   scan cost. Run offline against an already-indexed nest (stop `dev` first).
-- **`nuthatch transform <component.wasm>`** - run a WASIp2 transform component over stored
-  transfers.

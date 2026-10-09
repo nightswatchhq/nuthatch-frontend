@@ -6,6 +6,12 @@ author: "cargopete"
 tags: ["nuthatch", "webassembly", "wasmtime", "component-model", "determinism", "compliance", "the-graph", "rust"]
 ---
 
+> **Superseded, 2026-10-09.** Nuthatch 5.0.0 removed the WASM layer described below: `nuthatch
+> transform`, live screening, `nuthatch screen`, `audit replay`, the `wit/` interfaces, the embedded
+> component and wasmtime with them. No production nest used it. Nuthatch now runs no WebAssembly at
+> all. Kept as written, because a project that quietly edits its old positions is harder to trust
+> than one that dates them.
+
 *The obvious guess is wrong, so it is worth stating plainly at the top: Nuthatch runs no mapping
 WASM at all.*
 

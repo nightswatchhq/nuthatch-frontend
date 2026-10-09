@@ -2,7 +2,7 @@
 title: Determinism
 description: Decode, derivation, and reorg handling are deterministic and re-executable - LLM output never sits in the data path.
 order: 5
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 Determinism is a non-negotiable in nuthatch's core, not a nice-to-have. Anything that feeds stored state
@@ -24,7 +24,8 @@ same inputs at the same block always produce the same output, on any machine, on
 
 - **ABI decoding** - deterministic Rust, topic0-keyed, versioned (history is never retroactively
   re-decoded).
-- **Entity derivation** - incremental views over decoded events (DBSP/IVM), or pure WASM components.
+- **Entity derivation** - incremental views over decoded events (DBSP/IVM), and SQL views evaluated
+  over the same stored rows.
 - **Contract state** - where nuthatch *derives* a read (see [Recipes](/docs/build/recipes/)) it's pure
   SQL over indexed events, no fetch at all. Token metadata (`decimals`/`symbol`/`name`) is
   pulled once and cached, since it never changes. Mutable state comes only through declared
@@ -40,11 +41,7 @@ the runtime data path.** An agent can scaffold a nest, write a view, or author a
 any code - but nothing an LLM produces at runtime feeds stored state. The data path stays deterministic;
 the AI stays at the authoring layer.
 
-> This is also why effectful WASM components (HTTP enrichers, say) may produce **annotations only**,
-> never canonical entities - only zero-capability, deterministic components can feed entity derivation.
-> See [Authoring modes](/docs/concepts/authoring/).
-
 ## Next
 
 - [Reorgs &amp; finality](/docs/concepts/reorgs/) - determinism in action
-- [Authoring modes](/docs/concepts/authoring/) - the purity rule for handlers
+- [Authoring modes](/docs/concepts/authoring/) - incremental entities and request-time views

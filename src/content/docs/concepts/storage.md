@@ -2,7 +2,7 @@
 title: Storage & sealing
 description: A hot redb tip store, content-addressed Parquet sealed past finality, unified behind one SQL surface.
 order: 3
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 Nuthatch stores data in two tiers, split at the finality boundary - and glues them behind one SQL

@@ -18,7 +18,7 @@ const rows = [
   <!-- 1. HERO -->
   <section class="hero">
     <div class="wrap">
-      <p class="hero-eyebrow rise rise-1"><span class="tag">v4.15.2 · MIT OR Apache-2.0</span></p>
+      <p class="hero-eyebrow rise rise-1"><span class="tag">v5.0.0 · MIT OR Apache-2.0</span></p>
       <h1 class="rise rise-1">Be your own indexer.</h1>
       <p class="hero-sub narrow rise rise-2">
         Turn an EVM contract's history into a local SQL database. One Rust binary, no Postgres,
@@ -113,9 +113,9 @@ const rows = [
         <div>
           <h3>Deterministic by construction</h3>
           <p>
-            Decode and derivation are reproducible. The escape hatch is capability-isolated
-            WASM components via WIT. A component granted zero capabilities is pure, so it can be
-            re-executed and verified; effectful ones only annotate.
+            Decode and derivation are reproducible: the same blocks in always give the same
+            rows and entities out, so anyone can re-execute a nest and check the answer. Effects
+            such as webhooks and alerts happen after sealing, never in the data path.
           </p>
         </div>
       </div>
@@ -217,7 +217,7 @@ const rows = [
         <div class="card ai-card">
           <span class="ai-kicker">For agents</span>
           <ul class="ai-list">
-            <li>A built-in MCP server: nine tools, three resources and two prompts on every nest, covering schema discovery, SQL, entity and balance lookup. Flags, exposure, sanctions screening and a third prompt appear when the compliance pack is configured.</li>
+            <li>A built-in MCP server: nine tools, three resources and two prompts on every nest, covering schema discovery, SQL, entity and balance lookup. Flags, exposure and a third prompt appear when the compliance pack is configured.</li>
             <li>A governed semantic layer: <code>schema</code> serves <em>this</em> nest's meaning, and a failed query comes back as a fix hint (<code>explain</code> checks a query before it runs) - so the agent gets it right first try.</li>
             <li>Ships <code>llms.txt</code> and a Claude Code skill an agent uses to <em>drive</em> nuthatch, not just read it.</li>
             <li>Works fully offline against your local instance.</li>

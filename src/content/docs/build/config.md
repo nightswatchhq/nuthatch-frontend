@@ -2,7 +2,7 @@
 title: nuthatch.toml
 description: The one config file a nest has - the [nest] header and one or more [[contracts]].
 order: 1
-checked: 4.15.2
+checked: 5.0.0
 ---
 
 A nest starts with `nuthatch.toml`. `init` generates it from a contract address; you
@@ -58,7 +58,7 @@ One block per contract. Repeat it to index many contracts in one nest.
 `nuthatch.toml` also carries the optional layers, each documented on its own page:
 
 - `[[templates]]` + `[[factories]]` - index dynamically discovered children. See [Factories](/docs/build/factories/).
-- `[screening]` + `[flags]` + `[[alerts]]` - the compliance pack. See [Compliance pack](/docs/build/compliance/).
+- `[flags]` + `[[alerts]]` - the compliance pack. See [Compliance pack](/docs/build/compliance/).
 - `[[webhooks]]` - POST sealed rows to a URL. See [Webhooks](/docs/build/webhooks/).
 - `[[calls]]` + `[[ipfs]]` - pinned contract reads and verified IPFS documents. See [Contract calls and
   IPFS documents](/docs/build/contract-calls/).
