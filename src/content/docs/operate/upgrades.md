@@ -2,7 +2,7 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 5.0.0
+checked: 5.0.1
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
@@ -43,7 +43,7 @@ manifest with `screening` or `components` entries is refused at `pack verify`. L
 exposure, velocity, `audit report` and `audit sealed` are unchanged. A segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15, because Parquet 59 writes a different `created_by`
 stamp; existing segments are read as they are, and the decoded rows are identical. Compare rows, not
-hashes, across versions. The [release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v5.0.0)
+hashes, across versions. The [release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v5.0.1)
 have the rest.
 
 ## Upgrading to 4.11
