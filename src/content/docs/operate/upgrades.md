@@ -2,31 +2,49 @@
 title: "Upgrading a nest"
 description: "The N-1 resync tax, solved by the runtime rather than by a command you have to remember."
 order: 10
-checked: 4.15.2
+checked: 5.0.1
 ---
 
 The N-1 problem is the subgraph resync tax: version N is live, version N+1 needs days of backfill, and
 consumers eat downtime or stale data during the flip.
 
-## The 4.x promise
+## The 5.x promise
 
-4.0.0 is the stable line. Coming from 3.13.3 it is a binary swap: no storage migration, config change,
-NID change or re-index. The major version is a promise about later releases, not a claim about what
-changed. From 4.0.0 to the last 4.x release:
+5.x is the stable line. From 5.0.0 to the last 5.x release:
 
-- **Config keeps working.** A config that works on a 4.x release works on every later 4.x release,
+- **Config keeps working.** A config that works on a 5.x release works on every later 5.x release,
   with the same meaning.
-- **Data directories upgrade drop-in.** A later 4.x opens a data directory written by an earlier 4.x
+- **Data directories upgrade drop-in.** A later 5.x opens a data directory written by an earlier 5.x
   in place. No re-index, no re-seal, no migration command.
 - **The HTTP, SQL and MCP surfaces do not break.** No route, response field, generated table or
   column, or MCP tool is removed, renamed or retyped.
 
-The promise is upgrade only; a downgrade is not covered. A released 4.x only gets patches, features
-wait for the monthly minor (4.1, 4.2), and correctness and security fixes ship immediately. Also not
-covered: the off-by-default cargo features `graph`, `folds`, `counter` and `exex`; the SQL dialect behind
-`/sql`, which changed with the engine in 4.1; segment hashes across `arrow-rs` versions; the admin
-UI's HTML; and the `postgres-store` build's internal schema. The full contract is in the operator
-guide's [stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
+The promise is upgrade only; a downgrade is not covered. A released 5.x only gets patches, features
+wait for the monthly minor (5.1, 5.2), and correctness and security fixes ship immediately. Also not
+covered: the off-by-default cargo features `graph`, `folds` and `counter`; the SQL dialect behind
+`/sql`; segment hashes across `arrow-rs` versions; the admin UI's HTML; and the `postgres-store`
+build's internal schema. The full contract is in the operator guide's
+[stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
+
+4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
+removed, and that is why it is a major version.
+
+## Upgrading to 5.0
+
+Replace the binary and restart. There is no storage migration and no re-index: 5.0.0 is 4.15.2 with
+the WASM transform layer and live screening taken out. Two things can need attention.
+
+- **A `nuthatch.toml` with a `[screening]` table no longer loads.** The error names the table and says
+  it was removed. Delete the table and the nest loads; nothing else in the file changes meaning.
+- **The `screen_status` MCP tool is gone.** A nest only advertised it when screening was configured.
+
+`nuthatch transform`, `nuthatch screen` and `nuthatch audit replay` are removed, and a compliance pack
+manifest with `screening` or `components` entries is refused at `pack verify`. Labels, lists, flags,
+exposure, velocity, `audit report` and `audit sealed` are unchanged. A segment sealed by 5.0.0 hashes
+differently from the same rows sealed by 4.15, because Parquet 59 writes a different `created_by`
+stamp; existing segments are read as they are, and the decoded rows are identical. Compare rows, not
+hashes, across versions. The [release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v5.0.1)
+have the rest.
 
 ## Upgrading to 4.11
 

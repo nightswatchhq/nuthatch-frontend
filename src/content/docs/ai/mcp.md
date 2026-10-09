@@ -2,7 +2,7 @@
 title: "Agent-grade MCP"
 description: "Drive nuthatch from an agent - fully offline against the local instance."
 order: 1
-checked: 4.15.2
+checked: 5.0.1
 ---
 
 A nest isn't just queryable by you - it's queryable by your agent, with the same two-minute setup.
@@ -45,7 +45,7 @@ Use the binary's absolute path (what `nuthatch mcp --print-config` emits) if `nu
 ## An honest tool menu
 
 The tools a nest advertises match what it actually indexes (RFC-0025). A token nest offers `balance`
-and `top_balances`; a nest with compliance configured adds `flags`, `exposure`, and `screen_status`;
+and `top_balances`; a nest with compliance configured adds `flags` and `exposure`;
 a bare event nest (say a Uniswap pool) offers neither, so an agent is never handed a tool that would
 just answer `{"count":0}`. The menu agrees with the data.
 

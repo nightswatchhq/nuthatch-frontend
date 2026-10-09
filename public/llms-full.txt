@@ -2,7 +2,7 @@
 
 Nuthatch is a self-hosted, AI-native blockchain indexer. One Rust binary, one command, a live
 indexed API on your own machine. There is no mandatory third-party data dependency, ever. Tagline:
-"Be your own indexer." Status: **v4.15.2**, released 2026-10-08, on the stable 4.x line. Licence:
+"Be your own indexer." Status: **v5.0.1**, released 2026-10-09, on the stable 5.x line. Licence:
 MIT OR Apache-2.0.
 
 This document is written for language models and agents. It separates what the released binary does
@@ -121,11 +121,13 @@ operational weight of the tooling, which is an engineering problem.
    refuses a topic0-only fetch keeps the cursor on addresses. An endpoint that refuses too many
    addresses in one `eth_getLogs` (publicnode on BSC: ten or more) has the list halved until it
    accepts, rather than being read as a credentials refusal.
-9. **The compliance pack** (RFC-0008, opt-in, zero cost when absent). Sanctions screening against
-   content-addressed list snapshots (`nuthatch lists fetch ofac-sdn|eu-consolidated`, `nuthatch
-   screen`), replayable `sanction_hit` annotations, threshold and velocity flags at `/flags`,
-   counterparty exposure at `/exposure/{address}`, alerts over a durable at-least-once outbox, and a
-   signed pack manifest (`pack build|verify`, ed25519) with `audit replay` and `audit report`.
+9. **The compliance pack** (RFC-0008, opt-in, zero cost when absent). Content-addressed label
+   snapshots (`nuthatch labels import`) and list snapshots (`nuthatch lists fetch
+   ofac-sdn|eu-consolidated`), threshold and velocity flags at `/flags`, counterparty exposure at
+   `/exposure/{address}`, alerts over a durable at-least-once outbox, and a signed pack manifest
+   (`pack build|verify`, ed25519) with `audit report`. Live sanctions screening was removed in
+   5.0.0 with the WASM layer: a `[screening]` table is refused at load, and `sanction_hit` rows a
+   4.x nest already sealed stay queryable.
 10. **Webhooks and the admin UI** (RFC-0010). `[[webhooks]]` POST sealed rows matching a `where`
     predicate to a URL, at least once, HMAC-signed with `X-Nuthatch-Signature` when a `secret` is
     set; they fire past finality, so a delivered row never rolls back. `/_admin/` is an embedded
@@ -133,9 +135,9 @@ operational weight of the tooling, which is an engineering problem.
     it; `--no-admin` removes it.
 11. **A built-in MCP server.** `nuthatch mcp` speaks stdio and bridges to a running `dev`
     (`--url`); `nuthatch mcp --print-config` prints a copy-paste `.mcp.json` and the `claude mcp
-    add` one-liner. Twelve tools in all: `status`, `schema`, `tables`, `table`, `sql`, `explain` and
+    add` one-liner. Eleven tools in all: `status`, `schema`, `tables`, `table`, `sql`, `explain` and
     `entity` on every nest; `balance` and `top_balances` where the nest decodes transfers;
-    `flags`, `exposure` and `screen_status` where compliance is configured (RFC-0025: a nest
+    `flags` and `exposure` where compliance is configured (RFC-0025: a nest
     advertises only what it can answer, read from `GET /shape`). Three resources
     (`nuthatch://schema`, `nuthatch://tables`, `nuthatch://status`) and three prompts
     (`profile-contract`, `verify-a-number`, and `investigate-address` where compliance is
@@ -200,8 +202,7 @@ operational weight of the tooling, which is an engineering problem.
     indexed is refused. `nuthatch offchain drop <file> --table <name>` seals a CSV, JSON array or
     Parquet file as an immutable `offchain__<name>` snapshot, and `nuthatch offchain pull <url>
     --table <name> --format json` fetches a JSON feed once for a host timer to schedule; an entity
-    can read either (RFC-0045). `nuthatch transform <component.wasm>` runs a pure, zero-capability
-    WASIp2 component over an Arrow batch.
+    can read either (RFC-0045).
 17. **Measurement.** `nuthatch doctor --rpc <url> --address <addr>` probes an endpoint's real
     `getLogs` window, batch limit and archive depth and recommends a `--window`; with `--dir` it
     probes the nest's full contract set, and `--catalogue` re-hashes the sealed catalogue instead.
@@ -326,11 +327,10 @@ incremental circuits; segments are sealed strictly past finality, so the columna
 append-only, and a reorg that would reach below the sealed watermark halts the cursor with an error
 rather than corrupting. Property tests assert convergence for random reorg depths. A store records
 what it covers (`indexed_coverage`) and refuses to start if `nuthatch.toml` has since changed the
-chain, contracts, start blocks, factories or extraction settings. Authoring is declarative by
-default (incremental views and entities, authored SQL) with capability-isolated WASM components as
-the escape hatch: a component granted zero capabilities is pure and may feed entity derivation;
-effectful components produce annotations only, and the effectful HTTP path is designed, not built.
-Verification means re-executing pure logic over content-addressed segments; no TEE, no zk.
+chain, contracts, start blocks, factories or extraction settings. Authoring is declarative
+(incremental views and entities, authored SQL); 5.0.0 removed the WASM component escape hatch, which
+no production nest used. Verification means re-executing the same logic over content-addressed
+segments; no TEE, no zk.
 
 A nest's identity (NID) is a hash of its authored inputs, so any edit is a new package; a separate
 data identity decides whether an existing dataset can be adopted, so a view, semantic or
@@ -402,17 +402,16 @@ entities. Derived views read finalised data while raw event tables are fresh to 
 ## Roadmap (/roadmap)
 
 https://www.nuthatch-indexer.com/roadmap is generated from the repository: the README's working-now
-table and progress log are the source of truth for what is shipped, the numbered RFCs under
+table and the release notes under `docs/releases/` are the source of truth for what is shipped, the numbered RFCs under
 `docs/rfcs/` for what is planned, and where the two disagree the README wins. Dates are not
 promised; order is.
 
 - Shipped: everything in "What it does today", plus a published stability contract, a `cargo-deny`
   gate, the CI footprint job and the release gate.
-- In progress: nothing partly landed. The reth ExEx groundwork (RFC-0003: the `Source` trait, the
-  library split, the push-to-pull bridge) is in and tested; wiring it needs a synced node.
+- In progress: nothing partly landed. Of the reth ExEx groundwork (RFC-0003), the `Source` trait and
+  the library split are in; 5.0.0 removed the `exex` stub, and the ExEx is designed, not built.
 - Planned: a Homebrew tap (RFC-0005's last open piece); reth ExEx tip mode and then firehose-class
-  extraction of traces and state diffs (RFC-0014); IVM generalisation; effectful HTTP egress for
-  transform worlds (`wasi:http`, beyond today's `kv` grant); wildcard signature-scoped indexing;
+  extraction of traces and state diffs (RFC-0014); IVM generalisation; wildcard signature-scoped indexing;
   streaming subscribe. Each reopens one item at a time with named evidence
   (`docs/frozen-for-2027.md`). The 2026 feature freeze ran from 2026-08-20 to 2026-09-08 and was
   lifted in full; RFC-0058 (cross-nest SQL), RFC-0059 (checkpointed folds, built in part behind the
@@ -455,15 +454,24 @@ The toolchain pin is required, not advisory: `rust-toolchain.toml` does not appl
 Minimum supported Rust is 1.95.
 
 **Upgrading** the binary is a swap and a restart; a newer release reads an older one's hot store and
-sealed segments as they are. The 4.x promise, from 4.0.0 to the last 4.x release: config keeps
-working with the same meaning; a data directory written by an earlier 4.x opens in place on a later
+sealed segments as they are. The 5.x promise, from 5.0.0 to the last 5.x release: config keeps
+working with the same meaning; a data directory written by an earlier 5.x opens in place on a later
 one with no re-index, re-seal or migration command; and no HTTP route, response field, generated
-table or column, or MCP tool is removed, renamed or retyped. It is upgrade only. A released 4.x gets
+table or column, or MCP tool is removed, renamed or retyped. It is upgrade only. A released 5.x gets
 patches; features wait for the monthly minor; correctness and security fixes ship immediately. Not
-covered: downgrades; the off-by-default cargo features `graph`, `folds`, `counter` and `exex`; the
+covered: downgrades; the off-by-default cargo features `graph`, `folds` and `counter`; the
 SQL dialect behind `/sql`, which changed with the engine in 4.1; segment hashes across `arrow-rs`
 versions; the admin UI's HTML; and the `postgres-store` build's internal schema. The full contract
 is `docs/operators.md#stability-contract` in the repository.
+
+4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 is 4.15.2 with the WASM transform layer and
+live screening removed, and it broke the promise twice for that: a `nuthatch.toml` with a
+`[screening]` table no longer loads until the table is deleted, and the `screen_status` MCP tool is
+gone. The `transform`, `screen` and `audit replay` subcommands are removed, and a pack
+manifest with `screening` or `components` entries is refused at `pack verify`. Release binaries are
+built with fat LTO and are smaller, and Arrow and Parquet 59 mean a segment sealed by 5.0.0 hashes
+differently from the same rows sealed by 4.15; existing segments are read as they are and decoded
+rows are identical. Otherwise it is a binary swap with no re-index.
 
 What changed inside 4.x that an operator should know: 4.1.0 (2026-10-02) made Burrmill the only
 engine, removed `emit dune`, refuses `NUTHATCH_ENGINE=duckdb` at startup, and raised the Linux glibc

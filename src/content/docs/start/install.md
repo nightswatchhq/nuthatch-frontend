@@ -2,7 +2,7 @@
 title: "Install"
 description: "Install the nuthatch binary - curl | sh, cargo install, or a prebuilt release."
 order: 2
-checked: 4.15.2
+checked: 5.0.1
 ---
 
 nuthatch is **one binary**. No Postgres, no Docker, no IPFS, no account - install it and
@@ -25,7 +25,9 @@ Intel Mac is deliberately not built. Each release carries `nuthatch-aarch64-appl
 and, for [scaled mode](/docs/operate/scaled/), `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz`, each
 with a `.sha256` beside it. On a platform with no prebuilt binary, or on Linux arm64 while the latest
 release has none, the installer stops and prints the source-build command below rather than install
-something that will not run.
+something that will not run. From 5.0.0 the release binaries are built with fat LTO (the `dist`
+profile), which makes them smaller than a `cargo install` build from the same tag. Measured on macOS
+before the WASM layer was removed, fat LTO took the binary from 158.9 MB to 106.7 MB.
 
 The Linux binaries are dynamically linked and need **glibc 2.35 or newer**, measured off the published
 artifact with `objdump -T`: from 4.1.0 the x86_64 binary references `hypot` at `GLIBC_2.35`, and the
@@ -65,13 +67,13 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.15.2 --version
+docker run --rm ghcr.io/nightswatchhq/nuthatch:5.0.1 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
 only for now, and no image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a
 binary. The image carries the **same binary attached to the GitHub Release**, so the two cannot
-drift. Scaled mode needs the `-scaled` tag (`4.12.0-scaled`): the default image is the embedded build
+drift. Scaled mode needs the `-scaled` tag (`5.0.1-scaled`): the default image is the embedded build
 and carries no database driver. See [Deploy it](/docs/operate/deploy/) for running it properly.
 
 ## From source

@@ -2,28 +2,31 @@
 title: "RFCs"
 description: "The numbered design record - every decision, what shipped, what's deferred."
 order: 3
-checked: 4.15.2
+checked: 5.0.1
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
 [`docs/rfcs/`](https://github.com/nightswatchhq/nuthatch/tree/main/docs/rfcs). They're numbered
 in build order, each states its dependencies and what it blocks, and the status lifecycle is
 **Draft → Accepted → Implemented → (Superseded / Parked)**. Statuses are reconciled against the
-progress log; measured numbers are cited, and targets are labeled as targets, never as results.
+[release notes](https://github.com/nightswatchhq/nuthatch/tree/main/docs/releases); measured numbers
+are cited, and targets are labeled as targets, never as results.
 
 ## The series
 
 - **0001 Generalized decode & nests** *(Implemented)* - the foundation: multi-contract nests, the
   decode registry.
 - **0002 The Horizon nest** *(Implemented)* - the first real-world nest.
-- **0003 reth ExEx tip mode** *(Accepted; deferred)* - colocated-node ingestion.
+- **0003 reth ExEx tip mode** *(Accepted; deferred)* - colocated-node ingestion. Designed, not built:
+  5.0.0 removed the `exex` feature's stub, and the `Source` trait is what an ExEx source would
+  implement.
 - **0004 Backfill throughput** *(Implemented)* - measure first, optimise second; seal-direct.
 - **0005 Release engineering** *(Implemented)* - the v0.1.0 bar and beyond.
 - **0006 Grant funding** *(Withdrawn 2026-10-04)* - nuthatch takes no grants and never applied for
   one. It is a self-funded public good, maintained by one person; everything is open source.
 - **0007 Launch & validation** *(Accepted; process)* - the non-engineering record.
-- **0008 The compliance pack** *(Implemented)* - labels, lists, screening, flags, exposure, the
-  signed audit pack.
+- **0008 The compliance pack** *(Implemented)* - labels, lists, flags, exposure, alerts and the
+  signed pack manifest. Live screening, its WASM component and `audit replay` were removed in 5.0.0.
 - **0009 Factories** *(Implemented)* - dynamic child-contract discovery.
 - **0010 Admin UI & webhooks** *(Implemented)* - ease-of-use parity.
 - **0011 The graph-network nest** *(Parked after pilot)* - the wedge proven in prod.
@@ -133,7 +136,9 @@ progress log; measured numbers are cited, and targets are labeled as targets, ne
   until you say yes. The totals are at [/count](/count).
 - **0055 The Dune view emitter** *(Withdrawn)* - `emit dune`, DuneSQL models over a mirrored nest.
   Shipped in 3.7.0 and removed in 4.1 with DuckDB, whose parser it depended on.
-- **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Draft)*.
+- **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Withdrawn)*. The three
+  Dune RFCs were deleted from the tree in 5.0.0; they are readable at the
+  [v4.15.2 tag](https://github.com/nightswatchhq/nuthatch/tree/v4.15.2/docs/rfcs).
 - **0058 Cross-nest SQL** *(Accepted, then parked 2026-09-26 with no user)* - a declared read-only
   query across mounts in one runtime.
 - **0059 Checkpointed folds** / **0060 The Network Subgraph endpoint** *(Accepted 2026-09-21, behind
@@ -151,8 +156,8 @@ determinism in the core, MIT OR Apache-2.0) and carries the standard structure: 
 Goals/Non-goals, Design, Implementation, Testing, Risks, Alternatives, Open questions. Companions
 in `docs/`: **backlog.md** (how to read the issue queue, which is now where everything deferred
 lives, and the standing decisions behind it), **prod-readiness.md** (the bar
-a release clears before it's pointed at a real workload unattended), and the **progress log** (the
-running narrative the statuses are reconciled against).
+a release clears before it's pointed at a real workload unattended), and **releases/** (one page of
+notes per version, which the statuses are reconciled against).
 
 Proposing a change? Open a [discussion](https://github.com/nightswatchhq/nuthatch/discussions)
 first; if it survives contact, it becomes the next number.

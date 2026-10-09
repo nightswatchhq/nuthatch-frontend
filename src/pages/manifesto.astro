@@ -49,8 +49,7 @@ import Layout from '../layouts/Layout.astro';
         construction. Decoding, reorg handling, and entity derivation are reproducible: the same
         blocks in always produce the same state out. Entities are declarative incremental views,
         so a reorg is a retraction rather than a hand-written rollback, and a backfill is the
-        same logic run as a batch. Where you need imperative code, it runs as a capability-isolated
-        WASM component: one granted no capabilities is a pure function, and a pure function can be
+        same logic run as a batch, and a view is plain SQL over the same stored rows. All of it can be
         re-executed and checked by anyone. Verification here means running the code again and
         getting the same answer, not trusting a claim about it.
       </p>
