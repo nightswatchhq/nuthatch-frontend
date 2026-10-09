@@ -7,7 +7,7 @@ checked: 5.0.1
 
 One SQL surface spans both stores: the live unsealed tip (redb) and the sealed Parquet history,
 registered as one table per event in the query engine,
-[Burrmill](https://github.com/nightswatchhq/burrmill) on DataFusion. You never think about the seam - a query over `usdc__transfer` sees every
+[Burrmill](https://github.com/nuthatch-org/burrmill) on DataFusion. You never think about the seam - a query over `usdc__transfer` sees every
 row from deployment to the block indexed a moment ago. Reach it via `nuthatch sql` (a REPL when
 called with no query), `GET /sql`, or the MCP `sql` tool.
 

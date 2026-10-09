@@ -24,7 +24,7 @@ That identifier binds the authored inputs which make the index what it is: contr
 
 > I serve this reproducible dataset, with this query mode, at this endpoint.
 
-The first offering is [`horizon-nest`](https://github.com/nightswatchhq/horizon-nest), the Nuthatch index of Graph Horizon activity on Arbitrum One. It exposes five named queries: `top_indexers`, `indexer`, `active_allocations`, `delegations_for_indexer`, and `network_totals`.
+The first offering is [`horizon-nest`](https://github.com/nuthatch-org/horizon-nest), the Nuthatch index of Graph Horizon activity on Arbitrum One. It exposes five named queries: `top_indexers`, `indexer`, `active_allocations`, `delegations_for_indexer`, and `network_totals`.
 
 ## The route through the machine
 
@@ -43,7 +43,7 @@ private Nuthatch runtime
 Horizon nest data
 ```
 
-The public gateway is written in Rust on [`horizon-core`](https://github.com/nightswatchhq/nuthatch-ds). It exposes free discovery routes for `/schema` and `/queries`, then charges for the useful bit. Named queries cost one computation unit, table reads cost two, and arbitrary SQL is not available in the first offering.
+The public gateway is written in Rust on [`horizon-core`](https://github.com/nuthatch-org/nuthatch-ds). It exposes free discovery routes for `/schema` and `/queries`, then charges for the useful bit. Named queries cost one computation unit, table reads cost two, and arbitrary SQL is not available in the first offering.
 
 That last point matters. Nuthatch's local `/sql` is excellent for the person operating a nest. It is not a security boundary for a public internet service. The named query allowlist is the boundary, and it is enforced twice: by the gateway's `NAMED` mode and by Nuthatch itself.
 
@@ -86,6 +86,6 @@ Paid requests are currently limited to an allowlisted, GraphTally-authorized sig
 
 There is one other small operational wrinkle. The serving runtime is currently also the writer for this mounted nest host. We tried the obvious read-only `nuthatch serve` substitution and found that it expects a direct nest directory rather than the mount host. The writer remains in place because a gateway with no functioning upstream would be a rather expensive health check. Packaging the direct-reader topology is the next piece of work.
 
-The code, deployment record, and the exact test evidence are in [the Nuthatch Data Service repository](https://github.com/nightswatchhq/nuthatch-ds). The service also appears in [Lodestar's Horizon data service catalogue](https://www.lodestar-dashboard.com/data-services).
+The code, deployment record, and the exact test evidence are in [the Nuthatch Data Service repository](https://github.com/nuthatch-org/nuthatch-ds). The service also appears in [Lodestar's Horizon data service catalogue](https://www.lodestar-dashboard.com/data-services).
 
 *Nuthatch remains one Rust binary for deriving and serving your own chain data. The new thing is that a reproducible nest can now be a paid Horizon offering too. That is a useful property, and there is plenty left to make it boring.*

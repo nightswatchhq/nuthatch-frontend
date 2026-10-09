@@ -20,7 +20,7 @@ nothing:
 
 ```sh
 rustup toolchain install 1.95.0
-cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
+cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch
 ```
 
 ## 2. Scaffold a nest from an address

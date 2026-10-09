@@ -96,14 +96,14 @@ matters, but it proves that the bytes survived transit. It cannot establish who 
 attacker able to replace the tarball can replace its sidecar with it.
 
 ```sh
-gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatchhq/nuthatch
+gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nuthatch-org/nuthatch
 ```
 
 The `--repo` is not decoration. Without it, an attestation from any repository can satisfy the command.
 With it, GitHub's recorded workflow identity ties the artifact to this repository, its producing commit
 and workflow. The release workflow performs the same verification before publication.
 
-The [release](https://github.com/nightswatchhq/nuthatch/releases/tag/v3.0.0) has the complete changelog.
+The [release](https://github.com/nuthatch-org/nuthatch/releases/tag/v3.0.0) has the complete changelog.
 The [entities guide](/docs/build/entities/) has the authoring and operating contract. The work now is
 less about saying that Nuthatch can compute a question and more about deciding, honestly and visibly,
 which questions are important enough to compute as the chain moves.

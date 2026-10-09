@@ -25,7 +25,7 @@ exactly as sustainable as it sounds. So we built the thing we kept doing manuall
 [platform.nuthatch-indexer.com](https://platform.nuthatch-indexer.com) runs nuthatch for you: sign
 in, give it a repository or a contract address, and you get a live SQL endpoint.**
 
-It is not a different product. It runs the published image, `ghcr.io/nightswatchhq/nuthatch:3.11.0`,
+It is not a different product. It runs the published image, `ghcr.io/nuthatch-org/nuthatch:3.11.0`,
 unmodified. Everything it adds, sign-in, plans, payments, lives in a separate private repository and
 none of it enters the nuthatch tree. Delete the platform and a self-hoster loses nothing; that is a
 rule we set before we wrote a line of it, and the binary you download is the one we run.

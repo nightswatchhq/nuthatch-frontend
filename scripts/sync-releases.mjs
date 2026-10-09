@@ -5,7 +5,7 @@
 //   node scripts/sync-releases.mjs        # GITHUB_TOKEN is used if set; unauthenticated works too
 import { writeFile } from 'node:fs/promises';
 
-const repo = 'nightswatchhq/nuthatch';
+const repo = 'nuthatch-org/nuthatch';
 const out = new URL('../src/data/releases.json', import.meta.url);
 const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'nuthatch-frontend' };
 if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;

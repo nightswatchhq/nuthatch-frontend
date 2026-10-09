@@ -8,7 +8,7 @@ checked: 5.0.1
 The builder skill teaches a coding agent to *build with* nuthatch - scaffold nests, edit configs,
 add factories and compliance, package and publish, run runtimes, and troubleshoot - the way an
 experienced operator would. It lives in the repo at
-[`skills/nuthatch-builder/`](https://github.com/nightswatchhq/nuthatch/tree/main/skills/nuthatch-builder)
+[`skills/nuthatch-builder/`](https://github.com/nuthatch-org/nuthatch/tree/main/skills/nuthatch-builder)
 and drops into any agent that reads Claude-style skills.
 
 ## The one rule: generate what can be generated
@@ -43,6 +43,6 @@ and rejects any authored file that names a flag or metric the binary doesn't hav
 eval - scoring agent sessions end-to-end - is planned (RFC-0017).
 
 A sibling skill,
-[`skills/nuthatch-subgraph-port/`](https://github.com/nightswatchhq/nuthatch/tree/main/skills/nuthatch-subgraph-port)
+[`skills/nuthatch-subgraph-port/`](https://github.com/nuthatch-org/nuthatch/tree/main/skills/nuthatch-subgraph-port)
 (RFC-0044), ports a Graph subgraph to a nest, and writes a port report classifying every entity field
 before anything is scaffolded.

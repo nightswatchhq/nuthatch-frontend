@@ -23,9 +23,9 @@ factory over 10,001 mainnet blocks (19,000,000 to 19,010,000): `PairCreated` dis
 The published 4.10.1 binary on 2026-10-05, against Tenderly's keyless public gateway (no key, no
 account), on an 18-core Apple M5 Pro laptop, `--seal-direct`, adaptive window, one fetch at a time.
 Re-runnable with `nuthatch bench backfill --from 19000000 --to 19010000 --runs 5 --seal-direct` on
-[`nightswatchhq/obib-case6`](https://github.com/nightswatchhq/obib-case6); the 4.7.0 run on the same
+[`nuthatch-org/obib-case6`](https://github.com/nuthatch-org/obib-case6); the 4.7.0 run on the same
 machine and endpoint, 4.7 s, is
-[recorded in the repo](https://github.com/nightswatchhq/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md).
+[recorded in the repo](https://github.com/nuthatch-org/nuthatch/blob/main/docs/bench/obib-case6-4.7.0-tenderly-2026-10-05.md).
 
 **The record count matching Sentio's is the part worth trusting.** A fast indexer that quietly drops
 events is not fast, it is wrong, and an event count agreeing with an independent implementation is a
@@ -62,7 +62,7 @@ Case 1 (`Transfer` from LBTC across 22.2M Ethereum blocks) never completed. Our 
 green throughout, because every fixture returned the error shape we had thought to write down. It now
 completes with the record count Sentio publishes, 294,278 events; the timings this page once quoted
 for it came from an Alchemy account that has since closed, so they are withdrawn rather than repeated
-([#1844](https://github.com/nightswatchhq/nuthatch/issues/1844)).
+([#1844](https://github.com/nuthatch-org/nuthatch/issues/1844)).
 
 That is the whole argument for benchmarking against a real provider instead of a mock: mocks return
 the failures you imagined.
@@ -121,12 +121,12 @@ Two measurements bound it. CI's footprint job fails a build whose peak RSS passe
 fixed 8,004-row fixture. The release gate serves a copy of the largest nest we run, the Lodestar
 allocations nest, under its production limits and runs the 74 statements its consumers send, two at a
 time as production runs them; 4.4.0 peaked at 1,595 to 1,788 MiB over four runs on Linux, and a peak
-over 2 GiB fails the gate ([release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.4.0)). Most of that is
+over 2 GiB fails the gate ([release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v4.4.0)). Most of that is
 analytical SQL, not indexing. The 241 MB in the OBIB run above is a full-throttle backfill.
 
 ## Query speed, and the engine question
 
-Analytical queries run on [Burrmill](https://github.com/nightswatchhq/burrmill), a Rust engine on
+Analytical queries run on [Burrmill](https://github.com/nuthatch-org/burrmill), a Rust engine on
 DataFusion, over sealed Parquet segments and the hot tip. Until 4.1 they ran on DuckDB. How that
 changed is below.
 
@@ -159,9 +159,9 @@ language in the binary and exact arithmetic that refuses rather than wraps. See
 rows and segments it reads, so a committed row or a newly sealed segment in a table it reads means the
 next request computes. Since 4.11.0 the key covers only what the statement reads, not every cursor
 poll, so a quiet nest at the tip answers a repeat from memory. The 4.11.0
-[release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.11.0) measured a repeated
+[release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v4.11.0) measured a repeated
 `bets` query on the BetSwirl stopgap nest at 10.4 s before and 3 ms after; the first run of a
-statement is as slow as it was ([#1951](https://github.com/nightswatchhq/nuthatch/issues/1951) is
+statement is as slow as it was ([#1951](https://github.com/nuthatch-org/nuthatch/issues/1951) is
 open for that). The memo is bounded by `NUTHATCH_SQL_MEMO_BYTES` (default 64 MiB, `0` turns it off),
 lives in the process and is cleared by a restart. Statements that call `now()`, `random()` and the
 like are never remembered.
@@ -180,4 +180,4 @@ not publish an API key along with the result.
 Benchmarks are CI artifacts here, not blog posts. Peak RSS (one nest and a dense multi-nest runtime),
 entity point-read p50 and the tip's after-seen p50 fail the build on a regression. Backfill events/sec,
 total tip lag and the p99s are measured on every PR and tracked, not gated: the CI fixture could not see
-a 4x decode cost ([#1723](https://github.com/nightswatchhq/nuthatch/issues/1723)).
+a 4x decode cost ([#1723](https://github.com/nuthatch-org/nuthatch/issues/1723)).

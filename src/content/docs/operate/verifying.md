@@ -10,7 +10,7 @@ which claims we have and have not tested ourselves.
 
 > **Still deciding whether to trust nuthatch at all?** This page is for proving a deployment works
 > once you have adopted one. The step before it is
-> [`docs/kicking-the-tyres.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/kicking-the-tyres.md),
+> [`docs/kicking-the-tyres.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/kicking-the-tyres.md),
 > written from the opposite posture: *you are not trying to confirm the claims, you are trying to
 > falsify them, and it tells you where we think you have the best chance.* It covers the cold walk
 > against a contract we did not pick, correctness against a public subgraph, what it costs to keep
@@ -19,7 +19,7 @@ which claims we have and have not tested ourselves.
 > one than a user did.
 
 The full runbook lives in the repo at
-[`docs/verification.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/verification.md).
+[`docs/verification.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/verification.md).
 Levels 0 - 4 are automated:
 
 ```sh
@@ -45,7 +45,7 @@ Level 0 is one you can run on your own download in a line. Every release tarball
 provenance attestation:
 
 ```sh
-gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nightswatchhq/nuthatch
+gh attestation verify nuthatch-graph-aarch64-apple-darwin.tar.gz --repo nuthatch-org/nuthatch
 ```
 
 It exits `0` when the file was built by the release workflow in that repository, at a release tag.
@@ -110,5 +110,5 @@ Useful to include: the level and step, expected versus actual, `nuthatch --versi
 contract, embedded or scaled, and for level 5 how many writers and FE nodes.
 
 Known-unverified items are tracked in
-[`docs/prod-readiness.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/prod-readiness.md);
+[`docs/prod-readiness.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/prod-readiness.md);
 anything you confirm can move with your evidence attached.

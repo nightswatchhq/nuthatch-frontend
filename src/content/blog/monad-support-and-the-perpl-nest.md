@@ -149,11 +149,11 @@ FROM perpl_fills GROUP BY market ORDER BY fills DESC;
 
 That was the first three weeks of the venue's life, from a query on our box. The nest itself,
 config, vendored interface, views and the parity script, is public at
-[nightswatchhq/perpl-nest](https://github.com/nightswatchhq/perpl-nest), and anyone with the
+[nuthatch-org/perpl-nest](https://github.com/nuthatch-org/perpl-nest), and anyone with the
 binary and a Monad endpoint can run the same thing:
 
 ```sh
-nuthatch init --from https://github.com/nightswatchhq/perpl-nest
+nuthatch init --from https://github.com/nuthatch-org/perpl-nest
 nuthatch dev --dir perpl-nest --rpc https://your-monad-endpoint --window 320 --seal-direct
 ```
 

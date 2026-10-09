@@ -10,7 +10,7 @@ const sqlCurl = `curl -G 'http://127.0.0.1:8288/sql' \\
 ORDER BY block_number DESC, log_index DESC LIMIT 20'`;
 
 // Story 2 - a published nest.
-const initFrom = `nuthatch init --from https://github.com/nightswatchhq/horizon-nest`;
+const initFrom = `nuthatch init --from https://github.com/nuthatch-org/horizon-nest`;
 
 const indexersQuery = `select * from indexers order by cast(rewards as double) desc limit 20;`;
 
@@ -91,13 +91,13 @@ const mcpConfig = `{
           It began with a rate limit. Subgraph Studio's development endpoint allows 3,000 queries a
           day, the app needed about 120,000, and Arc Testnet has no paid tier to buy. The nests were
           serving within two hours of the builder asking for a higher limit. They were testnet nests
-          that Nightswatch ran for the hackathon, and they were stopped on 2026-09-29, when
-          Nightswatch stopped running nests for others. The one exception since, stopgap nests for
+          that Nuthatch ran for the hackathon, and they were stopped on 2026-09-29, when
+          Nuthatch stopped running nests for others. The one exception since, stopgap nests for
           BNB and Polygon subgraphs the network does not serve, is on
           <a href="/the-graph">Nuthatch &amp; The Graph</a>.
           <a href="/blog/we-host-your-hackathon-nest">How it was built is on the blog</a>, kept as a
           record, and the nest itself is
-          <a href="https://github.com/nightswatchhq/arcaidia-nest" rel="noopener">published</a>.
+          <a href="https://github.com/nuthatch-org/arcaidia-nest" rel="noopener">published</a>.
         </p>
       </div>
 
@@ -143,7 +143,7 @@ const mcpConfig = `{
       </p>
       <p>
         He pulls a published nest - the
-        <a href="https://github.com/nightswatchhq/horizon-nest" rel="noopener">horizon-nest</a>,
+        <a href="https://github.com/nuthatch-org/horizon-nest" rel="noopener">horizon-nest</a>,
         with contracts, vendored ABIs, and derived views all included - and runs it against his own
         node. He wrote no indexing code; he ran someone else's definition:
       </p>

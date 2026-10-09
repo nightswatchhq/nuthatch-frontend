@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-const REPO = 'https://github.com/nightswatchhq/nuthatch';
-const DS_REPO = 'https://github.com/nightswatchhq/nuthatch-ds';
-const HORIZON_NEST = 'https://github.com/nightswatchhq/horizon-nest';
+const REPO = 'https://github.com/nuthatch-org/nuthatch';
+const DS_REPO = 'https://github.com/nuthatch-org/nuthatch-ds';
+const HORIZON_NEST = 'https://github.com/nuthatch-org/horizon-nest';
 const DS_CONTRACT = 'https://arbiscan.io/address/0x647D1Fd14AF2DE3947522B74F1de5B99d317c10A';
 
 // The right-hand column: each card is one concrete, checkable touchpoint. Keep the copy to two or
@@ -44,10 +44,10 @@ const meets = [
     k: '04 · Stopgap nests',
     tag: 'october 2026',
     h: 'Stranded BNB and Polygon subgraphs keep answering',
-    p: 'For a deployment the network does not serve, Nightswatch runs a stopgap nest on the nuthatch-graph download until an indexer picks it up. The first, BetSwirl BNB Chain, answers its client’s own queries exactly and refuses anything else by name.',
+    p: 'For a deployment the network does not serve, Nuthatch runs a stopgap nest on the nuthatch-graph download until an indexer picks it up. The first, BetSwirl BNB Chain, answers its client’s own queries exactly and refuses anything else by name.',
     links: [
       { href: 'https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/', text: 'the dispatch', ext: true },
-      { href: 'https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md', text: 'the handback', ext: true },
+      { href: 'https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md', text: 'the handback', ext: true },
     ],
   },
   {
@@ -150,13 +150,13 @@ const meets = [
 
           <h2>What comes next</h2>
           <p>
-            Nightswatch does not run a hosted nest service. The GraphQL read surface is parked:
+            Nuthatch does not run a hosted nest service. The GraphQL read surface is parked:
             an analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for
             one field it cannot answer.
           </p>
           <p>
             One exception, made on 6 October 2026: as BNB Chain and Polygon subgraphs move onto the
-            network, Nightswatch serves stopgap nests for deployments the network does not serve,
+            network, Nuthatch serves stopgap nests for deployments the network does not serve,
             until an indexer picks each one up. Each is the stock <code>nuthatch-graph</code>
             download run as any operator would run it: no billing, no accounts, no platform. A
             stopgap nest answers the fields a subgraph derives from decoded events exactly and
@@ -164,7 +164,7 @@ const meets = [
             says how to run it yourself and how to go back to the network.
             <a href="https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/" rel="noopener">The dispatch</a>
             explains why, and
-            <a href="https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">the BetSwirl BNB Chain handback</a>
+            <a href="https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md" rel="noopener">the BetSwirl BNB Chain handback</a>
             is the first.
           </p>
           <p>

@@ -6,12 +6,12 @@
 # rustc toolchain on your machine is irrelevant.
 #
 # It is deliberately short and readable. Piping a script to a shell asks for trust; read it first.
-#   Source: https://github.com/nightswatchhq/nuthatch
+#   Source: https://github.com/nuthatch-org/nuthatch
 #   Override install dir with NUTHATCH_INSTALL_DIR (default: $HOME/.local/bin).
 
 set -eu
 
-REPO="nightswatchhq/nuthatch"
+REPO="nuthatch-org/nuthatch"
 BASE="https://github.com/${REPO}/releases/latest/download"
 
 os="$(uname -s)"
@@ -20,17 +20,17 @@ case "$os" in
   Darwin)
     case "$arch" in
       arm64 | aarch64) target="aarch64-apple-darwin" ;;
-      x86_64) echo "nuthatch: no prebuilt binary for Intel Mac yet - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
+      x86_64) echo "nuthatch: no prebuilt binary for Intel Mac yet - build from source: cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" >&2; exit 1 ;;
       *) echo "nuthatch: unsupported macOS architecture '$arch'" >&2; exit 1 ;;
     esac ;;
   Linux)
     case "$arch" in
       x86_64 | amd64) target="x86_64-unknown-linux-gnu" ;;
       aarch64 | arm64) target="aarch64-unknown-linux-gnu" ;;
-      *) echo "nuthatch: no prebuilt binary for Linux '$arch' yet - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
+      *) echo "nuthatch: no prebuilt binary for Linux '$arch' yet - build from source: cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" >&2; exit 1 ;;
     esac ;;
   *)
-    echo "nuthatch: unsupported OS '$os' - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1 ;;
+    echo "nuthatch: unsupported OS '$os' - build from source: cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" >&2; exit 1 ;;
 esac
 
 tarball="nuthatch-${target}.tar.gz"
@@ -40,7 +40,7 @@ trap 'rm -rf "$tmp"' EXIT
 echo "nuthatch: downloading ${tarball}…"
 # Releases up to 4.11.0 carry no aarch64 Linux tarball (#1961).
 if ! curl -fsSL "${BASE}/${tarball}" -o "${tmp}/${tarball}"; then
-  echo "nuthatch: the latest release has no ${tarball} - build from source: cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" >&2; exit 1
+  echo "nuthatch: the latest release has no ${tarball} - build from source: cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" >&2; exit 1
 fi
 curl -fsSL "${BASE}/${tarball}.sha256" -o "${tmp}/${tarball}.sha256"
 

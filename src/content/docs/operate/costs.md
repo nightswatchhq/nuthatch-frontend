@@ -38,7 +38,7 @@ someone builds a "last N days" view against them.
 ## Measured, not modelled
 
 On our own reference deployment
-([#750](https://github.com/nightswatchhq/nuthatch/issues/750), audited 2026-08-22): four nests, one
+([#750](https://github.com/nuthatch-org/nuthatch/issues/750), audited 2026-08-22): four nests, one
 week, **~11.8M RPC requests** against **~100 HTTP requests actually served** - roughly **118,000 RPC
 requests per HTTP request answered**, and if anything an understatement, since that ~100 excludes
 only one nest's own audit-probe traffic and not the others'.
@@ -50,7 +50,7 @@ remainder is that none of it is waste - it is load established, not assumed, to 
 Lodestar panels turned out to need the column, confirmed by reading the consuming app's own SQL
 rather than assumed: one filters on `block_timestamp` for a "last seven days" view, the other uses it
 as an entity's `createdAt`. The full per-nest table is in the
-[operator docs](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#what-a-nest-costs-at-tip).
+[operator docs](https://github.com/nuthatch-org/nuthatch/blob/main/docs/operators.md#what-a-nest-costs-at-tip).
 
 The busiest of the three averaged **~549,000 requests a day** over the audit window, on a chain
 producing about 345,600 blocks a day - the right order of magnitude for a header fetch per block plus
@@ -61,7 +61,7 @@ its log polling on top.
 Everything above is the **nominal** bill: what a nest asks for when the endpoint answers. On a
 rate-limited endpoint it asks for considerably more, and the reason is a loop.
 
-Measured 2026-08-23 with the [replay rig](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0039-the-recorded-tape.md),
+Measured 2026-08-23 with the [replay rig](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0039-the-recorded-tape.md),
 which records every call a run makes so the request the code *asked for* can be compared with what
 actually went over the wire. A 120-block USDC range, fixed 20-block window:
 
@@ -86,7 +86,7 @@ Two practical consequences, neither of them a recommendation to change a default
 - **A paid endpoint can be cheaper than a free one**, because the retry loop above never starts. That
   is an uncomfortable thing to put on our own page and it appears to be true.
 
-Tracked as [RFC-0040](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0040-the-freshness-dial.md),
+Tracked as [RFC-0040](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0040-the-freshness-dial.md),
 which argues for letting an operator trade freshness for money rather than paying a production-sized
 bill for a dashboard nobody reads hourly. It shipped in 3.5.0 as two `nuthatch dev` flags:
 `--poll-interval <DURATION>` sets how long a caught-up cursor waits before asking for the tip again,
@@ -99,7 +99,7 @@ whose readers need the tip closely.
 
 None of the volume above was billed - most of those nests run against a free public endpoint. Pricing
 the header-fetch load alone against a metered one, the same way
-[`benchmarks.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/benchmarks.md#what-a-backfill-costs-against-a-metered-endpoint-2026-08-19)
+[`benchmarks.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/benchmarks.md#what-a-backfill-costs-against-a-metered-endpoint-2026-08-19)
 prices a backfill:
 
 ```
@@ -122,7 +122,7 @@ A nest sitting at tip, answering nobody, still costs on the order of **~$100/mon
 provider. That figure is this computation, not a measurement - the reference deployment itself paid
 nothing for it, because it runs against a free endpoint.
 
-Measured against a paid endpoint on 2026-09-06 ([#1173](https://github.com/nightswatchhq/nuthatch/issues/1173)),
+Measured against a paid endpoint on 2026-09-06 ([#1173](https://github.com/nuthatch-org/nuthatch/issues/1173)),
 a nest at tip on Arbitrum spent about 9,900 CU a minute, roughly $185 a month, and the computation
 above had the attribution wrong: headers are bought only for blocks that produced a kept row, and 95
 of that day's 345,600 blocks did. The header per block was the poll loop's own. At

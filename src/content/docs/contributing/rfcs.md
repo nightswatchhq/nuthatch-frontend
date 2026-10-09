@@ -6,10 +6,10 @@ checked: 5.0.1
 ---
 
 Every non-trivial design decision in nuthatch is written down first, as a numbered RFC in
-[`docs/rfcs/`](https://github.com/nightswatchhq/nuthatch/tree/main/docs/rfcs). They're numbered
+[`docs/rfcs/`](https://github.com/nuthatch-org/nuthatch/tree/main/docs/rfcs). They're numbered
 in build order, each states its dependencies and what it blocks, and the status lifecycle is
 **Draft → Accepted → Implemented → (Superseded / Parked)**. Statuses are reconciled against the
-[release notes](https://github.com/nightswatchhq/nuthatch/tree/main/docs/releases); measured numbers
+[release notes](https://github.com/nuthatch-org/nuthatch/tree/main/docs/releases); measured numbers
 are cited, and targets are labeled as targets, never as results.
 
 ## The series
@@ -138,7 +138,7 @@ are cited, and targets are labeled as targets, never as results.
   Shipped in 3.7.0 and removed in 4.1 with DuckDB, whose parser it depended on.
 - **0056 The Dune row-insert sidecar** / **0057 Dune-assisted ingestion** *(Withdrawn)*. The three
   Dune RFCs were deleted from the tree in 5.0.0; they are readable at the
-  [v4.15.2 tag](https://github.com/nightswatchhq/nuthatch/tree/v4.15.2/docs/rfcs).
+  [v4.15.2 tag](https://github.com/nuthatch-org/nuthatch/tree/v4.15.2/docs/rfcs).
 - **0058 Cross-nest SQL** *(Accepted, then parked 2026-09-26 with no user)* - a declared read-only
   query across mounts in one runtime.
 - **0059 Checkpointed folds** / **0060 The Network Subgraph endpoint** *(Accepted 2026-09-21, behind
@@ -159,5 +159,5 @@ lives, and the standing decisions behind it), **prod-readiness.md** (the bar
 a release clears before it's pointed at a real workload unattended), and **releases/** (one page of
 notes per version, which the statuses are reconciled against).
 
-Proposing a change? Open a [discussion](https://github.com/nightswatchhq/nuthatch/discussions)
+Proposing a change? Open a [discussion](https://github.com/nuthatch-org/nuthatch/discussions)
 first; if it survives contact, it becomes the next number.
