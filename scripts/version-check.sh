@@ -28,11 +28,12 @@ echo
 
 # Any x.y.z that is not the wanted one, in files a reader or an agent actually sees.
 # `blog/` is excluded on purpose: a post is dated writing and should keep the version it shipped with.
+# `releases.json` is the changelog, every version by design; its newest entry is probed below.
 stale=0
 while IFS= read -r line; do
   f=${line%%:*}
   case "$f" in
-    */blog/*) continue ;;
+    */blog/*|src/data/releases.json) continue ;;
   esac
   echo "  $line"
   stale=$((stale + 1))
@@ -81,6 +82,8 @@ probe() {  # probe <file> <what> <grep-args...>  - the matched line must carry $
 
 probe src/pages/index.astro            "hero tag"                  -E 'class="tag"'
 probe src/pages/install.astro           "install page description"  -E '^  description="Install Nuthatch'
+# The /install release note and /changelog render from this; `node scripts/sync-releases.mjs` (#104).
+probe src/data/releases.json            "latest in changelog"       -E '"version":'
 probe src/pages/example.astro           "worked example"            -E 'current, executable path'
 # A docs page stamps the release it was checked against in its frontmatter (`checked: 4.10.1`, #81).
 # A page without the field makes no claim; one with it must name the current release.

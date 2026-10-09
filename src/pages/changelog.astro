@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { releases, headlineHtml } from '../data/releases';
+
+const majors = [...new Set(releases.map((r) => r.version.split('.')[0]))];
+---
+<Layout
+  path="/changelog"
+  title="Changelog - Nuthatch"
+  description="Every published Nuthatch release, newest first: the date it shipped, what it changed in one sentence, and a link to its full notes."
+>
+  <section class="page">
+    <div class="wrap narrow">
+      <p class="section-label">Changelog</p>
+      <h1>Every release, one line each.</h1>
+      <p class="lede">
+        The first sentence of each release's notes, newest first. The full notes, with what to read
+        before upgrading, are on GitHub; follow the version. Upgrade paths are in
+        <a href="/docs/operate/upgrades/">Upgrades</a>.
+      </p>
+
+      {majors.map((major) => (
+        <>
+          <h2 class="major">{major}.x</h2>
+          <ol class="releases">
+            {releases.filter((r) => r.version.split('.')[0] === major).map((r) => (
+              <li id={`v${r.version}`}>
+                <a class="ver" href={r.url} rel="noopener">v{r.version}</a>
+                <time datetime={r.date}>{r.date}</time>
+                {r.headline && <span class="hl" set:html={headlineHtml(r.headline)} />}
+              </li>
+            ))}
+          </ol>
+        </>
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 8vw, 6rem); }
+  .page h1 { margin-bottom: 1.2rem; }
+  .lede { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem; }
+  .major { margin-top: 2.6rem; margin-bottom: 0.6rem; font-size: 1.35rem; }
+  .releases { list-style: none; padding: 0; margin: 0; }
+  .releases li {
+    display: grid; grid-template-columns: 5.5rem 6.5rem 1fr; gap: 0.2rem 0.8rem;
+    padding-block: 0.55rem; border-top: 1px solid var(--border);
+    font-size: 0.92rem; color: var(--text-muted);
+  }
+  .ver, time { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+  time { color: var(--text-faint); }
+  @media (max-width: 560px) {
+    .releases li { grid-template-columns: auto 1fr; }
+    .hl { grid-column: 1 / -1; }
+  }
+</style>
