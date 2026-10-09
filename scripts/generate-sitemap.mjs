@@ -3,7 +3,7 @@ import { join, relative, sep } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
 const site = 'https://nuthatch-indexer.com';
-const routes = ['/', '/install', '/example', '/stories', '/roadmap', '/nests', '/mirror', '/manifesto', '/the-graph', '/platform', '/blog', '/docs'];
+const routes = ['/', '/install', '/changelog', '/example', '/stories', '/roadmap', '/nests', '/mirror', '/manifesto', '/the-graph', '/platform', '/blog', '/docs'];
 
 async function markdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
