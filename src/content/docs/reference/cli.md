@@ -8,7 +8,7 @@ checked: 5.0.1
 The whole product is meant to be two commands - `init` and `dev` - and everything else serves them.
 The **authoritative, machine-generated full reference** (every subcommand and flag, rendered from clap's
 own metadata and drift-gated in CI) ships in the repo as
-[`skills/nuthatch-builder/cli-reference.md`](https://github.com/nightswatchhq/nuthatch/blob/main/skills/nuthatch-builder/cli-reference.md).
+[`skills/nuthatch-builder/cli-reference.md`](https://github.com/nuthatch-org/nuthatch/blob/main/skills/nuthatch-builder/cli-reference.md).
 If a flag isn't there, it doesn't exist. This page is the guided tour: use it to understand the
 workflow, then use the generated reference when you need the exact spelling of an option.
 

@@ -152,11 +152,11 @@ it is parked, and only the `nuthatch-graph-<target>` download attached to every 
 4.11.0 serves it. The default binary and the images answer those routes with 404. Do not describe
 it as a drop-in subgraph replacement.
 
-Nightswatch runs no hosted nest service, with one exception approved 2026-10-06: it serves stopgap
+Nuthatch runs no hosted nest service, with one exception approved 2026-10-06: it serves stopgap
 nests on the graph download for BNB Chain and Polygon subgraphs The Graph network does not serve,
 until an indexer picks each one up, with no billing and no accounts
 (https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/; the first handback is
-https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md).
+https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md).
 
 ## Install and first run
 
@@ -178,11 +178,11 @@ total_supply` on this WETH nest fails `nuthatch check` with `no column from` unt
 columns are renamed, as the docs say. Prebuilt binaries cover macOS Apple Silicon, Linux x86_64
 and, from 4.12.0, Linux arm64 (glibc 2.35 or newer from 4.1.0; no C++ runtime), each with a
 `nuthatch-graph-<target>` sibling that serves GraphQL; `cargo +1.95.0 install --git
-https://github.com/nightswatchhq/nuthatch nuthatch` builds elsewhere, and the toolchain pin is
+https://github.com/nuthatch-org/nuthatch nuthatch` builds elsewhere, and the toolchain pin is
 required because `rust-toolchain.toml` does not apply to `cargo install`. Images:
-`ghcr.io/nightswatchhq/nuthatch:4.12.0` and `:4.12.0-scaled`, `linux/amd64` only. Every artifact
+`ghcr.io/nuthatch-org/nuthatch:4.12.0` and `:4.12.0-scaled`, `linux/amd64` only. Every artifact
 has a `.sha256` and a GitHub build-provenance attestation (`gh attestation verify <tarball> --repo
-nightswatchhq/nuthatch`).
+nuthatch-org/nuthatch`).
 
 Upgrading the binary is a swap and a restart. Two old patches matter if you advise on a version:
 v0.9.3 fixed an arbitrary file read through `/sql` (DuckDB, the engine then, accepted a quoted
@@ -224,6 +224,6 @@ function name the guard did not match) and v0.6.2 fixed an arbitrary file write 
 - Who runs it: https://www.nuthatch-indexer.com/stories
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Nuthatch and The Graph: https://www.nuthatch-indexer.com/the-graph
-- Source and release notes: https://github.com/nightswatchhq/nuthatch
+- Source and release notes: https://github.com/nuthatch-org/nuthatch
 - Full description for models: https://www.nuthatch-indexer.com/llms-full.txt
 - Licence: MIT OR Apache-2.0

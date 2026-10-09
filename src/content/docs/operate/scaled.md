@@ -13,7 +13,7 @@ Scaled mode is a different deployment for a different problem - **one operator r
 across many machines**. It is opt-in at build time (`--features postgres-store`), so the default
 published binary carries no database driver and embedded mode stays a single file with nothing beside
 it. Each release also ships the scaled build as a separate `nuthatch-scaled-*` tarball and a
-`ghcr.io/nightswatchhq/nuthatch:<version>-scaled` image.
+`ghcr.io/nuthatch-org/nuthatch:<version>-scaled` image.
 
 ## When to reach for it
 
@@ -224,6 +224,6 @@ asserts it pulls one anyway, and that check has not been run on real machines ye
 process per box is enough, that is still the shape to reach for.
 
 The full design and its acceptance criteria are in
-[RFC-0022](https://github.com/nightswatchhq/nuthatch/blob/main/docs/rfcs/0022-distributed-scaled-mode.md);
+[RFC-0022](https://github.com/nuthatch-org/nuthatch/blob/main/docs/rfcs/0022-distributed-scaled-mode.md);
 the operator guide covers it at
-[docs/operators.md](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#scaled-mode-a-fleet-across-machines-rfc-0022).
+[docs/operators.md](https://github.com/nuthatch-org/nuthatch/blob/main/docs/operators.md#scaled-mode-a-fleet-across-machines-rfc-0022).

@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import CopyBlock from '../components/CopyBlock.astro';
 import { latest, headlineHtml } from '../data/releases';
-const GH = 'https://github.com/nightswatchhq/nuthatch';
+const GH = 'https://github.com/nuthatch-org/nuthatch';
 ---
 <Layout
   path="/install"
@@ -30,17 +30,17 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
       <CopyBlock command="curl -fsSL https://nuthatch-indexer.com/install.sh | sh" size="lg" />
       <p class="note">
         Piping to a shell asks for trust. Read it first:
-        <a href="https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh" rel="noopener">the script is short and on GitHub</a>,
+        <a href="https://github.com/nuthatch-org/nuthatch-frontend/blob/main/public/install.sh" rel="noopener">the script is short and on GitHub</a>,
         or download it, read it, then run it.
       </p>
 
       <h2 class="ih">Cargo</h2>
       <p>Build from source straight from the repo, with Rust 1.95.0. This is the only route on a platform without a published binary, Intel Macs included (the Intel build has not been verified on Intel hardware). The toolchain pin is required, not advisory: <code>rust-toolchain.toml</code> does not apply to <code>cargo install --git</code>, and rustc 1.97 hits a <code>dbsp</code> ICE that installs nothing. No prebuilt binary in the trust path.</p>
       <CopyBlock command="rustup toolchain install 1.95.0" />
-      <CopyBlock command="cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch" />
+      <CopyBlock command="cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch" />
       <p class="note">
         Or grab a tarball and its <code>.sha256</code> yourself from the
-        <a href="https://github.com/nightswatchhq/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>:
+        <a href="https://github.com/nuthatch-org/nuthatch/releases/latest" rel="noopener">latest GitHub release</a>:
         <code>nuthatch-aarch64-apple-darwin.tar.gz</code>, <code>nuthatch-x86_64-unknown-linux-gnu.tar.gz</code>,
         <code>nuthatch-aarch64-unknown-linux-gnu.tar.gz</code> (from 4.12.0),
         or <code>nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz</code> for scaled mode.
@@ -75,7 +75,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
         anyone who wants one, and for <a href="/docs/operate/scaled/">scaled mode</a>, where Postgres
         replaces the embedded hot store across a fleet.
       </p>
-      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nightswatchhq/nuthatch:5.0.1' prompt={true} />
+      <CopyBlock command='docker run --rm -v "$PWD/nest:/nest" -p 127.0.0.1:8288:8288 ghcr.io/nuthatch-org/nuthatch:5.0.1' prompt={true} />
       <p class="note">
         The image runs <code>dev</code> on the nest mounted at <code>/nest</code>, bound to
         <code>0.0.0.0:8288</code> inside the container, so publish it to loopback as above.
@@ -84,7 +84,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
         <code>control</code> and <code>serve --hot-store</code> commands. <code>linux/amd64</code> only, and no
         image carries the graph build: on an arm64 Linux host, or to serve GraphQL, use a binary.
         The compose files live in the
-        <a href="https://github.com/nightswatchhq/nuthatch" rel="noopener">repo</a>.
+        <a href="https://github.com/nuthatch-org/nuthatch" rel="noopener">repo</a>.
       </p>
 
       <h2 class="ih">First run</h2>
@@ -119,7 +119,7 @@ const GH = 'https://github.com/nightswatchhq/nuthatch';
           the file arrived intact; this verifies which repository and workflow built it. The repository
           constraint is load-bearing:
         </p>
-        <CopyBlock command="gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatchhq/nuthatch" />
+        <CopyBlock command="gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nuthatch-org/nuthatch" />
       </div>
 
       <p class="backlink"><a href={GH} rel="noopener">Source, docs, and issues on GitHub →</a></p>

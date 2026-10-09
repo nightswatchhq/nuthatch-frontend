@@ -47,7 +47,7 @@ integrations from Edge & Node. It may well come. It is not there today, and no c
 will get the deploy past that check.
 
 We have written the error up properly, with the evidence, at
-[graph-support #38](https://github.com/nightswatchhq/graph-support/issues/38), so the next person who
+[graph-support #38](https://github.com/nuthatch-org/graph-support/issues/38), so the next person who
 searches for it finds the answer rather than a silent channel.
 
 ## Nuthatch indexes Robinhood Chain already

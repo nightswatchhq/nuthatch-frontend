@@ -166,9 +166,9 @@ are closed, and the write-up records *how* - including finding 3, closed as **no
 than fixed, because the belief attached to it was the actual problem.
 
 Read it at
-[`docs/security-audit-2026-07-31.md`](https://github.com/nightswatchhq/nuthatch/blob/main/docs/security-audit-2026-07-31.md).
+[`docs/security-audit-2026-07-31.md`](https://github.com/nuthatch-org/nuthatch/blob/main/docs/security-audit-2026-07-31.md).
 
 ## Reporting something
 
 Please report privately through the repository's Security tab rather than opening a public issue. See
-[`SECURITY.md`](https://github.com/nightswatchhq/nuthatch/blob/main/SECURITY.md).
+[`SECURITY.md`](https://github.com/nuthatch-org/nuthatch/blob/main/SECURITY.md).

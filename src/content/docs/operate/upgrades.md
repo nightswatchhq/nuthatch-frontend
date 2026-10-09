@@ -24,7 +24,7 @@ wait for the monthly minor (5.1, 5.2), and correctness and security fixes ship i
 covered: the off-by-default cargo features `graph`, `folds` and `counter`; the SQL dialect behind
 `/sql`; segment hashes across `arrow-rs` versions; the admin UI's HTML; and the `postgres-store`
 build's internal schema. The full contract is in the operator guide's
-[stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract).
+[stability contract](https://github.com/nuthatch-org/nuthatch/blob/main/docs/operators.md#stability-contract).
 
 4.x held the same promise from 4.0.0 to 4.15.2. 5.0.0 broke it twice, both for the WASM layer it
 removed, and that is why it is a major version.
@@ -43,7 +43,7 @@ manifest with `screening` or `components` entries is refused at `pack verify`. L
 exposure, velocity, `audit report` and `audit sealed` are unchanged. A segment sealed by 5.0.0 hashes
 differently from the same rows sealed by 4.15, because Parquet 59 writes a different `created_by`
 stamp; existing segments are read as they are, and the decoded rows are identical. Compare rows, not
-hashes, across versions. The [release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v5.0.1)
+hashes, across versions. The [release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v5.0.1)
 have the rest.
 
 ## Upgrading to 4.11
@@ -79,7 +79,7 @@ captures both entity rows and their applied-through watermark under one lock rat
 newer label to older rows.
 
 Release binaries now carry a GitHub build-provenance attestation as well as a checksum. Verify a manual
-download with `gh attestation verify <tarball> --repo nightswatchhq/nuthatch`; the `--repo` clause is
+download with `gh attestation verify <tarball> --repo nuthatch-org/nuthatch`; the `--repo` clause is
 what prevents an attestation from an unrelated repository being accepted.
 
 In 2.0 there is **no upgrade command**. The runtime does the classifying, and grafting does the rest.

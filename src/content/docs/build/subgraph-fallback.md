@@ -22,12 +22,12 @@ disappear, and are they derivable from chain logs?**
 
 ## The stopgap nests
 
-Nightswatch runs no hosted nest service, with one exception. From 2026-10-08 Studio traffic for BNB
+Nuthatch runs no hosted nest service, with one exception. From 2026-10-08 Studio traffic for BNB
 Smart Chain and Polygon moves onto The Graph network, and a deployment no network indexer picks up
-stops answering. For those, Nightswatch serves **stopgap nests**: the stock `nuthatch-graph` binary, run as
+stops answering. For those, Nuthatch serves **stopgap nests**: the stock `nuthatch-graph` binary, run as
 any operator would, answering the subgraph's event-derived fields until an indexer serves the
 deployment and its developer points back at the network. There is no billing and no account. The
-first is BetSwirl on BNB Chain; [its handback package](https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md)
+first is BetSwirl on BNB Chain; [its handback package](https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md)
 says what it answers, how to run it yourself and how to go back.
 [The dispatch on learn-thegraph.com](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
 explains how many deployments were stranded, what a stopgap nest is and is not, and how its answers

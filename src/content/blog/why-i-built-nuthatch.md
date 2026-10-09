@@ -68,4 +68,4 @@ nuthatch dev --backfill 300
 nuthatch sql "SELECT count(*) FROM usdc__transfer"
 ```
 
-The source, the issue tracker and the progress log are at [github.com/nightswatchhq/nuthatch](https://github.com/nightswatchhq/nuthatch). If it breaks on your contract, that is the most useful thing you can tell me.
+The source, the issue tracker and the progress log are at [github.com/nuthatch-org/nuthatch](https://github.com/nuthatch-org/nuthatch). If it breaks on your contract, that is the most useful thing you can tell me.

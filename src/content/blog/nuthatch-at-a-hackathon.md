@@ -36,7 +36,7 @@ typing on.
 
 ```sh
 curl -fsSL https://nuthatch-indexer.com/install.sh | sh
-nuthatch init --from https://github.com/nightswatchhq/hackathon-nest
+nuthatch init --from https://github.com/nuthatch-org/hackathon-nest
 nuthatch dev --dir hackathon-nest
 ```
 
@@ -161,7 +161,7 @@ found, is in [We will host your hackathon nest](/blog/we-host-your-hackathon-nes
 ## Try it
 
 The starter is at
-[github.com/nightswatchhq/hackathon-nest](https://github.com/nightswatchhq/hackathon-nest), with the
+[github.com/nuthatch-org/hackathon-nest](https://github.com/nuthatch-org/hackathon-nest), with the
 quickstart above and the endpoint table dated so you know when to re-measure it. If it does not work
 on your chain, the [Night's Watch Discord](https://discord.gg/CQewvyJ69Y) is where the people who
 run these sit, and one of them will probably have hit your problem before.

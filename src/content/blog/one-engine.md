@@ -16,7 +16,7 @@ either engine.** This post is the account, with the losses first, because the ru
 
 ## What was actually replaced
 
-nuthatch's SQL surface is now [Burrmill](https://github.com/nightswatchhq/burrmill): a Rust engine
+nuthatch's SQL surface is now [Burrmill](https://github.com/nuthatch-org/burrmill): a Rust engine
 over DataFusion 55.0.0 with its own analyzer and physical rules. Since its first commit on
 31 August it has grown to 235 commits and 24,225 lines in `crates/burrmill/src`, 37 of those files
 being the DataFusion host and its rules, and a dialect corpus of 273 statements that DuckDB and

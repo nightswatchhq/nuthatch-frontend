@@ -20,13 +20,13 @@ how the process is supervised. nuthatch sees a tenant as an opaque label and kno
 it. Sign-in, plans, per-tenant authorisation, quotas and billing belong to a gateway in front of the
 runtime; process supervision belongs to systemd or a container restart policy.
 
-Hosting is for operators. Nightswatch, which builds nuthatch, runs no hosted nest service, with one
+Hosting is for operators. The nuthatch team runs no hosted nest service, with one
 exception approved on 2026-10-06: it serves
 [subgraph stopgap nests](https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/)
 for BNB Chain and Polygon subgraphs The Graph network does not serve, until an indexer picks each one
 up. Each is the stock binary run as any operator would run it, with no billing, no accounts and no
 platform. The first is BetSwirl on BNB Chain, and its
-[handback](https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md) says how
+[handback](https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md) says how
 to run it yourself and how to go back to the network.
 
 ## The moving parts

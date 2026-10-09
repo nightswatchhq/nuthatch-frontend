@@ -35,7 +35,7 @@ on any machine, on any run. That's what makes segments *reusable* across nest ve
 
 ## The union: one engine over hot ∪ cold
 
-Analytical SQL (`/sql`, `nuthatch sql`) runs on [Burrmill](https://github.com/nightswatchhq/burrmill),
+Analytical SQL (`/sql`, `nuthatch sql`) runs on [Burrmill](https://github.com/nuthatch-org/burrmill),
 an embedded query engine on DataFusion. Each session registers the sealed segments and the hot tip's
 rows as one table per event, so a query spans all of history seamlessly, hot and cold. Only the
 ingestion thread writes; queries only read.

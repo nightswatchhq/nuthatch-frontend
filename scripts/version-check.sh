@@ -19,7 +19,7 @@ cd "$(dirname "$0")/.." || exit 1
 
 WANT=${1:-}
 if [ -z "$WANT" ]; then
-  WANT=$(curl -fsS -m 20 https://api.github.com/repos/nightswatchhq/nuthatch/releases/latest 2>/dev/null \
+  WANT=$(curl -fsS -m 20 https://api.github.com/repos/nuthatch-org/nuthatch/releases/latest 2>/dev/null \
          | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -1)
 fi
 [ -z "$WANT" ] && { echo "could not determine the current version; pass it as an argument"; exit 2; }
@@ -99,9 +99,9 @@ probe public/llms-full.txt              "what agents read"          -E 'Status: 
 probe src/pages/stories.astro           "stories kicker"            -E 'class="illus"'
 probe src/pages/stories.astro           "stories preview note"      -E 'These workflows run on v'
 probe src/pages/roadmap.astro           "roadmap current release"   -E 'is the current release</strong>'
-probe src/pages/install.astro           "container tag"             -E 'ghcr.io/nightswatchhq/nuthatch:[0-9]'
-probe src/content/docs/start/install.md "docs container tag"        -E 'ghcr.io/nightswatchhq/nuthatch:[0-9]'
-probe src/content/docs/operate/deploy.md "deploy container tag"     -E 'ghcr.io/nightswatchhq/nuthatch:[0-9]'
+probe src/pages/install.astro           "container tag"             -E 'ghcr.io/nuthatch-org/nuthatch:[0-9]'
+probe src/content/docs/start/install.md "docs container tag"        -E 'ghcr.io/nuthatch-org/nuthatch:[0-9]'
+probe src/content/docs/operate/deploy.md "deploy container tag"     -E 'ghcr.io/nuthatch-org/nuthatch:[0-9]'
 
 echo
 if [ "$fail" -ne 0 ]; then

@@ -19,7 +19,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 tmp="$(mktemp -d)"
-REF_URL="https://raw.githubusercontent.com/nightswatchhq/nuthatch/v${WANT}/skills/nuthatch-builder/cli-reference.md"
+REF_URL="https://raw.githubusercontent.com/nuthatch-org/nuthatch/v${WANT}/skills/nuthatch-builder/cli-reference.md"
 # No fallback: a reference we could not fetch is not a pass.
 if ! curl -fsSL "$REF_URL" -o "$tmp/ref.md"; then
   echo "FAIL: could not fetch the CLI reference for v${WANT} ($REF_URL)" >&2

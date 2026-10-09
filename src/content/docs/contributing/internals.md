@@ -156,7 +156,7 @@ Two surfaces over the same data.
 **Point-reads** come from redb directly - entity by id, balances, flags. Cheap, no SQL engine
 involved.
 
-**Analytical SQL** runs on [Burrmill](https://github.com/nightswatchhq/burrmill), an embedded engine
+**Analytical SQL** runs on [Burrmill](https://github.com/nuthatch-org/burrmill), an embedded engine
 on DataFusion. A session opens empty and registers, for each table a statement binds, the segment
 list and the hot rows staged for it, so the ingestion path never writes to the engine.
 

@@ -29,7 +29,7 @@ operational weight of the tooling, which is an engineering problem.
 - No gateway, no metered data API, no API tokens, no telemetry by default. The one opt-in is a head
   count after `nuthatch init`, off until you say yes (`nuthatch count`); nothing else is ever sent.
 - Free, licensed MIT OR Apache-2.0 at your option. There is no hosted tier, no token and no pricing
-  page. Nightswatch, the company behind it, does not run a hosted nest service, with one exception
+  page. Nuthatch, the company behind it, does not run a hosted nest service, with one exception
   approved 2026-10-06: it serves stopgap nests for BNB Chain and Polygon subgraphs The Graph network
   does not serve, until an indexer picks each one up. Each is the stock binary run as any operator
   would run it, with no billing and no accounts.
@@ -278,7 +278,7 @@ Backfill: Sentio's OBIB benchmark, case 6 (the Uniswap V2 factory over mainnet b
 19,010,000, `PairCreated` discovering 232 children and `Swap` on each), completed in 5.9 s median
 of five runs of the published 4.10.1 binary on 2026-10-05 against Tenderly's keyless public gateway,
 35,271 events (35,039 `Swap`, OBIB's expected count exactly) in 14 RPC requests at 241 MB peak RSS,
-re-runnable from `nightswatchhq/obib-case6`. OBIB case 1 (LBTC `Transfer` over 22.2M blocks) once
+re-runnable from `nuthatch-org/obib-case6`. OBIB case 1 (LBTC `Transfer` over 22.2M blocks) once
 never finished, because Alchemy's oversized-range refusal arrives as HTTP 400 and was retried
 unchanged; it now completes with Sentio's count of 294,278 events, and its timings are withdrawn
 because the account they were measured on has closed. No seal-direct or pipeline multiplier is
@@ -374,7 +374,7 @@ default binary and the container images answer `POST /graphql` and the `/subgrap
 An analytics client cannot adopt it unmodified, because GraphQL refuses a whole query for one
 unanswerable field. Do not describe it as a drop-in replacement. The stopgap nests above run on it:
 https://learn-thegraph.com/dispatches/stopgap-nests-for-stranded-subgraphs/ explains them, and
-https://github.com/nightswatchhq/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md is the first
+https://github.com/nuthatch-org/nuthatch/blob/main/docs/stopgap/betswirl-bnb.md is the first
 one's handback.
 
 ## Worked example (/example)
@@ -395,7 +395,7 @@ who write no indexing code, and the MCP server for agents. Two real deployments 
 a public Graph Protocol dashboard on Arbitrum One, serves its live panels from self-hosted nuthatch
 nests on one Hetzner VPS behind Caddy and has held no Graph API key since 2026-09-06. Arcaidia, an
 ETHOnline 2026 cross-chain USDC protocol, read its indexed state from two testnet nests over `/sql`;
-those nests were stopped on 2026-09-29, when Nightswatch stopped running nests for anyone. GraphOps,
+those nests were stopped on 2026-09-29, when Nuthatch stopped running nests for anyone. GraphOps,
 an indexer and core developer on The Graph, is a design partner; its feedback led to maintained
 entities. Derived views read finalised data while raw event tables are fresh to the tip.
 
@@ -436,17 +436,17 @@ with no prebuilt binary the script stops and prints the source-build command. Ea
 `nuthatch-scaled-x86_64-unknown-linux-gnu.tar.gz` and, since 4.11.0, the GraphQL-serving
 `nuthatch-graph-<target>.tar.gz` for each default target, each with a `.sha256` beside it
 (`sha256sum -c nuthatch-<target>.tar.gz.sha256`) and a GitHub build-provenance attestation since
-3.0 (`gh attestation verify <tarball> --repo nightswatchhq/nuthatch`; the `--repo` clause is what
+3.0 (`gh attestation verify <tarball> --repo nuthatch-org/nuthatch`; the `--repo` clause is what
 stops an attestation from any repository being accepted). The Linux binaries are dynamically linked,
 needs glibc 2.35 or newer from 4.1.0 (Debian 12 and Ubuntu 22.04 qualify; RHEL 9 and Amazon Linux
 2023 ship 2.34 and need the source build) and no C++ runtime. Container images:
-`ghcr.io/nightswatchhq/nuthatch:4.12.0` (embedded) and `:4.12.0-scaled`, `linux/amd64` only, the
+`ghcr.io/nuthatch-org/nuthatch:4.12.0` (embedded) and `:4.12.0-scaled`, `linux/amd64` only, the
 same binary as the release; no image carries the graph build.
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:4.12.0 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:4.12.0 --version
 rustup toolchain install 1.95.0
-cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
+cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch
 ```
 
 The toolchain pin is required, not advisory: `rust-toolchain.toml` does not apply to `cargo install
@@ -494,7 +494,7 @@ swap with no storage migration, config change, NID change or re-index.
 In scope: EVM chains; embedded mode (the product) and scaled mode (built, opt-in at build time);
 multi-nest tenancy in the runtime, where a tenant is an opaque label with no identity,
 authentication, quotas or metering; mirrors and seeding. Out of scope: any gateway, auth, metering
-or billing layer in the core; a hosted service run by Nightswatch (the subgraph stopgap nests are
+or billing layer in the core; a hosted service run by Nuthatch (the subgraph stopgap nests are
 the one exception, the stock binary run as an operator would); any token, staking or
 decentralised-network feature; telemetry on by default; non-EVM chains before EVM is airtight; TEE attestation or
 zero-knowledge proofs; Kubernetes manifests. An operator charging at their own endpoint is their
@@ -512,6 +512,6 @@ choice, not a property of the binary.
 - Roadmap: https://www.nuthatch-indexer.com/roadmap
 - Manifesto: https://www.nuthatch-indexer.com/manifesto
 - Nuthatch and The Graph: https://www.nuthatch-indexer.com/the-graph
-- Source, releases, RFCs, security advisories: https://github.com/nightswatchhq/nuthatch
-- Burrmill, the query engine: https://github.com/nightswatchhq/burrmill
+- Source, releases, RFCs, security advisories: https://github.com/nuthatch-org/nuthatch
+- Burrmill, the query engine: https://github.com/nuthatch-org/burrmill
 - Licence: MIT OR Apache-2.0

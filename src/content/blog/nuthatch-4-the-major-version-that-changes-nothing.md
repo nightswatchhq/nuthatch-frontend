@@ -125,6 +125,6 @@ nuthatch sql "SELECT count(*) FROM usdc__transfer"    # in a second terminal
 
 Upgrading from 3.13.x is a binary swap. Coming from an earlier 3.x, read the compatibility section of
 each release in between. The
-[release notes](https://github.com/nightswatchhq/nuthatch/releases/tag/v4.0.0) carry the short form
-and the [stability contract](https://github.com/nightswatchhq/nuthatch/blob/main/docs/operators.md#stability-contract)
+[release notes](https://github.com/nuthatch-org/nuthatch/releases/tag/v4.0.0) carry the short form
+and the [stability contract](https://github.com/nuthatch-org/nuthatch/blob/main/docs/operators.md#stability-contract)
 the long one.

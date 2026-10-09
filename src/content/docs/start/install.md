@@ -16,7 +16,7 @@ curl -fsSL https://nuthatch-indexer.com/install.sh | sh
 
 The script detects your platform, downloads the matching release binary, verifies its checksum, and
 installs `nuthatch` to `~/.local/bin` (override with `NUTHATCH_INSTALL_DIR`). It's short and
-[readable on GitHub](https://github.com/nightswatchhq/nuthatch-frontend/blob/main/public/install.sh) -
+[readable on GitHub](https://github.com/nuthatch-org/nuthatch-frontend/blob/main/public/install.sh) -
 audit it first if `curl | sh` makes you itch.
 
 Prebuilt binaries cover **macOS (Apple Silicon)**, **Linux x86_64** and, from 4.12.0, **Linux arm64**.
@@ -40,7 +40,7 @@ Every artifact since 3.0 also has a GitHub build-provenance attestation, which e
 repository and workflow rather than merely the integrity of bytes in transit:
 
 ```sh
-gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nightswatchhq/nuthatch
+gh attestation verify nuthatch-x86_64-unknown-linux-gnu.tar.gz --repo nuthatch-org/nuthatch
 ```
 
 The `--repo` constraint matters. Without it, an attestation from any repository may be accepted.
@@ -54,7 +54,7 @@ for `aarch64-apple-darwin` and `x86_64-unknown-linux-gnu`, and for `aarch64-unkn
 every command the default binary has. The installer does not fetch it:
 
 ```sh
-gh release download --repo nightswatchhq/nuthatch -p 'nuthatch-graph-aarch64-apple-darwin.tar.gz*'
+gh release download --repo nuthatch-org/nuthatch -p 'nuthatch-graph-aarch64-apple-darwin.tar.gz*'
 shasum -a 256 -c nuthatch-graph-aarch64-apple-darwin.tar.gz.sha256
 tar -xzf nuthatch-graph-aarch64-apple-darwin.tar.gz    # one binary, named nuthatch
 ```
@@ -67,7 +67,7 @@ subgraph: see [Subgraph fallback](/docs/build/subgraph-fallback/).
 ## Container image
 
 ```sh
-docker run --rm ghcr.io/nightswatchhq/nuthatch:5.0.1 --version
+docker run --rm ghcr.io/nuthatch-org/nuthatch:5.0.1 --version
 ```
 
 `:latest` follows the newest release; pin the version for anything you care about. `linux/amd64`
@@ -83,7 +83,7 @@ advisory:**
 
 ```sh
 rustup toolchain install 1.95.0
-cargo +1.95.0 install --git https://github.com/nightswatchhq/nuthatch nuthatch
+cargo +1.95.0 install --git https://github.com/nuthatch-org/nuthatch nuthatch
 ```
 
 `rust-toolchain.toml` pins 1.95.0 because `dbsp` hits a next-trait-solver ICE on 1.97 - and **that
@@ -93,7 +93,7 @@ toolchain fails after a full dependency build with `error: could not compile dbs
 nothing.
 
 This page previously said a plain `cargo install` on recent stable worked. It does not, and has not
-since rustc 1.97 - see [#534](https://github.com/nightswatchhq/nuthatch/issues/534).
+since rustc 1.97 - see [#534](https://github.com/nuthatch-org/nuthatch/issues/534).
 
 ## Verify
 

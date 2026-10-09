@@ -54,7 +54,7 @@ about three minutes, once we stopped asking its public endpoint the wrong way.
 Arc Testnet's two public RPC endpoints enforce a sliding quota that a cold start drains, and nuthatch
 read the resulting 429s as "the range is too large", halved its window five times in fourteen
 seconds and gave up. That is our bug, now
-[#1297](https://github.com/nightswatchhq/nuthatch/issues/1297), and it is the kind of bug a
+[#1297](https://github.com/nuthatch-org/nuthatch/issues/1297), and it is the kind of bug a
 hackathon finds for you: public testnet endpoints are where the assumptions in an RPC client go to be
 tested. dRPC's public Arc endpoint, which serves 5,120-block windows without complaint, and a
 4,000-block window made it a non-event.
@@ -69,7 +69,7 @@ https://hackathon.89.167.109.4.sslip.io/arcaidia-arc/sql?q=SELECT * FROM pending
 https://hackathon.89.167.109.4.sslip.io/arcaidia-sepolia/sql?q=SELECT * FROM protocol_state
 ```
 
-And a repository, [nightswatchhq/arcaidia-nest](https://github.com/nightswatchhq/arcaidia-nest),
+And a repository, [nuthatch-org/arcaidia-nest](https://github.com/nuthatch-org/arcaidia-nest),
 with both configs, the views, and a README that shows each of his four subgraph queries as the SQL
 that answers it, every example run against the live nests before it was written down. If our box
 goes away, the nest does not: `nuthatch init --from` that repository and it runs on his laptop.
